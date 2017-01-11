@@ -6,6 +6,8 @@ JuicyJ Unabashedly Is a Compiler for Your JOOS.
 FAQ
 ---
 
+`Course Site`_
+
 Rust Installation
 ~~~~~~~~~~~~~~~~~
 
@@ -17,3 +19,5 @@ Rust Installation
     rustup toolchain install 1.5.0
     rustup default 1.5.0
     rustc --version  # should show "rustc 1.5.0 (3d7cd77e4 2015-12-04)"
+
+.. _`Course Site`: https://www.student.cs.uwaterloo.ca/~cs444/
