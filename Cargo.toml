@@ -1,0 +1,50 @@
+[package]
+name = "juicyj"
+version = "0.1.0"
+authors = ["Kevin James <KevinJames@thekev.in>", "Steven Locke <s3locke@student.cs.uwaterloo.ca>"]
+repository = "https://github.com/waterloo-cs444/cs444-w17-group3"
+readme = "README.rst"
+
+include = ["src/**/*", "Cargo.toml"]
+
+[profile.dev]  # `cargo build`
+opt-level = 0
+debug = true
+rpath = false
+lto = false
+debug-assertions = true
+codegen-units = 1
+
+[profile.release]  # `cargo build --release`
+opt-level = 3
+debug = false
+rpath = false
+lto = false
+debug-assertions = false
+codegen-units = 1
+
+[profile.test]  # `cargo test`
+opt-level = 0
+debug = true
+rpath = false
+lto = false
+debug-assertions = true
+codegen-units = 1
+
+[profile.bench]  # `cargo bench`
+opt-level = 3
+debug = false
+rpath = false
+lto = false
+debug-assertions = false
+codegen-units = 1
+
+[profile.doc]  # `cargo doc`
+opt-level = 0
+debug = true
+rpath = false
+lto = false
+debug-assertions = true
+codegen-units = 1
+
+[dependencies]
