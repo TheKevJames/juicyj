@@ -7,9 +7,7 @@ pub struct Lexer<'src> {
 
 impl<'src> Lexer<'src> {
     pub fn new(src: &str) -> Lexer {
-        return Lexer {
-            src: src,
-        };
+        return Lexer { src: src };
     }
 
     pub fn tokenize(&self) -> Vec<Token> {

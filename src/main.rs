@@ -1,4 +1,5 @@
 extern crate env_logger;
+extern crate getopts;
 #[macro_use]
 extern crate log;
 
@@ -11,18 +12,45 @@ use std::io::Read;
 fn main() {
     env_logger::init().unwrap();
 
-    if env::args().count() != 2 {
-        error!("usage: {} <src_file>", env::args().nth(0).unwrap());
-        std::process::exit(1);
+    let args: Vec<String> = env::args().collect();
+    let program = args[0].clone();
+
+    let mut opts = getopts::Options::new();
+    opts.optflag("h", "help", "print this help menu");
+    let matches = match opts.parse(&args[1..]) {
+        Ok(m) => m,
+        Err(_) => {
+            print_usage(&program, opts);
+            return;
+        }
+    };
+
+    if matches.opt_present("h") {
+        print_usage(&program, opts);
+        return;
     }
 
-    let src_file = env::args().nth(1).unwrap();
-    debug!("Using src file {}", src_file);
+    let file = if matches.free.len() == 1 {
+        matches.free[0].clone()
+    } else {
+        print_usage(&program, opts);
+        return;
+    };
 
-    let mut file = match File::open(&src_file) {
+    let src = read_src_file(file);
+
+    let lexer = juicyj::lexer::Lexer::new(&src);
+    let tokens = lexer.tokenize();
+    debug!("got tokens {:?}", tokens);
+}
+
+fn read_src_file(file: String) -> String {
+    debug!("Using src file {}", file);
+
+    let mut file = match File::open(&file) {
         Ok(file) => file,
         Err(_) => {
-            error!("could not open file: {}", src_file);
+            error!("could not open file: {}", file);
             std::process::exit(1);
         }
     };
@@ -36,7 +64,10 @@ fn main() {
         }
     };
 
-    let lexer = juicyj::lexer::Lexer::new(&src);
-    let tokens = lexer.tokenize();
-    debug!("got tokens {:?}", tokens);
+    src
+}
+
+fn print_usage(program: &str, opts: getopts::Options) {
+    let brief = format!("Usage: {} FILE [options]", program);
+    print!("{}", opts.usage(&brief));
 }

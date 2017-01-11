@@ -9,6 +9,7 @@ include = ["src/**/*", "Cargo.toml"]
 
 [dependencies]
 env_logger = "0.3.5"
+getopts = "0.2.14"
 log = "0.3.6"
 
 [profile]
