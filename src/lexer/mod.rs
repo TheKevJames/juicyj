@@ -7,11 +7,11 @@ pub struct Lexer<'src> {
 
 impl<'src> Lexer<'src> {
     pub fn new(src: &str) -> Lexer {
-        return Lexer { src: src };
+        Lexer { src: src }
     }
 
     pub fn tokenize(&self) -> Vec<Token> {
-        return self.src
+        self.src
             .split_whitespace()
             .map(|t| {
                 Token {
@@ -19,6 +19,6 @@ impl<'src> Lexer<'src> {
                     lexeme: t,
                 }
             })
-            .collect();
+            .collect()
     }
 }
