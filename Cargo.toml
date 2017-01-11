@@ -7,44 +7,32 @@ readme = "README.rst"
 
 include = ["src/**/*", "Cargo.toml"]
 
+[dependencies]
+env_logger = "0.3.5"
+log = "0.3.6"
+
+[profile]
 [profile.dev]  # `cargo build`
 opt-level = 0
 debug = true
-rpath = false
-lto = false
 debug-assertions = true
-codegen-units = 1
 
 [profile.release]  # `cargo build --release`
 opt-level = 3
 debug = false
-rpath = false
-lto = false
 debug-assertions = false
-codegen-units = 1
 
 [profile.test]  # `cargo test`
 opt-level = 0
 debug = true
-rpath = false
-lto = false
 debug-assertions = true
-codegen-units = 1
 
 [profile.bench]  # `cargo bench`
 opt-level = 3
 debug = false
-rpath = false
-lto = false
 debug-assertions = false
-codegen-units = 1
 
 [profile.doc]  # `cargo doc`
 opt-level = 0
 debug = true
-rpath = false
-lto = false
 debug-assertions = true
-codegen-units = 1
-
-[dependencies]
