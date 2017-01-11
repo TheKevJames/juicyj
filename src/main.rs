@@ -2,6 +2,8 @@ extern crate env_logger;
 #[macro_use]
 extern crate log;
 
+extern crate juicyj;
+
 use std::env;
 use std::fs::File;
 use std::io::Read;
@@ -33,4 +35,8 @@ fn main() {
             std::process::exit(1);
         }
     };
+
+    let lexer = juicyj::lexer::Lexer::new(&src);
+    let tokens = lexer.tokenize();
+    debug!("got tokens {:?}", tokens);
 }
