@@ -1,7 +1,7 @@
 #[derive(Debug)]
 pub struct Token<'src> {
     pub kind: TokenKind,
-    pub data: &'src str,
+    pub lexeme: &'src str,
 }
 
 #[derive(Debug)]

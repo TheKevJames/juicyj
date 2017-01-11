@@ -15,8 +15,8 @@ impl<'src> Lexer<'src> {
             .split_whitespace()
             .map(|t| {
                 Token {
-                    data: t,
                     kind: TokenKind::Unknown,
+                    lexeme: t,
                 }
             })
             .collect();
