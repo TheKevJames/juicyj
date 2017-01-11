@@ -64,7 +64,7 @@ fn read_src_file(file: String) -> String {
         }
     };
 
-    src
+    return src;
 }
 
 fn print_usage(program: &str, opts: getopts::Options) {
