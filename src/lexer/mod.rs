@@ -40,7 +40,7 @@ impl<'src> Lexer<'src> {
                     kind: TokenKind::BitAnd,
                     lexeme: None,
                 };
-            },
+            }
             Some('|') => {
                 self.consume_token();
 
@@ -78,7 +78,7 @@ impl<'src> Lexer<'src> {
                     kind: TokenKind::Assignment,
                     lexeme: None,
                 };
-            },
+            }
             Some('>') => {
                 self.consume_token();
 
@@ -94,7 +94,7 @@ impl<'src> Lexer<'src> {
                     kind: TokenKind::GreaterThan,
                     lexeme: None,
                 };
-            },
+            }
             Some('<') => {
                 self.consume_token();
 
@@ -110,7 +110,7 @@ impl<'src> Lexer<'src> {
                     kind: TokenKind::LessThan,
                     lexeme: None,
                 };
-            },
+            }
             Some('!') => {
                 self.consume_token();
 
