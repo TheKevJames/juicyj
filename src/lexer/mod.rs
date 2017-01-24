@@ -196,23 +196,6 @@ impl<'src> Lexer<'src> {
         }
     }
 
-    fn next_number(&mut self) -> Token {
-        let mut identifier = String::new();
-        while let Some(c) = self.current {
-            if !c.is_digit(10) {
-                break;
-            }
-
-            identifier.push(c);
-            self.consume_token();
-        }
-
-        Token {
-            kind: TokenKind::NumValue,
-            lexeme: Some(identifier),
-        }
-    }
-
     fn next_char(&mut self) -> Token {
         self.consume_token();
 
@@ -240,6 +223,23 @@ impl<'src> Lexer<'src> {
 
         Token {
             kind: TokenKind::CharValue,
+            lexeme: Some(identifier),
+        }
+    }
+
+    fn next_number(&mut self) -> Token {
+        let mut identifier = String::new();
+        while let Some(c) = self.current {
+            if !c.is_digit(10) {
+                break;
+            }
+
+            identifier.push(c);
+            self.consume_token();
+        }
+
+        Token {
+            kind: TokenKind::NumValue,
             lexeme: Some(identifier),
         }
     }
@@ -289,10 +289,10 @@ impl<'src> Lexer<'src> {
             Some('+') => TokenKind::Plus,
             Some('*') => TokenKind::Star,
 
+            Some(';') => TokenKind::Semicolon,
+
             Some('&') => return Some(self.next_boolean()),
             Some('|') => return Some(self.next_boolean()),
-
-            Some(';') => TokenKind::Semicolon,
 
             Some('=') => return Some(self.next_comparison()),
             Some('<') => return Some(self.next_comparison()),
