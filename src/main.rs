@@ -17,6 +17,7 @@ fn main() {
 
     let mut opts = getopts::Options::new();
     opts.optflag("h", "help", "print this help menu");
+    opts.optflag("V", "version", "print the version");
     let matches = match opts.parse(&args[1..]) {
         Ok(m) => m,
         Err(_) => {
@@ -27,6 +28,11 @@ fn main() {
 
     if matches.opt_present("h") {
         print_usage(&program, opts);
+        return;
+    }
+
+    if matches.opt_present("V") {
+        print_version(&program);
         return;
     }
 
@@ -70,4 +76,8 @@ fn read_src_file(file: String) -> String {
 fn print_usage(program: &str, opts: getopts::Options) {
     let brief = format!("Usage: {} FILE [options]", program);
     print!("{}", opts.usage(&brief));
+}
+
+fn print_version(program: &str) {
+    println!("{} v{}", program, env!("CARGO_PKG_VERSION"));
 }
