@@ -1,0 +1,32 @@
+# Useful: https://github.com/pingcap/tikv/blob/master/circle.yml
+machine:
+    environment:
+        PATH: "$HOME/.cargo/bin:$HOME/.local/bin:$PATH"
+    post:
+        # https://github.com/rust-lang/cargo/issues/2078#issuecomment-263027534
+        - git config --global --unset url.ssh://git@github.com:.insteadof
+
+dependencies:
+    cache_directories:
+        - target
+        - ~/.cargo
+        - ~/.local
+        - ~/.multirust
+    pre:
+        - |
+          if [[ ! -e $HOME/.cargo ]]; then
+            curl -sSf https://sh.rustup.rs |
+              sh -s -- --no-modify-path --default-toolchain "1.14.0" -y;
+            rustup default "1.14.0";
+          else
+            rustup default "1.14.0";
+          fi
+        - rustc --version
+
+        - test -e $HOME/.cargo/bin/cargo-fmt || cargo install --force rustfmt || true
+
+test:
+    override:
+        - cargo fmt -- --write-mode=diff
+        - cargo build -v
+        - cargo test -v
