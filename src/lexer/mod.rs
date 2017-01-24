@@ -25,111 +25,55 @@ impl<'src> Lexer<'src> {
         self.current = self.src.next();
     }
 
-    fn next_boolean(&mut self) -> Token {
-        match self.current {
-            Some('&') => {
-                self.consume_token();
+    fn do_lookahead(&mut self,
+                    current_kind: TokenKind,
+                    ahead_char: char,
+                    ahead_kind: TokenKind)
+                    -> Option<Token> {
+        self.consume_token();
 
-                if self.current == Some('&') {
-                    self.consume_token();
-                    return Token {
-                        kind: TokenKind::And,
-                        lexeme: None,
-                    };
-                }
-
-                return Token {
-                    kind: TokenKind::BitAnd,
-                    lexeme: None,
-                };
-            }
-            Some('|') => {
-                self.consume_token();
-
-                if self.current == Some('|') {
-                    self.consume_token();
-                    return Token {
-                        kind: TokenKind::Or,
-                        lexeme: None,
-                    };
-                }
-
-                return Token {
-                    kind: TokenKind::BitOr,
-                    lexeme: None,
-                };
-            }
-            _ => panic!("next_boolean called on illegal value."),
+        if self.current == Some(ahead_char) {
+            self.consume_token();
+            return Some(Token {
+                kind: ahead_kind,
+                lexeme: None,
+            });
         }
+
+        return Some(Token {
+            kind: current_kind,
+            lexeme: None,
+        });
     }
 
-    fn next_comparison(&mut self) -> Token {
-        match self.current {
-            Some('=') => {
+    fn next_char(&mut self) -> Token {
+        self.consume_token();
+
+        let mut identifier = String::new();
+        while let Some(c) = self.current {
+            if c == '\'' {
                 self.consume_token();
-
-                if self.current == Some('=') {
-                    self.consume_token();
-                    return Token {
-                        kind: TokenKind::Equality,
-                        lexeme: None,
-                    };
-                }
-
-                return Token {
-                    kind: TokenKind::Assignment,
-                    lexeme: None,
-                };
+                break;
             }
-            Some('>') => {
+
+            if c == '\\' {
+                // TODO
                 self.consume_token();
-
-                if self.current == Some('=') {
-                    self.consume_token();
-                    return Token {
-                        kind: TokenKind::GreaterThanOrEqual,
-                        lexeme: None,
-                    };
-                }
-
-                return Token {
-                    kind: TokenKind::GreaterThan,
-                    lexeme: None,
-                };
-            }
-            Some('<') => {
                 self.consume_token();
-
-                if self.current == Some('=') {
-                    self.consume_token();
-                    return Token {
-                        kind: TokenKind::LessThanOrEqual,
-                        lexeme: None,
-                    };
-                }
-
-                return Token {
-                    kind: TokenKind::LessThan,
-                    lexeme: None,
-                };
+                continue;
             }
-            Some('!') => {
-                self.consume_token();
 
-                if self.current == Some('=') {
-                    self.consume_token();
-                    return Token {
-                        kind: TokenKind::NotEqual,
-                        lexeme: None,
-                    };
-                }
+            identifier.push(c);
+            self.consume_token();
+        }
 
-                return Token {
-                    kind: TokenKind::Not,
-                    lexeme: None,
-                };
-            }
-            _ => panic!("next_comparison called on illegal value."),
+        if identifier.len() != 1 {
+            panic!("next_char given multiple characters.")
+        }
+
+        Token {
+            kind: TokenKind::CharValue,
+            lexeme: Some(identifier),
         }
     }
 
@@ -198,37 +142,6 @@ impl<'src> Lexer<'src> {
         }
     }
 
-    fn next_char(&mut self) -> Token {
-        self.consume_token();
-
-        let mut identifier = String::new();
-        while let Some(c) = self.current {
-            if c == '\'' {
-                self.consume_token();
-                break;
-            }
-
-            if c == '\\' {
-                // TODO
-                self.consume_token();
-                self.consume_token();
-                continue;
-            }
-
-            identifier.push(c);
-            self.consume_token();
-        }
-
-        if identifier.len() != 1 {
-            panic!("next_char given multiple characters.")
-        }
-
-        Token {
-            kind: TokenKind::CharValue,
-            lexeme: Some(identifier),
-        }
-    }
-
     fn next_number(&mut self) -> Token {
         let mut identifier = String::new();
         while let Some(c) = self.current {
@@ -293,13 +206,16 @@ impl<'src> Lexer<'src> {
 
             Some(';') => TokenKind::Semicolon,
 
-            Some('&') => return Some(self.next_boolean()),
-            Some('|') => return Some(self.next_boolean()),
-
-            Some('=') => return Some(self.next_comparison()),
-            Some('<') => return Some(self.next_comparison()),
-            Some('>') => return Some(self.next_comparison()),
-            Some('!') => return Some(self.next_comparison()),
+            Some('&') => return self.do_lookahead(TokenKind::BitAnd, '&', TokenKind::And),
+            Some('|') => return self.do_lookahead(TokenKind::BitOr, '|', TokenKind::Or),
+            Some('=') => return self.do_lookahead(TokenKind::Assignment, '=', TokenKind::Equality),
+            Some('<') => {
+                return self.do_lookahead(TokenKind::LessThan, '=', TokenKind::LessThanOrEqual)
+            }
+            Some('>') => {
+                return self.do_lookahead(TokenKind::GreaterThan, '=', TokenKind::GreaterThanOrEqual)
+            }
+            Some('!') => return self.do_lookahead(TokenKind::Not, '=', TokenKind::NotEqual),
 
             Some('\'') => return Some(self.next_char()),
             Some('"') => return Some(self.next_string()),
