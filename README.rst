@@ -20,14 +20,6 @@ Rust Installation
     rustup default 1.14.0
     rustc --version  # should show "rustc 1.14.0 (e8a012324 2016-12-16)"
 
-Formatting
-~~~~~~~~~~
-
-::
-
-    cargo fmt -- --write-mode=diff
-    cargo fmt -- --write-mode=overwrite
-
 Running
 ~~~~~~~
 
