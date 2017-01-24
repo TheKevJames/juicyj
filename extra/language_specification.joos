@@ -42,7 +42,7 @@ public final class AClass extends AAbstract implements AInterface {
     public int getSize(java.util.Vector x) {
         return x.size();
     }
-    public final int getMonday() {
+    public final int _getMonday() {
         return java.util.Calendar.MONDAY;
     }
     public void exit() {
@@ -73,7 +73,7 @@ public final class AClass extends AAbstract implements AInterface {
         int[] x = new int[42];
         return x.length;
     }
-    public int doLoop() {
+    public int do_loop() {
         int q = 3;
         while (q > 500) {
             System.out.println("This ain't a thing!");

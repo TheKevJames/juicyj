@@ -5,6 +5,8 @@ use std::str::Chars;
 use common::Token;
 use common::TokenKind;
 
+mod identifier;
+
 pub struct Lexer<'src> {
     current: Option<char>,
     src: Peekable<Chars<'src>>,
@@ -134,7 +136,7 @@ impl<'src> Lexer<'src> {
     fn next_identifier(&mut self) -> Token {
         let mut identifier = String::new();
         while let Some(c) = self.current {
-            if !c.is_alphabetic() {
+            if !identifier::valid_continuation(c) {
                 break;
             }
 
@@ -301,8 +303,8 @@ impl<'src> Lexer<'src> {
 
             Some('\'') => return Some(self.next_char()),
             Some('"') => return Some(self.next_string()),
-            Some(digit) if digit.is_digit(10) => return Some(self.next_number()),
-            Some(ident) if ident.is_alphabetic() => return Some(self.next_identifier()),
+            Some(d) if d.is_digit(10) => return Some(self.next_number()),
+            Some(c) if identifier::valid_start(c) => return Some(self.next_identifier()),
 
             Some(c) => panic!("unparseable token: {}", c),
             _ => return None,

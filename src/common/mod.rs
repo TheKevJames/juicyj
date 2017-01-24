@@ -1,8 +1,19 @@
+// use std;
+
 #[derive(Debug)]
 pub struct Token {
     pub kind: TokenKind,
     pub lexeme: Option<String>,
 }
+
+// impl std::fmt::Debug for Token {
+//     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+//         match self.lexeme {
+//             Some(ref l) => write!(f, "{}", l),
+//             None => write!(f, "{:?}", self.kind),
+//         }
+//     }
+// }
 
 #[derive(Debug)]
 pub enum TokenKind {
