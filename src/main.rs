@@ -40,7 +40,7 @@ fn main() {
     let src = read_src_file(file);
 
     let lexer = juicyj::lexer::Lexer::new(&src);
-    let tokens = lexer.tokenize();
+    let tokens = lexer.collect::<Vec<juicyj::common::Token>>();
     debug!("got tokens {:?}", tokens);
 }
 
