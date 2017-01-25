@@ -21,8 +21,10 @@ fn read_src_file(file: String) -> String {
 
 #[test]
 fn test_valid_language_features() {
-    let src = read_src_file(String::from("tests/language_features.joos"));
-    let lexer = juicyj::lexer::Lexer::new(&src);
+    let filename = "tests/language_features.joos";
+
+    let src = read_src_file(String::from(filename));
+    let lexer = juicyj::lexer::Lexer::new(&filename, &src);
     let tokens = lexer.collect::<Vec<juicyj::common::Token>>();
     // Yeah, I counted.
     assert_eq!(tokens.len(), 708);
@@ -35,7 +37,7 @@ fn test_all_cases() {
         match path.unwrap().path().to_str() {
             Some(name) => {
                 let src = read_src_file(String::from(name));
-                let lexer = juicyj::lexer::Lexer::new(&src);
+                let lexer = juicyj::lexer::Lexer::new(&name, &src);
                 lexer.collect::<Vec<juicyj::common::Token>>();
 
                 // TODO: consider validating token values

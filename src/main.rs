@@ -43,14 +43,14 @@ fn main() {
         return;
     };
 
-    let src = read_src_file(file);
+    let src = read_src_file(&file);
 
-    let lexer = juicyj::lexer::Lexer::new(&src);
+    let lexer = juicyj::lexer::Lexer::new(&file, &src);
     let tokens = lexer.collect::<Vec<juicyj::common::Token>>();
     debug!("got tokens {:?}", tokens);
 }
 
-fn read_src_file(file: String) -> String {
+fn read_src_file(file: &String) -> String {
     debug!("Using src file {}", file);
 
     let mut file = match File::open(&file) {
