@@ -62,26 +62,69 @@ impl<'src> Lexer<'src> {
             }
 
             if c == '\\' {
-                match self.src.peek() {
-                    Some(&'t') | Some(&'b') | Some(&'n') | Some(&'r') | Some(&'f') |
-                    Some(&'0') | Some(&'1') | Some(&'2') | Some(&'3') | Some(&'4') |
-                    Some(&'5') | Some(&'6') | Some(&'7') | Some(&'8') | Some(&'9') |
-                    Some(&'\\') | Some(&'"') | Some(&'\'') => {
-                        char_length = 2;
+                identifier.push(c);
+                self.consume_token();
 
-                        identifier.push(c);
+                match self.current {
+                    Some(digit0) if ('0' <= digit0 && digit0 <= '9') => {
+                        identifier.push(digit0);
                         self.consume_token();
+
                         match self.current {
-                            Some(next) => {
-                                identifier.push(next);
+                            Some(digit1) if ('0' <= digit1 && digit1 <= '9') => {
+                                identifier.push(digit1);
                                 self.consume_token();
-                                continue;
+
+                                match self.current {
+                                    Some(digit2) if ('0' <= digit2 && digit2 <= '9') => {
+                                        identifier.push(digit2);
+                                        self.consume_token();
+
+                                        // only \[0-3][0-9][0-9] is valid octal
+                                        match digit0 {
+                                            '0'...'3' => {
+                                                char_length = 4;
+                                                continue;
+                                            }
+                                            _ => {
+                                                panic!("next_char got invalid octal {}",
+                                                       identifier);
+                                            }
+                                        }
+                                    }
+                                    Some('\'') => {
+                                        char_length = 3;
+                                        self.consume_token();
+                                        break;
+                                    }
+                                    _ => {
+                                        panic!("next_char got invalid octal {}",
+                                               self.current.unwrap_or('?'))
+                                    }
+                                }
                             }
-                            _ => panic!("next_char got invalid escape char"),
+                            Some('\'') => {
+                                char_length = 2;
+                                self.consume_token();
+                                break;
+                            }
+                            _ => {
+                                panic!("next_char for invalid octal {}",
+                                       self.current.unwrap_or('?'))
+                            }
                         }
                     }
-                    _ => {
+                    Some(next) if (next == 't' || next == 'b' || next == 'n' || next == 'r' ||
+                                   next == 'f' ||
+                                   next == '\'' || next == '"' ||
+                                   next == '\\') => {
+                        char_length = 2;
+
+                        identifier.push(next);
                         self.consume_token();
+                        continue;
+                    }
+                    _ => {
                         panic!("next_char got invalid escape char {}",
                                self.current.unwrap_or('?'))
                     }
@@ -199,24 +242,19 @@ impl<'src> Lexer<'src> {
             }
 
             if c == '\\' {
-                match self.src.peek() {
-                    Some(&'t') | Some(&'b') | Some(&'n') | Some(&'r') | Some(&'f') |
-                    Some(&'0') | Some(&'1') | Some(&'2') | Some(&'3') | Some(&'4') |
-                    Some(&'5') | Some(&'6') | Some(&'7') | Some(&'8') | Some(&'9') |
-                    Some(&'\\') | Some(&'"') | Some(&'\'') => {
-                        identifier.push(c);
+                identifier.push(c);
+                self.consume_token();
+
+                match self.current {
+                    Some(next) if (next == 't' || next == 'b' || next == 'n' || next == 'r' ||
+                                   next == 'f' || next == '\\' ||
+                                   next == '"' || next == '\'' ||
+                                   ('0' <= next && next <= '9')) => {
+                        identifier.push(next);
                         self.consume_token();
-                        match self.current {
-                            Some(next) => {
-                                identifier.push(next);
-                                self.consume_token();
-                                continue;
-                            }
-                            _ => panic!("next_string got invalid escape char"),
-                        }
+                        continue;
                     }
                     _ => {
-                        self.consume_token();
                         panic!("next_string got invalid escape char {}",
                                self.current.unwrap_or('?'))
                     }

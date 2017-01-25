@@ -130,6 +130,9 @@ public final class AClass extends AAbstract implements AInterface {
     public boolean a = false;
     public char b = 'a';
     public char b_escaped = '\n';
+    public char b_octal_one = '\2';
+    public char b_octal_two = '\22';
+    public char b_octal_three = '\222';
     public byte c;
     public short d;
     protected String e = "foo";
