@@ -25,5 +25,5 @@ fn test_valid_language_features() {
     let lexer = juicyj::lexer::Lexer::new(&src);
     let tokens = lexer.collect::<Vec<juicyj::common::Token>>();
     // Yeah, I counted.
-    assert!(tokens.len() == 684, "got {} tokens", tokens.len());
+    assert!(tokens.len() == 708, "got {} tokens", tokens.len());
 }
