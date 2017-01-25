@@ -2,6 +2,7 @@ extern crate juicyj;
 
 use std::fs::File;
 use std::io::Read;
+use std::panic;
 
 // See main.rs
 fn read_src_file(file: String) -> String {
@@ -37,10 +38,18 @@ fn test_all_cases() {
         match path.unwrap().path().to_str() {
             Some(name) => {
                 let src = read_src_file(String::from(name));
-                let lexer = juicyj::lexer::Lexer::new(&name, &src);
-                lexer.collect::<Vec<juicyj::common::Token>>();
+                let mut lexer = juicyj::lexer::Lexer::new(&name, &src);
 
-                // TODO: consider validating token values
+                let result = panic::catch_unwind(panic::AssertUnwindSafe(|| {
+                    while let Some(_) = lexer.next() {
+                    }
+                }));
+
+                if name.contains("NonJoosConstructs") {
+                    assert!(result.is_err());
+                } else {
+                    assert!(result.is_ok());
+                }
             }
             _ => continue,
         }
