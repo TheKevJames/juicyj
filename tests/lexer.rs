@@ -25,5 +25,22 @@ fn test_valid_language_features() {
     let lexer = juicyj::lexer::Lexer::new(&src);
     let tokens = lexer.collect::<Vec<juicyj::common::Token>>();
     // Yeah, I counted.
-    assert!(tokens.len() == 708, "got {} tokens", tokens.len());
+    assert_eq!(tokens.len(), 708);
+}
+
+#[test]
+fn test_all_cases() {
+    let paths = std::fs::read_dir("tests/cases/").unwrap();
+    for path in paths {
+        match path.unwrap().path().to_str() {
+            Some(name) => {
+                let src = read_src_file(String::from(name));
+                let lexer = juicyj::lexer::Lexer::new(&src);
+                lexer.collect::<Vec<juicyj::common::Token>>();
+
+                // TODO: consider validating token values
+            }
+            _ => continue,
+        }
+    }
 }
