@@ -136,7 +136,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
             }
 
             if c == '\n' {
-                return Err(self.error("next_char got newline"));
+                return Err(self.error("char contains newline"));
             }
 
             if c == '\\' {
