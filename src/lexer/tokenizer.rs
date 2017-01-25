@@ -40,7 +40,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
         }
     }
 
-    fn consume_token(&mut self) {
+    fn consume(&mut self) {
         self.current = match self.line_iter.next() {
             Some(ch) => {
                 self.index_character += 1;
@@ -89,10 +89,10 @@ impl<'file, 'src> Lexer<'file, 'src> {
                 ahead_char: char,
                 ahead_kind: TokenKind)
                 -> Result<Token, error::LexerError> {
-        self.consume_token();
+        self.consume();
 
         if self.current == Some(ahead_char) {
-            self.consume_token();
+            self.consume();
             return Ok(Token {
                 kind: ahead_kind,
                 lexeme: None,
@@ -108,12 +108,12 @@ impl<'file, 'src> Lexer<'file, 'src> {
     fn next_char(&mut self) -> Result<Token, error::LexerError> {
         let mut char_length = 1;
 
-        self.consume_token();
+        self.consume();
 
         let mut identifier = String::new();
         while let Some(c) = self.current {
             if c == '\'' {
-                self.consume_token();
+                self.consume();
                 break;
             }
 
@@ -129,22 +129,22 @@ impl<'file, 'src> Lexer<'file, 'src> {
 
             if c == '\\' {
                 identifier.push(c);
-                self.consume_token();
+                self.consume();
 
                 match self.current {
                     Some(digit0) if ('0' <= digit0 && digit0 <= '9') => {
                         identifier.push(digit0);
-                        self.consume_token();
+                        self.consume();
 
                         match self.current {
                             Some(digit1) if ('0' <= digit1 && digit1 <= '9') => {
                                 identifier.push(digit1);
-                                self.consume_token();
+                                self.consume();
 
                                 match self.current {
                                     Some(digit2) if ('0' <= digit2 && digit2 <= '9') => {
                                         identifier.push(digit2);
-                                        self.consume_token();
+                                        self.consume();
 
                                         // only \[0-3][0-9][0-9] is valid octal
                                         match digit0 {
@@ -160,7 +160,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
                                     }
                                     Some('\'') => {
                                         char_length = 3;
-                                        self.consume_token();
+                                        self.consume();
                                         break;
                                     }
                                     _ => {
@@ -171,7 +171,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
                             }
                             Some('\'') => {
                                 char_length = 2;
-                                self.consume_token();
+                                self.consume();
                                 break;
                             }
                             _ => {
@@ -187,7 +187,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
                         char_length = 2;
 
                         identifier.push(next);
-                        self.consume_token();
+                        self.consume();
                         continue;
                     }
                     _ => {
@@ -198,7 +198,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
             }
 
             identifier.push(c);
-            self.consume_token();
+            self.consume();
         }
 
         if identifier.len() != char_length {
@@ -219,7 +219,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
             }
 
             identifier.push(c);
-            self.consume_token();
+            self.consume();
         }
 
         let kind = match identifier.as_str() {
@@ -284,7 +284,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
             }
 
             identifier.push(c);
-            self.consume_token();
+            self.consume();
         }
 
         Ok(Token {
@@ -294,12 +294,12 @@ impl<'file, 'src> Lexer<'file, 'src> {
     }
 
     fn next_string(&mut self) -> Result<Token, error::LexerError> {
-        self.consume_token();
+        self.consume();
 
         let mut identifier = String::new();
         while let Some(c) = self.current {
             if c == '"' {
-                self.consume_token();
+                self.consume();
                 break;
             }
 
@@ -309,7 +309,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
 
             if c == '\\' {
                 identifier.push(c);
-                self.consume_token();
+                self.consume();
 
                 match self.current {
                     Some(next) if (next == 't' || next == 'b' || next == 'n' || next == 'r' ||
@@ -317,7 +317,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
                                    next == '"' || next == '\'' ||
                                    ('0' <= next && next <= '9')) => {
                         identifier.push(next);
-                        self.consume_token();
+                        self.consume();
                         continue;
                     }
                     _ => {
@@ -328,7 +328,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
             }
 
             identifier.push(c);
-            self.consume_token();
+            self.consume();
         }
 
         Ok(Token {
@@ -342,42 +342,42 @@ impl<'file, 'src> Lexer<'file, 'src> {
 
         let token = match self.current {
             Some('{') => {
-                self.consume_token();
+                self.consume();
                 Ok(Token {
                     kind: TokenKind::LBrace,
                     lexeme: None,
                 })
             }
             Some('}') => {
-                self.consume_token();
+                self.consume();
                 Ok(Token {
                     kind: TokenKind::RBrace,
                     lexeme: None,
                 })
             }
             Some('[') => {
-                self.consume_token();
+                self.consume();
                 Ok(Token {
                     kind: TokenKind::LBracket,
                     lexeme: None,
                 })
             }
             Some(']') => {
-                self.consume_token();
+                self.consume();
                 Ok(Token {
                     kind: TokenKind::RBracket,
                     lexeme: None,
                 })
             }
             Some('(') => {
-                self.consume_token();
+                self.consume();
                 Ok(Token {
                     kind: TokenKind::LParen,
                     lexeme: None,
                 })
             }
             Some(')') => {
-                self.consume_token();
+                self.consume();
                 Ok(Token {
                     kind: TokenKind::RParen,
                     lexeme: None,
@@ -385,42 +385,42 @@ impl<'file, 'src> Lexer<'file, 'src> {
             }
 
             Some('.') => {
-                self.consume_token();
+                self.consume();
                 Ok(Token {
                     kind: TokenKind::Dot,
                     lexeme: None,
                 })
             }
             Some('/') => {
-                self.consume_token();
+                self.consume();
                 Ok(Token {
                     kind: TokenKind::FSlash,
                     lexeme: None,
                 })
             }
             Some('-') => {
-                self.consume_token();
+                self.consume();
                 Ok(Token {
                     kind: TokenKind::Minus,
                     lexeme: None,
                 })
             }
             Some('%') => {
-                self.consume_token();
+                self.consume();
                 Ok(Token {
                     kind: TokenKind::Percent,
                     lexeme: None,
                 })
             }
             Some('+') => {
-                self.consume_token();
+                self.consume();
                 Ok(Token {
                     kind: TokenKind::Plus,
                     lexeme: None,
                 })
             }
             Some('*') => {
-                self.consume_token();
+                self.consume();
                 Ok(Token {
                     kind: TokenKind::Star,
                     lexeme: None,
@@ -428,7 +428,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
             }
 
             Some(';') => {
-                self.consume_token();
+                self.consume();
                 Ok(Token {
                     kind: TokenKind::Semicolon,
                     lexeme: None,
@@ -466,25 +466,25 @@ impl<'file, 'src> Lexer<'file, 'src> {
     fn skip_comments(&mut self) {
         while let Some(c) = self.current {
             if c.is_whitespace() {
-                self.consume_token();
+                self.consume();
                 continue;
             }
 
             if c == '/' {
                 if self.peek() == Some('*') {
-                    self.consume_token();
-                    self.consume_token();
+                    self.consume();
+                    self.consume();
 
                     while let Some(c) = self.current {
                         if c == '*' && self.peek() == Some('/') {
                             break;
                         }
 
-                        self.consume_token();
+                        self.consume();
                     }
 
-                    self.consume_token();
-                    self.consume_token();
+                    self.consume();
+                    self.consume();
                     continue;
                 }
 
@@ -494,10 +494,10 @@ impl<'file, 'src> Lexer<'file, 'src> {
                             break;
                         }
 
-                        self.consume_token();
+                        self.consume();
                     }
 
-                    self.consume_token();
+                    self.consume();
                     continue;
                 }
             }
