@@ -11,6 +11,7 @@ pub struct Lexer<'src> {
     src: Peekable<Chars<'src>>,
 }
 
+// TODO: error context
 impl<'src> Lexer<'src> {
     pub fn new(src: &str) -> Lexer {
         let mut c = src.chars().peekable();
