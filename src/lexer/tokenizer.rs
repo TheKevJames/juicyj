@@ -42,6 +42,10 @@ impl<'file, 'src> Lexer<'file, 'src> {
 
     fn consume(&mut self) {
         self.current = match self.line_iter.next() {
+            Some(ch) if ch == '\t' => {
+                self.index_character += 4;
+                Some(ch)
+            }
             Some(ch) => {
                 self.index_character += 1;
                 Some(ch)
@@ -62,6 +66,10 @@ impl<'file, 'src> Lexer<'file, 'src> {
                 self.index_character = 0;
 
                 match self.line_iter.next() {
+                    Some(ch) if ch == '\t' => {
+                        self.index_character += 4;
+                        Some(ch)
+                    }
                     Some(ch) => {
                         self.index_character += 1;
                         Some(ch)
@@ -70,6 +78,16 @@ impl<'file, 'src> Lexer<'file, 'src> {
                 }
             }
         };
+    }
+
+    fn error(&self, message: &'static str) -> error::LexerError {
+        error::LexerError {
+            file: self.file.to_owned(),
+            index: self.index_character,
+            line: self.line.unwrap_or("").to_owned(),
+            line_number: self.index_line,
+            message: message,
+        }
     }
 
     fn peek(&mut self) -> Option<char> {
@@ -118,13 +136,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
             }
 
             if c == '\n' {
-                return Err(error::LexerError {
-                    file: self.file.to_owned(),
-                    index: self.index_character,
-                    line: self.line.unwrap_or("").to_owned(),
-                    line_number: self.index_line,
-                    message: &"next_char got newline",
-                });
+                return Err(self.error("next_char got newline"));
             }
 
             if c == '\\' {
@@ -152,10 +164,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
                                                 char_length = 4;
                                                 continue;
                                             }
-                                            _ => {
-                                                panic!("next_char got invalid octal {}",
-                                                       identifier);
-                                            }
+                                            _ => return Err(self.error("invalid octal")),
                                         }
                                     }
                                     Some('\'') => {
@@ -164,8 +173,8 @@ impl<'file, 'src> Lexer<'file, 'src> {
                                         break;
                                     }
                                     _ => {
-                                        panic!("next_char got invalid octal {}",
-                                               self.current.unwrap_or('?'))
+                                        return Err(self.error(
+                                        "too many characters in char (maybe malformed octal?)"));
                                     }
                                 }
                             }
@@ -175,8 +184,8 @@ impl<'file, 'src> Lexer<'file, 'src> {
                                 break;
                             }
                             _ => {
-                                panic!("next_char for invalid octal {}",
-                                       self.current.unwrap_or('?'))
+                                return Err(self.error(
+                                    "too many characters in char (maybe malformed octal?)"));
                             }
                         }
                     }
@@ -190,10 +199,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
                         self.consume();
                         continue;
                     }
-                    _ => {
-                        panic!("next_char got invalid escape char {}",
-                               self.current.unwrap_or('?'))
-                    }
+                    _ => return Err(self.error("invalid escape character")),
                 }
             }
 
@@ -202,7 +208,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
         }
 
         if identifier.len() != char_length {
-            panic!("next_char given multiple characters.")
+            return Err(self.error("too many characters in char"));
         }
 
         Ok(Token {
@@ -304,7 +310,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
             }
 
             if c == '\n' {
-                panic!("next_string got newline.")
+                return Err(self.error("string contains newline"));
             }
 
             if c == '\\' {
@@ -320,10 +326,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
                         self.consume();
                         continue;
                     }
-                    _ => {
-                        panic!("next_string got invalid escape char {}",
-                               self.current.unwrap_or('?'))
-                    }
+                    _ => return Err(self.error("invalid escape character")),
                 }
             }
 
@@ -337,130 +340,57 @@ impl<'file, 'src> Lexer<'file, 'src> {
         })
     }
 
-    fn next_token(&mut self) -> Option<Token> {
+    fn next_token(&mut self) -> Option<Result<Token, error::LexerError>> {
         self.skip_comments();
 
-        let token = match self.current {
-            Some('{') => {
-                self.consume();
-                Ok(Token {
-                    kind: TokenKind::LBrace,
-                    lexeme: None,
-                })
-            }
-            Some('}') => {
-                self.consume();
-                Ok(Token {
-                    kind: TokenKind::RBrace,
-                    lexeme: None,
-                })
-            }
-            Some('[') => {
-                self.consume();
-                Ok(Token {
-                    kind: TokenKind::LBracket,
-                    lexeme: None,
-                })
-            }
-            Some(']') => {
-                self.consume();
-                Ok(Token {
-                    kind: TokenKind::RBracket,
-                    lexeme: None,
-                })
-            }
-            Some('(') => {
-                self.consume();
-                Ok(Token {
-                    kind: TokenKind::LParen,
-                    lexeme: None,
-                })
-            }
-            Some(')') => {
-                self.consume();
-                Ok(Token {
-                    kind: TokenKind::RParen,
-                    lexeme: None,
-                })
-            }
+        let kind = match self.current {
+            Some('{') => Some(TokenKind::LBrace),
+            Some('}') => Some(TokenKind::RBrace),
+            Some('[') => Some(TokenKind::LBracket),
+            Some(']') => Some(TokenKind::RBracket),
+            Some('(') => Some(TokenKind::LParen),
+            Some(')') => Some(TokenKind::RParen),
 
-            Some('.') => {
-                self.consume();
-                Ok(Token {
-                    kind: TokenKind::Dot,
-                    lexeme: None,
-                })
-            }
-            Some('/') => {
-                self.consume();
-                Ok(Token {
-                    kind: TokenKind::FSlash,
-                    lexeme: None,
-                })
-            }
-            Some('-') => {
-                self.consume();
-                Ok(Token {
-                    kind: TokenKind::Minus,
-                    lexeme: None,
-                })
-            }
-            Some('%') => {
-                self.consume();
-                Ok(Token {
-                    kind: TokenKind::Percent,
-                    lexeme: None,
-                })
-            }
-            Some('+') => {
-                self.consume();
-                Ok(Token {
-                    kind: TokenKind::Plus,
-                    lexeme: None,
-                })
-            }
-            Some('*') => {
-                self.consume();
-                Ok(Token {
-                    kind: TokenKind::Star,
-                    lexeme: None,
-                })
-            }
+            Some('.') => Some(TokenKind::Dot),
+            Some('/') => Some(TokenKind::FSlash),
+            Some('-') => Some(TokenKind::Minus),
+            Some('%') => Some(TokenKind::Percent),
+            Some('+') => Some(TokenKind::Plus),
+            Some('*') => Some(TokenKind::Star),
 
-            Some(';') => {
-                self.consume();
-                Ok(Token {
-                    kind: TokenKind::Semicolon,
-                    lexeme: None,
-                })
-            }
+            Some(';') => Some(TokenKind::Semicolon),
 
-            Some('&') => self.do_ahead(TokenKind::BitAnd, '&', TokenKind::And),
-            Some('|') => self.do_ahead(TokenKind::BitOr, '|', TokenKind::Or),
-            Some('=') => self.do_ahead(TokenKind::Assignment, '=', TokenKind::Equality),
-            Some('<') => self.do_ahead(TokenKind::LessThan, '=', TokenKind::LessThanOrEqual),
-            Some('>') => self.do_ahead(TokenKind::GreaterThan, '=', TokenKind::GreaterThanOrEqual),
-            Some('!') => self.do_ahead(TokenKind::Not, '=', TokenKind::NotEqual),
-
-            Some('\'') => self.next_char(),
-            Some('"') => self.next_string(),
-            Some(d) if d.is_digit(10) => self.next_number(),
-            Some(c) if identifier::valid_start(c) => self.next_identifier(),
-
-            // TODO: don't lose your blanket
-            Some(c) => panic!("unparseable token: {}", c),
-            _ => return None,
+            _ => None,
         };
-
-        let token = match token {
-            Ok(k) => k,
-            Err(k) => {
-                println!("{}", k);
-                panic!(k);
+        match kind {
+            Some(kind) => {
+                self.consume();
+                return Some(Ok(Token {
+                    kind: kind,
+                    lexeme: None,
+                }));
             }
-        };
+            _ => {}
+        }
 
-        Some(token)
+        match self.current {
+            Some('&') => Some(self.do_ahead(TokenKind::BitAnd, '&', TokenKind::And)),
+            Some('|') => Some(self.do_ahead(TokenKind::BitOr, '|', TokenKind::Or)),
+            Some('=') => Some(self.do_ahead(TokenKind::Assignment, '=', TokenKind::Equality)),
+            Some('<') => Some(self.do_ahead(TokenKind::LessThan, '=', TokenKind::LessThanOrEqual)),
+            Some('>') => {
+                Some(self.do_ahead(TokenKind::GreaterThan, '=', TokenKind::GreaterThanOrEqual))
+            }
+            Some('!') => Some(self.do_ahead(TokenKind::Not, '=', TokenKind::NotEqual)),
+
+            Some('\'') => Some(self.next_char()),
+            Some('"') => Some(self.next_string()),
+            Some(d) if d.is_digit(10) => Some(self.next_number()),
+            Some(c) if identifier::valid_start(c) => Some(self.next_identifier()),
+
+            Some(_) => Some(Err(self.error("unparseable token"))),
+            _ => None,
+        }
     }
 
     fn skip_comments(&mut self) {
@@ -511,6 +441,14 @@ impl<'file, 'src> Iterator for Lexer<'file, 'src> {
     type Item = Token;
 
     fn next(&mut self) -> Option<Token> {
-        self.next_token()
+        match self.next_token() {
+            Some(Ok(token)) => Some(token),
+            Some(Err(err)) => {
+                println!("{}", err);
+                // TODO: neil gaiman
+                panic!(err);
+            }
+            _ => None,
+        }
     }
 }
