@@ -80,7 +80,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
         };
     }
 
-    fn error(&self, message: &'static str) -> error::LexerError {
+    fn error(&self, message: error::LexerErrorMessage) -> error::LexerError {
         error::LexerError {
             file: self.file.to_owned(),
             index: self.index_character,
@@ -136,7 +136,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
             }
 
             if c == '\n' {
-                return Err(self.error("char contains newline"));
+                return Err(self.error(error::CHAR_NEWLINE));
             }
 
             if c == '\\' {
@@ -164,7 +164,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
                                                 char_length = 4;
                                                 continue;
                                             }
-                                            _ => return Err(self.error("invalid octal")),
+                                            _ => return Err(self.error(error::INVALID_OCTAL)),
                                         }
                                     }
                                     Some('\'') => {
@@ -173,8 +173,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
                                         break;
                                     }
                                     _ => {
-                                        return Err(self.error(
-                                        "too many characters in char (maybe malformed octal?)"));
+                                        return Err(self.error(error::CHAR_TOO_LONG_OCTAL));
                                     }
                                 }
                             }
@@ -184,8 +183,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
                                 break;
                             }
                             _ => {
-                                return Err(self.error(
-                                    "too many characters in char (maybe malformed octal?)"));
+                                return Err(self.error(error::CHAR_TOO_LONG_OCTAL));
                             }
                         }
                     }
@@ -199,7 +197,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
                         self.consume();
                         continue;
                     }
-                    _ => return Err(self.error("invalid escape character")),
+                    _ => return Err(self.error(error::INVALID_ESCAPE)),
                 }
             }
 
@@ -208,7 +206,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
         }
 
         if identifier.len() != char_length {
-            return Err(self.error("too many characters in char"));
+            return Err(self.error(error::CHAR_TOO_LONG));
         }
 
         Ok(Token {
@@ -310,7 +308,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
             }
 
             if c == '\n' {
-                return Err(self.error("string contains newline"));
+                return Err(self.error(error::STRING_NEWLINE));
             }
 
             if c == '\\' {
@@ -326,7 +324,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
                         self.consume();
                         continue;
                     }
-                    _ => return Err(self.error("invalid escape character")),
+                    _ => return Err(self.error(error::INVALID_ESCAPE)),
                 }
             }
 
@@ -389,7 +387,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
             Some(d) if d.is_digit(10) => Some(self.next_number()),
             Some(c) if identifier::valid_start(c) => Some(self.next_identifier()),
 
-            Some(_) => Some(Err(self.error("unparseable token"))),
+            Some(_) => Some(Err(self.error(error::INVALID_TOKEN))),
             _ => None,
         }
     }
