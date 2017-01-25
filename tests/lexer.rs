@@ -76,4 +76,6 @@ fn test_all_cases() {
             _ => continue,
         }
     }
+    // Until the above TODO is fixed, uncomment this to see all failing tests
+    // assert!(false);
 }
