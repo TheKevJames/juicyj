@@ -46,6 +46,8 @@ impl<'src> Lexer<'src> {
     }
 
     fn next_char(&mut self) -> Token {
+        let mut char_length = 1;
+
         self.consume_token();
 
         let mut identifier = String::new();
@@ -55,18 +57,42 @@ impl<'src> Lexer<'src> {
                 break;
             }
 
+            if c == '\n' {
+                panic!("next_char got newline.")
+            }
+
             if c == '\\' {
-                // TODO
-                self.consume_token();
-                self.consume_token();
-                continue;
+                match self.src.peek() {
+                    Some(&'t') | Some(&'b') | Some(&'n') | Some(&'r') | Some(&'f') |
+                    Some(&'0') | Some(&'1') | Some(&'2') | Some(&'3') | Some(&'4') |
+                    Some(&'5') | Some(&'6') | Some(&'7') | Some(&'8') | Some(&'9') |
+                    Some(&'\\') | Some(&'"') | Some(&'\'') => {
+                        char_length = 2;
+
+                        identifier.push(c);
+                        self.consume_token();
+                        match self.current {
+                            Some(next) => {
+                                identifier.push(next);
+                                self.consume_token();
+                                continue;
+                            }
+                            _ => panic!("next_char got invalid escape char"),
+                        }
+                    }
+                    _ => {
+                        self.consume_token();
+                        panic!("next_char got invalid escape char {}",
+                               self.current.unwrap_or('?'))
+                    }
+                }
             }
 
             identifier.push(c);
             self.consume_token();
         }
 
-        if identifier.len() != 1 {
+        if identifier.len() != char_length {
             panic!("next_char given multiple characters.")
         }
 
@@ -168,11 +194,33 @@ impl<'src> Lexer<'src> {
                 break;
             }
 
+            if c == '\n' {
+                panic!("next_string got newline.")
+            }
+
             if c == '\\' {
-                // TODO
-                self.consume_token();
-                self.consume_token();
-                continue;
+                match self.src.peek() {
+                    Some(&'t') | Some(&'b') | Some(&'n') | Some(&'r') | Some(&'f') |
+                    Some(&'0') | Some(&'1') | Some(&'2') | Some(&'3') | Some(&'4') |
+                    Some(&'5') | Some(&'6') | Some(&'7') | Some(&'8') | Some(&'9') |
+                    Some(&'\\') | Some(&'"') | Some(&'\'') => {
+                        identifier.push(c);
+                        self.consume_token();
+                        match self.current {
+                            Some(next) => {
+                                identifier.push(next);
+                                self.consume_token();
+                                continue;
+                            }
+                            _ => panic!("next_string got invalid escape char"),
+                        }
+                    }
+                    _ => {
+                        self.consume_token();
+                        panic!("next_string got invalid escape char {}",
+                               self.current.unwrap_or('?'))
+                    }
+                }
             }
 
             identifier.push(c);
@@ -221,6 +269,7 @@ impl<'src> Lexer<'src> {
             Some(d) if d.is_digit(10) => return Some(self.next_number()),
             Some(c) if identifier::valid_start(c) => return Some(self.next_identifier()),
 
+            // TODO: don't lose your blanket
             Some(c) => panic!("unparseable token: {}", c),
             _ => return None,
         };
