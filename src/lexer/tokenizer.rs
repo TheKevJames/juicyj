@@ -358,6 +358,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
             Some('+') => Some(TokenKind::Plus),
             Some('*') => Some(TokenKind::Star),
 
+            Some(',') => Some(TokenKind::Semicolon),
             Some(';') => Some(TokenKind::Semicolon),
 
             _ => None,
@@ -438,17 +439,9 @@ impl<'file, 'src> Lexer<'file, 'src> {
 }
 
 impl<'file, 'src> Iterator for Lexer<'file, 'src> {
-    type Item = Token;
+    type Item = Result<Token, error::LexerError>;
 
-    fn next(&mut self) -> Option<Token> {
-        match self.next_token() {
-            Some(Ok(token)) => Some(token),
-            Some(Err(err)) => {
-                println!("{}", err);
-                // TODO: neil gaiman
-                panic!(err);
-            }
-            _ => None,
-        }
+    fn next(&mut self) -> Option<Result<Token, error::LexerError>> {
+        self.next_token()
     }
 }

@@ -46,7 +46,14 @@ fn main() {
     let src = read_src_file(&file);
 
     let lexer = juicyj::lexer::Lexer::new(&file, &src);
-    let tokens = lexer.collect::<Vec<juicyj::common::Token>>();
+    let tokens = lexer.map(|t| {
+            if t.is_err() {
+                println!("{}", t.err().unwrap());
+                std::process::exit(42);
+            }
+            t.ok().unwrap()  // TODO: unsafe
+        })
+        .collect::<Vec<juicyj::common::Token>>();
     debug!("got tokens {:?}", tokens);
 }
 

@@ -89,5 +89,6 @@ pub enum TokenKind {
     NumValue,
     StrValue,
 
+    Comma,
     Semicolon,
 }
