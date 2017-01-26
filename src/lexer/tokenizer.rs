@@ -104,17 +104,75 @@ impl<'file, 'src> Lexer<'file, 'src> {
 
     fn do_ahead(&mut self,
                 current_kind: TokenKind,
-                ahead_char: char,
-                ahead_kind: TokenKind)
+                aheads_char: Option<Vec<(char, Option<TokenKind>)>>,
+                aheads_str: Option<Vec<(&str, Option<TokenKind>)>>)
                 -> Result<Token, error::LexerError> {
         self.consume();
 
-        if self.current == Some(ahead_char) {
-            self.consume();
-            return Ok(Token {
-                kind: ahead_kind,
-                lexeme: None,
-            });
+        for (ahead_char, ahead_kind) in aheads_char.unwrap_or(Vec::new()) {
+            if self.current == Some(ahead_char) {
+                self.consume();
+                return match ahead_kind {
+                    Some(TokenKind::AssignmentAddition) => Err(self.error(error::INVALID_TOKEN)),
+                    Some(TokenKind::AssignmentAnd) => Err(self.error(error::INVALID_TOKEN)),
+                    Some(TokenKind::AssignmentDivision) => Err(self.error(error::INVALID_TOKEN)),
+                    Some(TokenKind::AssignmentModulus) => Err(self.error(error::INVALID_TOKEN)),
+                    Some(TokenKind::AssignmentMultiplication) => {
+                        Err(self.error(error::INVALID_TOKEN))
+                    }
+                    Some(TokenKind::AssignmentOr) => Err(self.error(error::INVALID_TOKEN)),
+                    Some(TokenKind::AssignmentSubtraction) => Err(self.error(error::INVALID_TOKEN)),
+                    Some(TokenKind::AssignmentXor) => Err(self.error(error::INVALID_TOKEN)),
+                    Some(TokenKind::Decrement) => Err(self.error(error::INVALID_TOKEN)),
+                    Some(TokenKind::Increment) => Err(self.error(error::INVALID_TOKEN)),
+                    Some(TokenKind::LShift) => Err(self.error(error::INVALID_TOKEN)),
+                    Some(TokenKind::RShift) => Err(self.error(error::INVALID_TOKEN)),
+                    Some(kind) => {
+                        Ok(Token {
+                            kind: kind,
+                            lexeme: None,
+                        })
+                    }
+                    None => Err(self.error(error::INVALID_TOKEN)),
+                };
+            }
+        }
+
+        for (ahead_str, ahead_kind) in aheads_str.unwrap_or(Vec::new()) {
+            let mut ahead_chars = ahead_str.chars();
+            if self.current != ahead_chars.next() {
+                continue;
+            }
+            if self.peek() == ahead_chars.next() {
+                continue;
+            }
+            let last = ahead_chars.next();
+            if last != None {
+                // This only works because all len-4's have len-3s as prefixes.
+                // Itherwise, I'd need to figure out a peek_twice. Ew.
+                self.consume();
+                if last == self.peek() {
+                    continue;
+                }
+            }
+
+            let num_ahead = if last == None { 2 } else { 3 };
+            for _ in 0..num_ahead {
+                self.consume();
+            }
+            return match ahead_kind {
+                Some(TokenKind::AssignmentLShift) => Err(self.error(error::INVALID_TOKEN)),
+                Some(TokenKind::AssignmentRRShift) => Err(self.error(error::INVALID_TOKEN)),
+                Some(TokenKind::AssignmentRShift) => Err(self.error(error::INVALID_TOKEN)),
+                Some(TokenKind::RRShift) => Err(self.error(error::INVALID_TOKEN)),
+                Some(kind) => {
+                    Ok(Token {
+                        kind: kind,
+                        lexeme: None,
+                    })
+                }
+                None => Err(self.error(error::INVALID_TOKEN)),
+            };
         }
 
         return Ok(Token {
@@ -266,6 +324,26 @@ impl<'file, 'src> Lexer<'file, 'src> {
             "return" => TokenKind::Return,
             "while" => TokenKind::While,
 
+            // TODO: no reason these can't be variable names
+            // "break" => TokenKind::Break,
+            // "case" => TokenKind::Case,
+            // "catch" => TokenKind::Catch,
+            // "continue" => TokenKind::Continue,
+            // "default" => TokenKind::Default,
+            // "do" => TokenKind::Do,
+            // "double" => TokenKind::Double,
+            // "finally" => TokenKind::Finally,
+            // "float" => TokenKind::Float,
+            // "goto" => TokenKind::Goto,
+            // "long" => TokenKind::Long,
+            // "strictfp" => TokenKind::Strictfp,
+            // "super" => TokenKind::Super,
+            // "switch" => TokenKind::Switch,
+            // "synchronized" => TokenKind::Synchronized,
+            // "throw" => TokenKind::Throw,
+            // "throws" => TokenKind::Throws,
+            // "transient" => TokenKind::Transient,
+            // "volatile" => TokenKind::Volatile,
             _ => {
                 return Ok(Token {
                     kind: TokenKind::Identifier,
@@ -274,6 +352,17 @@ impl<'file, 'src> Lexer<'file, 'src> {
             }
         };
 
+        // match kind {
+        //     // TODO: no reason these can't be variable name
+        //     TokenKind::Break => Err(self.error(error::INVALID_TOKEN)),
+        //     // etc
+        //     kind => {
+        //         Ok(Token {
+        //             kind: kind,
+        //             lexeme: None,
+        //         })
+        //     }
+        // }
         Ok(Token {
             kind: kind,
             lexeme: None,
@@ -349,21 +438,20 @@ impl<'file, 'src> Lexer<'file, 'src> {
             Some('(') => Some(TokenKind::LParen),
             Some(')') => Some(TokenKind::RParen),
 
+            Some(',') => Some(TokenKind::Comma),
             Some('.') => Some(TokenKind::Dot),
-            Some('/') => Some(TokenKind::FSlash),
-            Some('-') => Some(TokenKind::Minus),
-            Some('%') => Some(TokenKind::Percent),
-            Some('+') => Some(TokenKind::Plus),
-            Some('*') => Some(TokenKind::Star),
-
-            Some('^') => Some(TokenKind::BitXor),
-
-            Some(',') => Some(TokenKind::Semicolon),
             Some(';') => Some(TokenKind::Semicolon),
+
+            Some(':') => Some(TokenKind::Colon),
+            Some('~') => Some(TokenKind::Complement),
+            Some('?') => Some(TokenKind::Question),
 
             _ => None,
         };
         match kind {
+            Some(TokenKind::Colon) => return Some(Err(self.error(error::INVALID_TOKEN))),
+            Some(TokenKind::Complement) => return Some(Err(self.error(error::INVALID_TOKEN))),
+            Some(TokenKind::Question) => return Some(Err(self.error(error::INVALID_TOKEN))),
             Some(kind) => {
                 self.consume();
                 return Some(Ok(Token {
@@ -375,14 +463,76 @@ impl<'file, 'src> Lexer<'file, 'src> {
         }
 
         match self.current {
-            Some('&') => Some(self.do_ahead(TokenKind::BitAnd, '&', TokenKind::And)),
-            Some('|') => Some(self.do_ahead(TokenKind::BitOr, '|', TokenKind::Or)),
-            Some('=') => Some(self.do_ahead(TokenKind::Assignment, '=', TokenKind::Equality)),
-            Some('<') => Some(self.do_ahead(TokenKind::LessThan, '=', TokenKind::LessThanOrEqual)),
-            Some('>') => {
-                Some(self.do_ahead(TokenKind::GreaterThan, '=', TokenKind::GreaterThanOrEqual))
+            Some('/') => {
+                Some(self.do_ahead(TokenKind::FSlash,
+                                   Some(vec![('=', Some(TokenKind::AssignmentDivision))]),
+                                   None))
             }
-            Some('!') => Some(self.do_ahead(TokenKind::Not, '=', TokenKind::NotEqual)),
+            Some('-') => {
+                Some(self.do_ahead(TokenKind::Minus,
+                                   Some(vec![('=', Some(TokenKind::AssignmentSubtraction)),
+                                             ('-', Some(TokenKind::Decrement))]),
+                                   None))
+            }
+            Some('%') => {
+                Some(self.do_ahead(TokenKind::Percent,
+                                   Some(vec![('=', Some(TokenKind::AssignmentModulus))]),
+                                   None))
+            }
+            Some('+') => {
+                Some(self.do_ahead(TokenKind::Plus,
+                                   Some(vec![('=', Some(TokenKind::AssignmentAddition)),
+                                             ('+', Some(TokenKind::Increment))]),
+                                   None))
+            }
+            Some('*') => {
+                Some(self.do_ahead(TokenKind::Star,
+                                   Some(vec![('=', Some(TokenKind::AssignmentMultiplication))]),
+                                   None))
+            }
+
+            Some('&') => {
+                Some(self.do_ahead(TokenKind::BitAnd,
+                                   Some(vec![('&', Some(TokenKind::And)),
+                                             ('=', Some(TokenKind::AssignmentAnd))]),
+                                   None))
+            }
+            Some('|') => {
+                Some(self.do_ahead(TokenKind::BitOr,
+                                   Some(vec![('|', Some(TokenKind::Or)),
+                                             ('=', Some(TokenKind::AssignmentOr))]),
+                                   None))
+            }
+            Some('^') => {
+                Some(self.do_ahead(TokenKind::BitXor,
+                                   Some(vec![('=', Some(TokenKind::AssignmentXor))]),
+                                   None))
+            }
+
+            Some('=') => {
+                Some(self.do_ahead(TokenKind::Assignment,
+                                   Some(vec![('=', Some(TokenKind::Equality))]),
+                                   None))
+            }
+            Some('<') => {
+                Some(self.do_ahead(TokenKind::LessThan,
+                                   Some(vec![('=', Some(TokenKind::LessThanOrEqual)),
+                                             ('<', Some(TokenKind::LShift))]),
+                                   Some(vec![("<=", Some(TokenKind::AssignmentLShift))])))
+            }
+            Some('>') => {
+                Some(self.do_ahead(TokenKind::GreaterThan,
+                                   Some(vec![('=', Some(TokenKind::GreaterThanOrEqual)),
+                                             ('>', Some(TokenKind::RShift))]),
+                                   Some(vec![(">=", Some(TokenKind::AssignmentRShift)),
+                                             (">>=", Some(TokenKind::AssignmentRRShift)),
+                                             (">>", Some(TokenKind::RRShift))])))
+            }
+            Some('!') => {
+                Some(self.do_ahead(TokenKind::Not,
+                                   Some(vec![('=', Some(TokenKind::NotEqual))]),
+                                   None))
+            }
 
             Some('\'') => Some(self.next_char()),
             Some('"') => Some(self.next_string()),
