@@ -48,6 +48,7 @@ fn main() {
     let lexer = juicyj::lexer::Lexer::new(&file, &src);
     let tokens = lexer.map(|t| {
             if t.is_err() {
+                // TODO: print multiple errors
                 println!("{}", t.err().unwrap());
                 std::process::exit(42);
             }

@@ -48,27 +48,18 @@ fn test_all_cases() {
                 let src = read_src_file(String::from(name));
                 let lexer = juicyj::lexer::Lexer::new(&name, &src);
 
-                let mut errors =
-                    lexer.map(|result| { if result.is_err() { result.err() } else { None } });
-                let errored = errors.any(|x| x.is_some());
-                // let errored = lexer.fold(false, |acc, result| acc ^ result.is_err());
+                let errors = lexer.filter(|result| result.is_err()).collect::<Vec<_>>();
+                let errored = !errors.is_empty();
 
-                // TODO: hangs
-                // if name.starts_with("Je") {
-                if name.contains("Je") {
+                if name.starts_with("tests/cases/Je") {
                     if !errored {
                         println!("failed test: {}", name);
                     }
                     // TODO: most of these require a working parser to error
                     // assert!(errored);
                 } else {
-                    if errored {
-                        errors.map(|err| {
-                                if err.is_some() {
-                                    println!("{}", err.unwrap());
-                                }
-                            })
-                            .collect::<Vec<_>>();
+                    for err in errors {
+                        println!("{}", err.err().unwrap());
                     }
                     assert!(!errored);
                 }

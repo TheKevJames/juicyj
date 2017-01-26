@@ -194,6 +194,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
             }
 
             if c == '\n' {
+                self.consume();
                 return Err(self.error(error::CHAR_NEWLINE));
             }
 
@@ -355,7 +356,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
         };
 
         // match kind {
-        //     // TODO: no reason these can't be variable name
+        //     // TODO: no reason these can't be variable names
         //     TokenKind::Break => Err(self.error(error::INVALID_TOKEN)),
         //     // etc
         //     kind => {
@@ -399,6 +400,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
             }
 
             if c == '\n' {
+                self.consume();
                 return Err(self.error(error::STRING_NEWLINE));
             }
 
@@ -451,9 +453,18 @@ impl<'file, 'src> Lexer<'file, 'src> {
             _ => None,
         };
         match kind {
-            Some(TokenKind::Colon) => return Some(Err(self.error(error::INVALID_TOKEN))),
-            Some(TokenKind::Complement) => return Some(Err(self.error(error::INVALID_TOKEN))),
-            Some(TokenKind::Question) => return Some(Err(self.error(error::INVALID_TOKEN))),
+            Some(TokenKind::Colon) => {
+                self.consume();
+                return Some(Err(self.error(error::INVALID_TOKEN)));
+            }
+            Some(TokenKind::Complement) => {
+                self.consume();
+                return Some(Err(self.error(error::INVALID_TOKEN)));
+            }
+            Some(TokenKind::Question) => {
+                self.consume();
+                return Some(Err(self.error(error::INVALID_TOKEN)));
+            }
             Some(kind) => {
                 self.consume();
                 return Some(Ok(Token {
@@ -541,7 +552,10 @@ impl<'file, 'src> Lexer<'file, 'src> {
             Some(d) if d.is_digit(10) => Some(self.next_number()),
             Some(c) if identifier::valid_start(c) => Some(self.next_identifier()),
 
-            Some(_) => Some(Err(self.error(error::INVALID_TOKEN))),
+            Some(_) => {
+                self.consume();
+                Some(Err(self.error(error::INVALID_TOKEN)))
+            }
             _ => None,
         }
     }
