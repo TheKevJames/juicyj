@@ -144,21 +144,21 @@ impl<'file, 'src> Lexer<'file, 'src> {
                 self.consume();
 
                 match self.current {
-                    Some(digit0) if ('0' <= digit0 && digit0 <= '9') => {
+                    Some(digit0) if ('0' <= digit0 && digit0 <= '7') => {
                         identifier.push(digit0);
                         self.consume();
 
                         match self.current {
-                            Some(digit1) if ('0' <= digit1 && digit1 <= '9') => {
+                            Some(digit1) if ('0' <= digit1 && digit1 <= '7') => {
                                 identifier.push(digit1);
                                 self.consume();
 
                                 match self.current {
-                                    Some(digit2) if ('0' <= digit2 && digit2 <= '9') => {
+                                    Some(digit2) if ('0' <= digit2 && digit2 <= '7') => {
                                         identifier.push(digit2);
                                         self.consume();
 
-                                        // only \[0-3][0-9][0-9] is valid octal
+                                        // only \[0-3][0-7][0-7] is valid octal
                                         match digit0 {
                                             '0'...'3' => {
                                                 char_length = 4;
@@ -319,7 +319,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
                     Some(next) if (next == 't' || next == 'b' || next == 'n' || next == 'r' ||
                                    next == 'f' || next == '\\' ||
                                    next == '"' || next == '\'' ||
-                                   ('0' <= next && next <= '9')) => {
+                                   ('0' <= next && next <= '7')) => {
                         identifier.push(next);
                         self.consume();
                         continue;

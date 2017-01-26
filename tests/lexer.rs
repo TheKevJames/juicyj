@@ -53,9 +53,9 @@ fn test_all_cases() {
                 let errored = errors.any(|x| x.is_some());
                 // let errored = lexer.fold(false, |acc, result| acc ^ result.is_err());
 
-                if name.contains("NonJoosConstructs") || name.contains("Escapes_3DigitOctal_3") ||
-                   name.contains("Escapes_NonExistingEscape") ||
-                   name.contains("LabeledStatements") {
+                // TODO: hangs
+                // if name.starts_with("Je") {
+                if name.contains("Je") {
                     if !errored {
                         println!("failed test: {}", name);
                     }
