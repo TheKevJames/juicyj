@@ -344,6 +344,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
             // "throw" => TokenKind::Throw,
             // "throws" => TokenKind::Throws,
             // "transient" => TokenKind::Transient,
+            // "try" => TokenKind::Try,
             // "volatile" => TokenKind::Volatile,
             _ => {
                 return Ok(Token {

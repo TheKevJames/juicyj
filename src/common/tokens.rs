@@ -132,5 +132,6 @@ pub enum TokenKind {
     Throw,
     Throws,
     Transient,
+    Try,
     Volatile,
 }
