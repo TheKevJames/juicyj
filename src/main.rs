@@ -52,7 +52,7 @@ fn main() {
                 println!("{}", t.err().unwrap());
                 std::process::exit(42);
             }
-            t.ok().unwrap()  // TODO: unsafe
+            t.ok().unwrap() // TODO: unsafe
         })
         .collect::<Vec<juicyj::common::Token>>();
     debug!("got tokens {:?}", tokens);
