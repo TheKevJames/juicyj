@@ -1,5 +1,6 @@
 use std;
 
+#[derive(Debug)]
 pub struct LexerError {
     pub file: String,
     pub index: u32,
@@ -10,7 +11,7 @@ pub struct LexerError {
 
 impl std::fmt::Display for LexerError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let indent = self.index.to_string().len() as u32 + 1;
+        let indent = self.line_number.to_string().len() as u32;
         let pointer = (0..indent).map(|_| " ").collect::<String>() + "-->";
         let bar = (0..indent).map(|_| " ").collect::<String>() + " |";
 
@@ -29,6 +30,7 @@ impl std::fmt::Display for LexerError {
     }
 }
 
+#[derive(Debug)]
 pub struct LexerErrorMessage {
     pub message: &'static str,
 }
