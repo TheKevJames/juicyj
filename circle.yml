@@ -29,4 +29,4 @@ test:
     override:
         - cargo fmt -- --write-mode=diff
         - cargo build -v
-        - cargo test -v
+        - cargo test
