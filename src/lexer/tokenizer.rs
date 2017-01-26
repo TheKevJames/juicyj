@@ -310,6 +310,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
 
             "false" => TokenKind::False,
             "true" => TokenKind::True,
+            "null" => TokenKind::Null,
 
             "class" => TokenKind::Class,
             "delete" => TokenKind::Delete,

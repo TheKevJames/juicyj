@@ -71,6 +71,7 @@ pub enum TokenKind {
 
     False,
     True,
+    Null,
 
     Class,
     Delete,
