@@ -44,6 +44,7 @@ pub enum TokenKind {
     Or,
     BitAnd,
     BitOr,
+    BitXor,
 
     Import,
     Package,

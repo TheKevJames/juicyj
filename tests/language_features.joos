@@ -105,7 +105,7 @@ public final class AClass extends AAbstract implements AInterface {
         return (x<87) && (x>42) && (x<=86) && (x>=43) && (x==51) && (x!=52) ;
     }
     public boolean eagerBooleans(boolean x) {
-        return (x & true) | !x;
+        return (x & (true ^ false)) | !x;
     }
     public boolean lazyBooleans(boolean x) {
         return (x && true) || x;

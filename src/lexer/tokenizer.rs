@@ -356,6 +356,8 @@ impl<'file, 'src> Lexer<'file, 'src> {
             Some('+') => Some(TokenKind::Plus),
             Some('*') => Some(TokenKind::Star),
 
+            Some('^') => Some(TokenKind::BitXor),
+
             Some(',') => Some(TokenKind::Semicolon),
             Some(';') => Some(TokenKind::Semicolon),
 

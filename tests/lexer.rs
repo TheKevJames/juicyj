@@ -35,7 +35,7 @@ fn test_valid_language_features() {
         })
         .collect::<Vec<Option<juicyj::common::Token>>>();
     // Yeah, I counted.
-    assert_eq!(tokens.len(), 708);
+    assert_eq!(tokens.len(), 712);
 }
 
 // TODO: multiple test cases
