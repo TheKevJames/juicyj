@@ -14,10 +14,10 @@ pub enum Function {
     Shift,
 }
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct Rule {
-    lhs: Symbol, // NonTerminal
-    rhs: Vec<Symbol>,
+    pub lhs: Symbol, // NonTerminal
+    pub rhs: Vec<Symbol>,
 }
 
 #[derive(Debug)]
@@ -39,7 +39,6 @@ impl State {
 pub enum Terminality {
     NonTerminal,
     Terminal,
-    Any,
 }
 
 #[derive(Debug,Clone)]
@@ -90,7 +89,7 @@ impl Symbol {
 
 #[derive(Debug,Clone)]
 pub struct Transition {
-    pub end_state: usize,
+    pub value: usize,
     pub function: Function,
     pub start_state: usize,
     pub symbol: Symbol,
@@ -98,12 +97,11 @@ pub struct Transition {
 
 #[derive(Debug)]
 pub struct DFA {
-    current: usize,
-    non_terminals: Vec<Symbol>, // NonTerminal
-    terminals: Vec<Symbol>, // Terminal
-    rules: Vec<Rule>,
-    states: Vec<State>,
-    start: Symbol,
+    pub non_terminals: Vec<Symbol>, // NonTerminal
+    pub terminals: Vec<Symbol>, // Terminal
+    pub rules: Vec<Rule>,
+    pub start: Symbol,
+    pub states: Vec<State>,
 }
 
 impl DFA {
@@ -180,10 +178,10 @@ impl DFA {
             let start_state: usize = tx.next().unwrap().parse().unwrap();
             let symbol = tx.next().unwrap();
             let function = tx.next().unwrap();
-            let end_state: usize = tx.next().unwrap().parse().unwrap();
+            let value: usize = tx.next().unwrap().parse().unwrap();
 
             states[start_state].transitions.push(Transition {
-                end_state: end_state,
+                value: value,
                 function: match function {
                     "reduce" => Function::Reduce,
                     "shift" => Function::Shift,
@@ -200,7 +198,6 @@ impl DFA {
         }
 
         DFA {
-            current: 0,
             non_terminals: non_terminals,
             rules: rules,
             start: start,
@@ -209,14 +206,22 @@ impl DFA {
         }
     }
 
-    pub fn consume(&mut self, ref token: &Token) -> Result<Transition, error::ParserError> {
-        let ref states = self.states[self.current];
-        let ref transitions = states.transitions;
+    pub fn consume(&self,
+                   state: &usize,
+                   ref token: &Token)
+                   -> Result<Transition, error::ParserError> {
+        let ref state = self.states[*state];
+        let ref transitions = state.transitions;
         for transition in transitions {
             match token.kind {
                 ref l if *l == transition.symbol.token.kind => {
-                    self.current = transition.end_state;
-                    return Ok((*transition).clone());
+                    if transition.symbol.token.kind != TokenKind::NonTerminal {
+                        return Ok((*transition).clone());
+                    }
+
+                    if transition.symbol.token.lexeme == token.lexeme {
+                        return Ok((*transition).clone());
+                    }
                 }
                 _ => continue,
             }

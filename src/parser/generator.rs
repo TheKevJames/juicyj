@@ -1,4 +1,5 @@
 use std;
+use std::iter::Peekable;
 
 use common::Token;
 use common::TokenKind;
@@ -6,96 +7,101 @@ use lexer;
 use parser::dfa;
 
 pub struct Parser<T: Iterator<Item = Result<Token, lexer::LexerError>>> {
+    dfa: dfa::DFA,
     nodes: Vec<Token>,
-    states: Vec<dfa::Transition>,
-    tokens: T,
+    states: Vec<usize>,
+    token_state: u8,
+    tokens: Peekable<T>,
 }
 
 impl<T: Iterator<Item = Result<Token, lexer::LexerError>>> Parser<T> {
     pub fn new(it: T) -> Parser<T> {
         Parser {
+            dfa: dfa::DFA::new(),
             nodes: Vec::new(),
-            states: vec![dfa::Transition {
-                             end_state: 0,
-                             function: dfa::Function::Shift,
-                             start_state: 0,
-                             symbol: dfa::Symbol::new(dfa::Terminality::Any, "".to_string()),
-                         }],
-            tokens: it,
+            states: vec![0],
+            token_state: 0,
+            tokens: it.peekable(),
         }
     }
 
-    fn reduce(&mut self, transition: dfa::Transition) {
-        debug!("reducing: {:?}", transition);
-
-        let previous = self.states.pop();
-
-        self.nodes.push(transition.symbol.token);
-    }
-
-    fn shift(&mut self, transition: dfa::Transition) {
-        debug!("shifting: {:?}", transition);
-
-        self.states.push(transition.clone());
-
-        if transition.symbol.terminality == dfa::Terminality::Terminal {
-            self.nodes.push(transition.symbol.token);
-        }
-    }
-
-    pub fn get_tree(&mut self) {
-        let mut dfa = dfa::DFA::new();
-
-        match dfa.consume(&Token {
-            kind: TokenKind::BOF,
-            lexeme: None,
-        }) {
+    fn consume(&mut self, ref token: &Token) {
+        match self.dfa.consume(self.states.last().unwrap_or(&0), token) {
             Ok(transition) => {
                 match transition.function {
-                    dfa::Function::Reduce => self.reduce(transition),
+                    dfa::Function::Reduce => self.reduce(transition, token),
                     dfa::Function::Shift => self.shift(transition),
                 }
             }
             Err(e) => {
-                error!("could not get BOF transition: {:?}", e);
+                error!("could not get transition for {:?}: {:?}", token, e);
+                std::process::exit(1);
             }
         }
+    }
 
-        while let Some(tresult) = self.tokens.next() {
-            let token = match tresult {
-                Ok(t) => t,
-                Err(e) => {
+    fn peek(&mut self) -> Option<Token> {
+        if self.token_state == 0 {
+            self.token_state += 1;
+            Some(Token {
+                kind: TokenKind::BOF,
+                lexeme: None,
+            })
+        } else {
+            match self.tokens.peek() {
+                Some(&Ok(ref t)) => Some(t.clone()),
+                Some(&Err(ref e)) => {
                     println!("{}", e);
                     std::process::exit(42);
                 }
-            };
+                _ => {
+                    if self.token_state == 1 {
+                        self.token_state += 1;
+                        Some(Token {
+                            kind: TokenKind::EOF,
+                            lexeme: None,
+                        })
+                    } else {
+                        None
+                    }
+                }
+            }
+        }
+    }
 
-            match dfa.consume(&token) {
+    fn reduce(&mut self, transition: dfa::Transition, ref token: &Token) {
+        let ref rule = self.dfa.rules[transition.value].clone();
+        for _ in 0..rule.rhs.len() {
+            self.states.pop();
+            self.nodes.pop();
+        }
+
+        self.consume(&rule.lhs.token.clone());
+        self.consume(token);
+    }
+
+    fn shift(&mut self, transition: dfa::Transition) {
+        self.states.push(transition.value);
+        self.nodes.push(transition.symbol.token);
+    }
+
+    pub fn get_tree(&mut self) -> Vec<Token> {
+        while let Some(token) = self.peek() {
+            match self.dfa.consume(self.states.last().unwrap_or(&0), &token) {
                 Ok(transition) => {
                     match transition.function {
-                        dfa::Function::Reduce => self.reduce(transition),
+                        dfa::Function::Reduce => self.reduce(transition, &token),
                         dfa::Function::Shift => self.shift(transition),
                     }
+                    self.tokens.next();
                 }
                 Err(e) => {
                     error!("could not get transition for {:?}: {:?}", token, e);
+                    std::process::exit(1);
                 }
             }
         }
 
-        match dfa.consume(&Token {
-            kind: TokenKind::EOF,
-            lexeme: None,
-        }) {
-            Ok(transition) => {
-                match transition.function {
-                    dfa::Function::Reduce => self.reduce(transition),
-                    dfa::Function::Shift => self.shift(transition),
-                }
-            }
-            Err(e) => {
-                error!("could not get EOF transition: {:?}", e);
-            }
-        }
+        self.nodes.clone()
     }
 }
