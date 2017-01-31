@@ -5,3 +5,4 @@ mod test;
 mod tokenizer;
 
 pub use self::tokenizer::Lexer;
+pub use self::error::LexerError;
