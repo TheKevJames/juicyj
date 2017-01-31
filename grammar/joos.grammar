@@ -66,14 +66,14 @@ ImportDeclarations
 	ImportDeclarations ImportDeclaration
 
 ImportDeclaration:
-	SingleImportDeclaration
-	StarredImportDeclaration
+	SingleImportDeclaration SEMICOLON
+	StarredImportDeclaration SEMICOLON
 
-SingleTypeImportDeclaration:
-	IMPORT Name SEMICOLON
+SingleImportDeclaration:
+	IMPORT Name
 
-StarredTypeImportDeclaration:
-	IMPORT Name DOT STAR 
+StarredImportDeclaration:
+	IMPORT Name DOT STAR
 
 TypeDeclarations:
 	TypeDeclaration
@@ -97,18 +97,19 @@ ClassDeclaration:
 Modifiers:
 	Inheritance
 	Inheritance STATIC
-	Inheritance STATIC Absinal
-	STATIC Absinal
-	Absinal
+	Inheritance STATIC Absinalative
+	STATIC Absinalative
+	Absinalative
 
 Inheritance:
 	PUBLIC
 	PROTECTED
 	PRIVATE
 
-Absinal:
+Absinalative:
 	ABSTRACT
 	FINAL
+	NATIVE
 
 ClassExtends:
 	EXTENDS ClassType
@@ -121,10 +122,10 @@ InterfaceTypeList:
 	InterfaceTypeList COMMA InterfaceType
 
 ClassBody:
-	{ ClassBodyeclarations }
+	{ ClassBodyDeclarations }
 	{ }
 
-ClassBodyeclarations:
+ClassBodyDeclarations:
 	ClassBodyDeclaration
 	ClassBodyDeclarations ClassBodyDeclaration
 
@@ -201,8 +202,6 @@ ConstructorBody:
 ExplicitConstructorInvocation:
 	THIS ( ArgumentList ) SEMICOLON
 	THIS ( ) SEMICOLON
-	SUPER ( ArgumentList ) SECMICOLON
-	SUPER ( ) SEMICOLON
 
 InterfaceDeclaration:
 	INTERFACE Identifier InterfaceBody
@@ -360,15 +359,12 @@ Dims:
 
 FieldAccess:
 	Primary DOT Identifier
-	SUPER DOT Identifier
 
 MethodInvocation:
 	Name ( )
 	Name ( ArgumentList )
 	Primary DOT Identifier ( )
 	Primary DOT Identifier ( ArgumentList )
-	SUPER DOT Identifier ( )
-	SUPER DOT Identifier ( ArgumentList )
 
 ArrayAccess
 	Name [ Expression ]
@@ -385,7 +381,6 @@ UnaryExpression:
 
 UnaryExpressionNotSign:
 	PostfixExpression
-	~ UnaryExpression
 	! UnaryExpression
 	CastExpression
 
@@ -444,23 +439,12 @@ AssignmentExpression:
 	Assignment
 
 Assignment:
-	LeftHandSide AssignmentOperator AssignmentExpression
+	LeftHandSide = AssignmentExpression
 
 LeftHandSide:
 	Name
 	FieldAccess
 	ArrayAccess
-
-AssignmentOperator:
-	=
-	*=
-	/=
-	%=
-	+=
-	-=
-	&=
-	^=
-	|=
 
 Expression:
 	AssignmentExpression
