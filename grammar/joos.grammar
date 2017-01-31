@@ -252,7 +252,7 @@ LocalVariableDeclarationStatement:
 	LocalVariableDeclaration SEMICOLON
 
 LocalVariableDeclaration:
-	Type VariableDeclarators
+	Type VariableDeclarator
 
 Statement:
 	StatementWithoutTrailingSubstatement
@@ -320,15 +320,11 @@ ForStatementNoShortIf:
 	FOR ( ForInit SEMICOLON Expression SEMICOLON ForUpdate ) StatementNoShortIf
 
 ForInit:
-	StatementExpressionList
+	StatementExpression
 	LocalVariableDeclaration
 
 ForUpdate:
-	StatementExpressionList
-
-StatementExpressionList:
 	StatementExpression
-	StatementExpressionList COMMA StatementExpression
 
 ReturnStatement:
 	RETURN SEMICOLON

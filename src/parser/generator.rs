@@ -5,10 +5,11 @@ use common::Token;
 use common::TokenKind;
 use lexer;
 use parser::dfa;
+use parser::tree;
 
 pub struct Parser<T: Iterator<Item = Result<Token, lexer::LexerError>>> {
     dfa: dfa::DFA,
-    nodes: Vec<Token>,
+    nodes: Vec<tree::Node>,
     states: Vec<usize>,
     token_state: u8,
     tokens: Peekable<T>,
@@ -70,11 +71,23 @@ impl<T: Iterator<Item = Result<Token, lexer::LexerError>>> Parser<T> {
     }
 
     fn reduce(&mut self, transition: dfa::Transition, ref token: &Token) {
+        let mut children: Vec<tree::Node> = Vec::new();
         let ref rule = self.dfa.rules[transition.value].clone();
         for _ in 0..rule.rhs.len() {
             self.states.pop();
-            self.nodes.pop();
+            match self.nodes.pop() {
+                Some(n) => children.push(n),
+                _ => {
+                    error!("could not reduce entire rule {:?}", rule);
+                    std::process::exit(1);
+                }
+            }
         }
+
+        self.nodes.push(tree::Node {
+            children: children,
+            token: rule.lhs.token.clone(),
+        });
 
         self.consume(&rule.lhs.token.clone());
         self.consume(token);
@@ -82,10 +95,15 @@ impl<T: Iterator<Item = Result<Token, lexer::LexerError>>> Parser<T> {
 
     fn shift(&mut self, transition: dfa::Transition) {
         self.states.push(transition.value);
-        self.nodes.push(transition.symbol.token);
+        if transition.symbol.terminality == dfa::Terminality::Terminal {
+            self.nodes.push(tree::Node {
+                children: Vec::new(),
+                token: transition.symbol.token,
+            });
+        }
     }
 
-    pub fn get_tree(&mut self) -> Vec<Token> {
+    pub fn get_tree(&mut self) -> Vec<tree::Node> {
         while let Some(token) = self.peek() {
             match self.dfa.consume(self.states.last().unwrap_or(&0), &token) {
                 Ok(transition) => {
