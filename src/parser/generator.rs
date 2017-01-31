@@ -26,17 +26,17 @@ impl<T: Iterator<Item = Result<Token, lexer::LexerError>>> Parser<T> {
         }
     }
 
-    fn consume(&mut self, ref token: &Token) {
-        match self.dfa.consume(self.states.last().unwrap_or(&0), token) {
+    fn consume(&mut self, token: Token) {
+        match self.dfa.consume(self.states.last().unwrap_or(&0), &token) {
             Ok(transition) => {
                 match transition.function {
                     dfa::Function::Reduce => self.reduce(transition, token),
-                    dfa::Function::Shift => self.shift(transition),
+                    dfa::Function::Shift => self.shift(transition, token),
                 }
             }
             Err(e) => {
                 error!("could not get transition for {:?}: {:?}", token, e);
-                std::process::exit(1);
+                std::process::exit(42);
             }
         }
     }
@@ -70,7 +70,7 @@ impl<T: Iterator<Item = Result<Token, lexer::LexerError>>> Parser<T> {
         }
     }
 
-    fn reduce(&mut self, transition: dfa::Transition, ref token: &Token) {
+    fn reduce(&mut self, transition: dfa::Transition, token: Token) {
         let mut children: Vec<tree::Node> = Vec::new();
         let ref rule = self.dfa.rules[transition.value].clone();
         for _ in 0..rule.rhs.len() {
@@ -89,16 +89,16 @@ impl<T: Iterator<Item = Result<Token, lexer::LexerError>>> Parser<T> {
             token: rule.lhs.token.clone(),
         });
 
-        self.consume(&rule.lhs.token.clone());
+        self.consume(rule.lhs.token.clone());
         self.consume(token);
     }
 
-    fn shift(&mut self, transition: dfa::Transition) {
+    fn shift(&mut self, transition: dfa::Transition, ref token: Token) {
         self.states.push(transition.value);
         if transition.symbol.terminality == dfa::Terminality::Terminal {
             self.nodes.push(tree::Node {
                 children: Vec::new(),
-                token: transition.symbol.token,
+                token: token.clone(),
             });
         }
     }
@@ -108,8 +108,8 @@ impl<T: Iterator<Item = Result<Token, lexer::LexerError>>> Parser<T> {
             match self.dfa.consume(self.states.last().unwrap_or(&0), &token) {
                 Ok(transition) => {
                     match transition.function {
-                        dfa::Function::Reduce => self.reduce(transition, &token),
-                        dfa::Function::Shift => self.shift(transition),
+                        dfa::Function::Reduce => self.reduce(transition, token),
+                        dfa::Function::Shift => self.shift(transition, token),
                     }
                     self.tokens.next();
                 }
