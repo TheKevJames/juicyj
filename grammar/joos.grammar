@@ -234,7 +234,7 @@ AbstractMethodDeclaration:
 
 Block:
 	{ }
-	{ BlockStatements }	
+	{ BlockStatements }
 
 BlockStatements:
 	BlockStatement
@@ -259,7 +259,6 @@ Statement:
 
 StatementNoShortIf:
 	StatementWithoutTrailingSubstatement
-	IfStatementNoShortIf
 	IfElseStatementNoShortIf
 	WhileStatementNoShortIf
 	ForStatementNoShortIf
@@ -293,7 +292,7 @@ IfElseStatementNoShortIf:
 WhileStatement:
 	WHILE ( Expression ) Statement
 
-WhileStatementNoShortIf
+WhileStatementNoShortIf:
 	WHILE ( Expression ) StatementNoShortIf
 
 ForStatement:
@@ -378,7 +377,7 @@ MethodInvocation:
 	Primary DOT IDENTIFIER ( )
 	Primary DOT IDENTIFIER ( ArgumentList )
 
-ArrayAccess
+ArrayAccess:
 	Name [ Expression ]
 	PrimaryNoNewArray [ Expression ]
 
