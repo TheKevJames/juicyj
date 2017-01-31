@@ -1,7 +1,7 @@
 all: release
 
 
-build: grammar
+build:
 	@cargo build
 	cp target/debug/juicyj joosc
 
@@ -12,7 +12,7 @@ clean:
 	rm -rf **/*.rs.bk
 	rm -rf grammar/jlalr/*.class
 
-release: grammar
+release:
 	@cargo build --release
 	cp target/release/juicyj joosc
 
@@ -25,6 +25,7 @@ grammar/jlalr/Jlr1.class: grammar/jlalr/Jlalr1.java
 	cd grammar && javac jlalr/Jlalr1.java
 
 zip:
+	@rm -rf juicyj.zip
 	zip juicyj.zip Makefile
 	zip juicyj.zip Cargo.*
 	zip -r juicyj.zip grammar/joos.lr1
