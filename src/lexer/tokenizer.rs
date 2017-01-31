@@ -1,3 +1,4 @@
+use std;
 use std::iter::Chain;
 use std::iter::Iterator;
 use std::iter::Peekable;
@@ -605,9 +606,16 @@ impl<'file, 'src> Lexer<'file, 'src> {
 }
 
 impl<'file, 'src> Iterator for Lexer<'file, 'src> {
-    type Item = Result<Token, error::LexerError>;
+    type Item = Token;
 
-    fn next(&mut self) -> Option<Result<Token, error::LexerError>> {
-        self.next_token()
+    fn next(&mut self) -> Option<Token> {
+        match self.next_token() {
+            Some(Ok(t)) => Some(t),
+            Some(Err(e)) => {
+                println!("{}", e);
+                std::process::exit(42);
+            }
+            _ => None,
+        }
     }
 }
