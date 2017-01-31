@@ -43,7 +43,27 @@ pub enum Terminality {
 #[derive(Debug)]
 pub struct Symbol {
     terminality: Terminality,
-    value: String,
+    token: Token,
+}
+
+impl Symbol {
+    fn new(terminality: Terminality, value: String) -> Symbol {
+        match value.parse() {
+            Ok(kind) => {
+                Symbol {
+                    terminality: terminality,
+                    token: Token {
+                        kind: kind,
+                        lexeme: Some(value),
+                    },
+                }
+            }
+            Err(_) => {
+                error!("could not convert string {} to Token", value);
+                std::process::exit(1);
+            }
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -82,45 +102,33 @@ impl DFA {
         let num_terminals: u32 = file.by_ref().lines().next().unwrap().unwrap().parse().unwrap();
         for _ in 0..num_terminals {
             let symbol = file.by_ref().lines().next().unwrap().unwrap();
-            terminals.push(Symbol {
-                terminality: Terminality::Terminal,
-                value: symbol,
-            });
+            terminals.push(Symbol::new(Terminality::Terminal, symbol));
         }
 
         let num_non_terminals: u32 =
             file.by_ref().lines().next().unwrap().unwrap().parse().unwrap();
         for _ in 0..num_non_terminals {
             let symbol = file.by_ref().lines().next().unwrap().unwrap();
-            non_terminals.push(Symbol {
-                terminality: Terminality::NonTerminal,
-                value: symbol,
-            });
+            non_terminals.push(Symbol::new(Terminality::NonTerminal, symbol));
         }
 
-        let start = Symbol {
-            terminality: Terminality::Any,
-            value: file.by_ref().lines().next().unwrap().unwrap(),
-        };
+        let start = Symbol::new(Terminality::Any,
+                                file.by_ref().lines().next().unwrap().unwrap());
 
         let num_rules: u32 = file.by_ref().lines().next().unwrap().unwrap().parse().unwrap();
         for _ in 0..num_rules {
             let rule = file.by_ref().lines().next().unwrap().unwrap();
             let mut sides = rule.splitn(2, " ");
-            let (lhs, rhs) = (sides.next().unwrap(), sides.next().unwrap());
 
-            let lhs = Symbol {
-                terminality: Terminality::NonTerminal,
-                value: lhs.to_string(),
+            let lhs = Symbol::new(Terminality::NonTerminal, sides.next().unwrap().to_string());
+            let rhs = match sides.next() {
+                Some(side) => {
+                    side.split_whitespace()
+                        .map(|s| Symbol::new(Terminality::Any, s.to_string()))
+                        .collect()
+                }
+                _ => Vec::new(),
             };
-            let rhs = rhs.split_whitespace()
-                .map(|s| {
-                    Symbol {
-                        terminality: Terminality::Any,
-                        value: s.to_string(),
-                    }
-                })
-                .collect();
             rules.push(Rule {
                 lhs: lhs,
                 rhs: rhs,
@@ -153,10 +161,7 @@ impl DFA {
                     }
                 },
                 start_state: start_state,
-                symbol: Symbol {
-                    terminality: Terminality::Any,
-                    value: symbol.to_string(),
-                },
+                symbol: Symbol::new(Terminality::Any, symbol.to_string()),
             });
         }
 
@@ -174,8 +179,8 @@ impl DFA {
         let ref states = self.states[self.current];
         let ref transitions = states.transitions;
         for transition in transitions {
-            match token.lexeme {
-                Some(ref l) if *l == transition.symbol.value => {
+            match token.kind {
+                ref l if *l == transition.symbol.token.kind => {
                     debug!("match {:?} {:?}", transition, token)
                 }
                 _ => debug!("{:?} {:?}", transition, token),

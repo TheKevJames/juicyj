@@ -1,6 +1,7 @@
 use std;
 
 use common::Token;
+use common::TokenKind;
 use lexer;
 use parser::dfa;
 
@@ -15,6 +16,11 @@ impl<T: Iterator<Item = Result<Token, lexer::LexerError>>> Parser<T> {
 
     pub fn get_tree(self) {
         let mut dfa = dfa::DFA::new();
+
+        dfa.consume(Token {
+            kind: TokenKind::BOF,
+            lexeme: None,
+        });
 
         for tresult in self.tokens {
             let token = match tresult {

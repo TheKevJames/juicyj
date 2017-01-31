@@ -1,4 +1,5 @@
 // use std;
+use std::str::FromStr;
 
 #[derive(Debug)]
 pub struct Token {
@@ -15,7 +16,7 @@ pub struct Token {
 //     }
 // }
 
-#[derive(Debug)]
+#[derive(Debug,PartialEq)]
 pub enum TokenKind {
     Assignment,
     Equality,
@@ -94,6 +95,9 @@ pub enum TokenKind {
     Comma,
     Semicolon,
 
+    BOF,
+    EOF,
+
     // INVALID
     AssignmentAddition,
     AssignmentAnd,
@@ -109,7 +113,7 @@ pub enum TokenKind {
     Break,
     Case,
     Catch,
-    Colon, // label
+    Colon,
     Complement,
     Continue,
     Decrement,
@@ -134,4 +138,123 @@ pub enum TokenKind {
     Transient,
     Try,
     Volatile,
+
+    // Parsing
+    NonTerminal,
+}
+
+impl FromStr for TokenKind {
+    type Err = &'static str;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "!" => Ok(TokenKind::Not),
+            "!=" => Ok(TokenKind::NotEqual),
+            "%" => Ok(TokenKind::Percent),
+            "%=" => Ok(TokenKind::AssignmentModulus),
+            "&" => Ok(TokenKind::BitAnd),
+            "&&" => Ok(TokenKind::And),
+            "&=" => Ok(TokenKind::AssignmentAnd),
+            "(" => Ok(TokenKind::LParen),
+            ")" => Ok(TokenKind::RParen),
+            "*" => Ok(TokenKind::Star),
+            "*=" => Ok(TokenKind::AssignmentMultiplication),
+            "+" => Ok(TokenKind::Plus),
+            "++" => Ok(TokenKind::Increment),
+            "+=" => Ok(TokenKind::AssignmentAddition),
+            "-" => Ok(TokenKind::Minus),
+            "--" => Ok(TokenKind::Decrement),
+            "-=" => Ok(TokenKind::AssignmentSubtraction),
+            "/" => Ok(TokenKind::FSlash),
+            "/=" => Ok(TokenKind::AssignmentDivision),
+            "<" => Ok(TokenKind::LessThan),
+            "<<" => Ok(TokenKind::LShift),
+            "<<=" => Ok(TokenKind::AssignmentLShift),
+            "<=" => Ok(TokenKind::LessThanOrEqual),
+            "=" => Ok(TokenKind::Assignment),
+            "==" => Ok(TokenKind::Equality),
+            ">" => Ok(TokenKind::GreaterThan),
+            ">=" => Ok(TokenKind::GreaterThanOrEqual),
+            ">>" => Ok(TokenKind::RShift),
+            ">>=" => Ok(TokenKind::AssignmentRShift),
+            ">>>" => Ok(TokenKind::RRShift),
+            ">>>=" => Ok(TokenKind::AssignmentRRShift),
+            "?" => Ok(TokenKind::Question),
+            "[" => Ok(TokenKind::LBracket),
+            "]" => Ok(TokenKind::RBracket),
+            "^" => Ok(TokenKind::BitXor),
+            "^=" => Ok(TokenKind::AssignmentXor),
+            "ABSTRACT" => Ok(TokenKind::Abstract),
+            "BOF" => Ok(TokenKind::BOF),
+            "BOOLEAN" => Ok(TokenKind::Boolean),
+            "BREAK" => Ok(TokenKind::Break),
+            "BYTE" => Ok(TokenKind::Byte),
+            "CASE" => Ok(TokenKind::Case),
+            "CATCH" => Ok(TokenKind::Catch),
+            "CHAR" => Ok(TokenKind::Char),
+            "CharacterLit" => Ok(TokenKind::CharValue),
+            "CLASS" => Ok(TokenKind::Class),
+            "COLON" => Ok(TokenKind::Colon),
+            "COMMA" => Ok(TokenKind::Comma),
+            "CONTINUE" => Ok(TokenKind::Continue),
+            "DEFAULT" => Ok(TokenKind::Default),
+            "DELETE" => Ok(TokenKind::Delete),
+            "DO" => Ok(TokenKind::Do),
+            "DOT" => Ok(TokenKind::Dot),
+            "DOUBLE" => Ok(TokenKind::Double),
+            "ELSE" => Ok(TokenKind::Else),
+            "EOF" => Ok(TokenKind::EOF),
+            "EXTENDS" => Ok(TokenKind::Extends),
+            "FALSE" => Ok(TokenKind::False),
+            "FINAL" => Ok(TokenKind::Final),
+            "FINALLY" => Ok(TokenKind::Finally),
+            "FLOAT" => Ok(TokenKind::Float),
+            "FOR" => Ok(TokenKind::For),
+            "GOTO" => Ok(TokenKind::Goto),
+            "IDENTIFIER" => Ok(TokenKind::Identifier),
+            "IF" => Ok(TokenKind::If),
+            "IMPLEMENTS" => Ok(TokenKind::Implements),
+            "IMPORT" => Ok(TokenKind::Import),
+            "INSTANCEOF" => Ok(TokenKind::Instanceof),
+            "INT" => Ok(TokenKind::Int),
+            "IntegerLit" => Ok(TokenKind::NumValue),
+            "INTERFACE" => Ok(TokenKind::Interface),
+            "LONG" => Ok(TokenKind::Long),
+            "NATIVE" => Ok(TokenKind::Native),
+            "NEW" => Ok(TokenKind::New),
+            "NullLit" => Ok(TokenKind::Null),
+            "OBJECT" => Ok(TokenKind::Object),
+            "PACKAGE" => Ok(TokenKind::Package),
+            "PRIVATE" => Ok(TokenKind::Private),
+            "PROTECTED" => Ok(TokenKind::Protected),
+            "PUBLIC" => Ok(TokenKind::Public),
+            "RETURN" => Ok(TokenKind::Return),
+            "SEMICOLON" => Ok(TokenKind::Semicolon),
+            "SHORT" => Ok(TokenKind::Short),
+            "STATIC" => Ok(TokenKind::Static),
+            "STRICTFP" => Ok(TokenKind::Strictfp),
+            "STRING" => Ok(TokenKind::Str),
+            "StringLit" => Ok(TokenKind::StrValue),
+            "SUPER" => Ok(TokenKind::Super),
+            "SWITCH" => Ok(TokenKind::Switch),
+            "SYNCHRONIZED" => Ok(TokenKind::Synchronized),
+            "THIS" => Ok(TokenKind::This),
+            "THROW" => Ok(TokenKind::Throw),
+            "THROWS" => Ok(TokenKind::Throws),
+            "TRANSIENT" => Ok(TokenKind::Transient),
+            "TRUE" => Ok(TokenKind::True),
+            "TRY" => Ok(TokenKind::Try),
+            "VOID" => Ok(TokenKind::Void),
+            "VOLATILE" => Ok(TokenKind::Volatile),
+            "WHILE" => Ok(TokenKind::While),
+            "{" => Ok(TokenKind::LBrace),
+            "|" => Ok(TokenKind::BitOr),
+            "|=" => Ok(TokenKind::AssignmentOr),
+            "||" => Ok(TokenKind::Or),
+            "}" => Ok(TokenKind::RBrace),
+            "~" => Ok(TokenKind::Complement),
+
+            _ => Ok(TokenKind::NonTerminal),
+        }
+    }
 }
