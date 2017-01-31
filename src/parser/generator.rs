@@ -14,18 +14,18 @@ impl<T: Iterator<Item = Result<Token, lexer::LexerError>>> Parser<T> {
     }
 
     pub fn get_tree(self) {
-        let real_tokens = self.tokens.map(|t| {
-            match t {
+        let mut dfa = dfa::DFA::new();
+
+        for tresult in self.tokens {
+            let token = match tresult {
                 Ok(t) => t,
                 Err(e) => {
                     println!("{}", e);
                     std::process::exit(42);
                 }
-            }
-        }).collect::<Vec<Token>>();
-        debug!("got tokens {:?}", real_tokens);
+            };
 
-        let dfa = dfa::DFA::new();
-        debug!("got dfa {:?}", dfa);
+            dfa.consume(token);
+        }
     }
 }

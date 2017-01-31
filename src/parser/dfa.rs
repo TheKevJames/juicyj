@@ -4,6 +4,8 @@ use std::io::BufReader;
 use std::io::Read;
 use std::fs::File;
 
+use common::Token;
+
 #[derive(Debug)]
 pub enum Function {
     Reduce,
@@ -23,7 +25,7 @@ pub struct State {
 }
 
 impl State {
-    pub fn new(s: u32) -> State {
+    fn new(s: u32) -> State {
         State {
             transitions: Vec::new(),
             state: s,
@@ -32,10 +34,16 @@ impl State {
 }
 
 #[derive(Debug)]
-pub enum Symbol {
-    NonTerminal { symbol: String },
-    Terminal { symbol: String },
-    Any { symbol: String },
+pub enum Terminality {
+    NonTerminal,
+    Terminal,
+    Any,
+}
+
+#[derive(Debug)]
+pub struct Symbol {
+    terminality: Terminality,
+    value: String,
 }
 
 #[derive(Debug)]
@@ -48,11 +56,12 @@ pub struct Transition {
 
 #[derive(Debug)]
 pub struct DFA {
-    pub non_terminals: Vec<Symbol>, // NonTerminal
-    pub terminals: Vec<Symbol>, // Terminal
-    pub rules: Vec<Rule>,
-    pub states: Vec<State>,
-    pub start: Symbol,
+    current: usize,
+    non_terminals: Vec<Symbol>, // NonTerminal
+    terminals: Vec<Symbol>, // Terminal
+    rules: Vec<Rule>,
+    states: Vec<State>,
+    start: Symbol,
 }
 
 impl DFA {
@@ -73,17 +82,26 @@ impl DFA {
         let num_terminals: u32 = file.by_ref().lines().next().unwrap().unwrap().parse().unwrap();
         for _ in 0..num_terminals {
             let symbol = file.by_ref().lines().next().unwrap().unwrap();
-            terminals.push(Symbol::Terminal { symbol: symbol });
+            terminals.push(Symbol {
+                terminality: Terminality::Terminal,
+                value: symbol,
+            });
         }
 
         let num_non_terminals: u32 =
             file.by_ref().lines().next().unwrap().unwrap().parse().unwrap();
         for _ in 0..num_non_terminals {
             let symbol = file.by_ref().lines().next().unwrap().unwrap();
-            non_terminals.push(Symbol::NonTerminal { symbol: symbol });
+            non_terminals.push(Symbol {
+                terminality: Terminality::NonTerminal,
+                value: symbol,
+            });
         }
 
-        let start = Symbol::Any { symbol: file.by_ref().lines().next().unwrap().unwrap() };
+        let start = Symbol {
+            terminality: Terminality::Any,
+            value: file.by_ref().lines().next().unwrap().unwrap(),
+        };
 
         let num_rules: u32 = file.by_ref().lines().next().unwrap().unwrap().parse().unwrap();
         for _ in 0..num_rules {
@@ -91,9 +109,17 @@ impl DFA {
             let mut sides = rule.splitn(2, " ");
             let (lhs, rhs) = (sides.next().unwrap(), sides.next().unwrap());
 
-            let lhs = Symbol::NonTerminal { symbol: lhs.to_string() };
+            let lhs = Symbol {
+                terminality: Terminality::NonTerminal,
+                value: lhs.to_string(),
+            };
             let rhs = rhs.split_whitespace()
-                .map(|s| Symbol::Any { symbol: s.to_string() })
+                .map(|s| {
+                    Symbol {
+                        terminality: Terminality::Any,
+                        value: s.to_string(),
+                    }
+                })
                 .collect();
             rules.push(Rule {
                 lhs: lhs,
@@ -127,16 +153,33 @@ impl DFA {
                     }
                 },
                 start_state: start_state,
-                symbol: Symbol::Any { symbol: symbol.to_string() },
+                symbol: Symbol {
+                    terminality: Terminality::Any,
+                    value: symbol.to_string(),
+                },
             });
         }
 
         DFA {
+            current: 0,
             non_terminals: non_terminals,
             rules: rules,
             start: start,
             states: states,
             terminals: terminals,
+        }
+    }
+
+    pub fn consume(&mut self, token: Token) {
+        let ref states = self.states[self.current];
+        let ref transitions = states.transitions;
+        for transition in transitions {
+            match token.lexeme {
+                Some(ref l) if *l == transition.symbol.value => {
+                    debug!("match {:?} {:?}", transition, token)
+                }
+                _ => debug!("{:?} {:?}", transition, token),
+            }
         }
     }
 }
