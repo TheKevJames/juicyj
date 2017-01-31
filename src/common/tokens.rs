@@ -1,7 +1,7 @@
 // use std;
 use std::str::FromStr;
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct Token {
     pub kind: TokenKind,
     pub lexeme: Option<String>,
@@ -16,7 +16,7 @@ pub struct Token {
 //     }
 // }
 
-#[derive(Debug,PartialEq)]
+#[derive(Debug,Clone,PartialEq)]
 pub enum TokenKind {
     Assignment,
     Equality,
