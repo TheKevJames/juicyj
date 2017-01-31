@@ -17,6 +17,8 @@ release: grammar
 	cp target/release/juicyj joosc
 
 grammar: grammar/joos.lr1
+grammar/joos.cfg: grammar/joos.grammar grammar/cfgerizer/cfgerize.py
+	./grammar/cfgerizer/cfgerize.py $< $@
 grammar/joos.lr1: grammar/joos.cfg grammar/jlalr/Jlr1.class
 	cd grammar && cat joos.cfg | java jlalr.Jlr1 > joos.lr1
 grammar/jlalr/Jlr1.class: grammar/jlalr/Jlalr1.java
