@@ -5,6 +5,12 @@ pub struct Tree {
     pub root: Node,
 }
 
+impl Tree {
+    pub fn print(self) {
+        self.root.print(0);
+    }
+}
+
 #[derive(Debug,Clone)]
 pub struct Node {
     pub children: Vec<Node>,

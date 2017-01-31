@@ -103,7 +103,7 @@ impl<T: Iterator<Item = Result<Token, lexer::LexerError>>> Parser<T> {
         }
     }
 
-    pub fn get_tree(&mut self) -> Vec<tree::Node> {
+    pub fn get_tree(&mut self) -> tree::Tree {
         while let Some(token) = self.peek() {
             match self.dfa.consume(self.states.last().unwrap_or(&0), &token) {
                 Ok(transition) => {
@@ -115,11 +115,15 @@ impl<T: Iterator<Item = Result<Token, lexer::LexerError>>> Parser<T> {
                 }
                 Err(e) => {
                     error!("could not get transition for {:?}: {:?}", token, e);
-                    std::process::exit(1);
+                    std::process::exit(42);
                 }
             }
         }
 
-        self.nodes.clone()
+        if self.nodes.len() != 3 {
+            error!("parse tree could not be reduced to Start");
+            std::process::exit(42);
+        }
+        tree::Tree { root: self.nodes[1].clone() }
     }
 }

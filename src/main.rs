@@ -48,9 +48,7 @@ fn main() {
     let lexer = juicyj::lexer::Lexer::new(&file, &src);
     let mut parser = juicyj::parser::Parser::new(lexer);
     let tree = parser.get_tree();
-    for t in tree {
-        t.print(0);
-    }
+    tree.print();
 }
 
 fn read_src_file(file: &String) -> String {
