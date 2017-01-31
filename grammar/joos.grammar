@@ -1,0 +1,469 @@
+Start:
+	BOF S EOF
+
+Literal:
+	IntegerLit
+	BooleanLit
+	CharacterLit
+	StringLit
+	NullLit
+
+Type:
+	PrimitiveType
+	ReferenceType
+
+PrimitiveType:
+	BOOLEAN
+	BYTE
+	SHORT
+	INT
+	LONG
+	CHAR
+
+ReferenceType:
+	ClassOrInterfaceType
+	ArrayType
+
+ClassOrInterfaceType:
+	Name
+
+ClassType:
+	ClassOrInterfaceType
+
+InterfaceType:
+	ClassOrInterfaceType
+
+ArrayType:
+	PrimitiveType [ ]
+	Name [ ]
+	ArrayType [ ]
+
+Name:
+	SimpleName
+	QualifiedName
+
+SimpleName:
+	Identifier
+
+QualifiedName:
+	Name DOT Identifier
+
+S:
+	\epsilon
+	TypeDeclarations
+	ImportDeclarations
+	ImportDeclarations TypeDeclarations
+	PackageDeclaration
+	PackageDeclaration TypeDeclarations
+	PackageDeclaration ImportDeclarations
+	PackageDeclaration ImportDeclarations TypeDeclarations
+
+PackageDeclaration:
+	PACKAGE Name SEMICOLON
+
+ImportDeclarations
+	ImportDeclaration
+	ImportDeclarations ImportDeclaration
+
+ImportDeclaration:
+	SingleImportDeclaration
+	StarredImportDeclaration
+
+SingleTypeImportDeclaration:
+	IMPORT Name SEMICOLON
+
+StarredTypeImportDeclaration:
+	IMPORT Name DOT STAR 
+
+TypeDeclarations:
+	TypeDeclaration
+	TypeDeclarations TypeDeclaration
+
+TypeDeclaration:
+	ClassDeclaration
+	InterfaceDeclaration
+	SEMICOLON
+
+ClassDeclaration:
+	CLASS Identifier ClassBody
+	CLASS Identifier Implements ClassBody
+	CLASS Identifier ClassExtends ClassBody
+	CLASS Identifier ClassExtends Implements ClassBody
+	Modifiers CLASS Identifier ClassBody
+	Modifiers CLASS Identifier Implements ClassBody
+	Modifiers CLASS Identifier ClassExtends ClassBody
+	Modifiers CLASS Identifier ClassExtends Implements ClassBody
+
+Modifiers:
+	Inheritance
+	Inheritance STATIC
+	Inheritance STATIC Absinal
+	STATIC Absinal
+	Absinal
+
+Inheritance:
+	PUBLIC
+	PROTECTED
+	PRIVATE
+
+Absinal:
+	ABSTRACT
+	FINAL
+
+ClassExtends:
+	EXTENDS ClassType
+
+Implements:
+	IMPLEMENTS InterfaceTypeList
+
+InterfaceTypeList:
+	InterfaceType
+	InterfaceTypeList COMMA InterfaceType
+
+ClassBody:
+	{ ClassBodyeclarations }
+	{ }
+
+ClassBodyeclarations:
+	ClassBodyDeclaration
+	ClassBodyDeclarations ClassBodyDeclaration
+
+ClassBodyDeclaration:
+	ClassMemberDeclaration
+	StaticInitializer
+	ConstructorDeclaration
+
+ClassMemberDeclaration:
+	FieldDeclaration
+	MethodDeclaration
+
+FieldDeclaration:
+	Modifiers Type VariableDeclarators SEMICOLON
+	Type VariableDeclarators SEMICOLON
+
+VariableDeclarators:
+	VariableDeclarator
+	VariableDeclarators COMMA VariableDeclarator
+
+VariableDeclarator:
+	VariableDeclaratorId
+	VariableDeclaratorId = VariableInitializer
+
+VariableDeclaratorId:
+	Identifier
+	VariableDeclaratorId [ ]
+
+VariableInitializer:
+	Expression
+
+MethodDeclaration:
+	MethodHeader MethodBody
+
+MethodHeader:
+	Modifiers Type MethodDeclarator
+	Type MethodDeclarator
+	Modifiers VOID MethodDeclarator
+	VOID MethodDeclarator
+
+MethodDeclarator:
+	Identifier ( ParameterList )
+	Identifier ( )
+	MethodDeclarator [ ]
+
+ParameterList:
+	Parameter
+	ParameterList COMMA Parameter
+
+Parameter:
+	Type VariableDeclaratorId
+
+MethodBody:
+	Block
+	SEMICOLON
+
+StaticInitializer:
+	STATIC Block
+
+ConstructorDeclaration:
+	Modifiers ConstructorDeclarator ConstructorBody
+	ConstructorDeclarator ConstructorBody
+
+ConstructorDeclarator:
+	SimpleName ( ParameterList )
+	SimpleName ( )
+
+ConstructorBody:
+	{ }
+	{ ExplicitConstructorInvocation }
+	{ BlockStatements }
+	{ ExplicitConstructorInvocation BlockStatements }
+
+ExplicitConstructorInvocation:
+	THIS ( ArgumentList ) SEMICOLON
+	THIS ( ) SEMICOLON
+	SUPER ( ArgumentList ) SECMICOLON
+	SUPER ( ) SEMICOLON
+
+InterfaceDeclaration:
+	INTERFACE Identifier InterfaceBody
+	Modifiers INTERFACE Identifier InterfaceBody
+	INTERFACE Identifier InterfaceExtends InterfaceBody
+	Modifiers INTERFACE Identifier InterfaceExtends InterfaceBody
+
+InterfaceExtends
+	EXTENDS InterfaceType
+	InterfaceExtends COMMA InterfaceType
+
+InterfaceBody:
+	{ }
+	{ InterfaceMemberDeclarations }
+
+InterfaceMemberDeclarations:
+	InterfaceMemberDeclaration
+	InterfaceMemberDeclarations InterfaceMemberDeclaration
+
+InterfaceMemberDeclaration:
+	ConstantDeclaration
+	AbstractMethodDeclaration
+
+ConstantDeclaration:
+	FieldDeclaration
+
+AbstractMethodDeclaration:
+	MethodHeader SEMICOLON
+
+Block:
+	{ }
+	{ BlockStatements }	
+
+BlockStatements:
+	BlockStatement
+	BlockStatements BlockStatement
+
+BlockStatement:
+	LocalVariableDeclarationStatement
+	Statement
+
+LocalVariableDeclarationStatement:
+	LocalVariableDeclaration SEMICOLON
+
+LocalVariableDeclaration:
+	Type VariableDeclarators
+
+Statement:
+	StatementWithoutTrailingSubstatement
+	IfStatement
+	IfElseStatement
+	WhileStatement
+	ForStatement
+
+StatementNoShortIf:
+	StatementWithoutTrailingSubstatementNoShortIf
+	IfStatementNoShortIf
+	IfElseStatementNoShortIf
+	WhileStatementNoShortIf
+	ForStatementNoShortIf
+
+StatementWithoutTrailingSubstatement:
+	Block
+	EmptyStatement
+	ExpressionStatement
+	ReturnStatement
+
+EmptyStatement:
+	SEMICOLON
+
+ExpressionStatement:
+	StatementExpression SEMICOLON
+
+StatementExpression:
+	Assignment
+	MethodInvocation
+	ClassInstanceCreationExpression
+
+IfStatement:
+	IF ( Expression ) Statement
+
+IfElseStatement:
+	IF ( Expression ) StatementNoShortIf ELSE Statement
+
+IfElseStatementNoShortIf:
+	IF ( Expression ) StatementNoShortIf ELSE StatementNoShortIf
+
+WhileStatement:
+	WHILE ( Expression ) Statement
+
+WhileStatementNoShortIf
+	WHILE ( Expression ) StatementNoShortIf
+
+ForStatement:
+	FOR ( SEMICOLON SEMICOLON ) Statement
+	FOR ( SEMICOLON SEMICOLON ForUpdate ) Statement
+	FOR ( SEMICOLON Expression SEMICOLON ) Statement
+	FOR ( SEMICOLON Expression SEMICOLON ForUpdate ) Statement
+	FOR ( ForInit SEMICOLON SEMICOLON ) Statement
+	FOR ( ForInit SEMICOLON SEMICOLON ForUpdate ) Statement
+	FOR ( ForInit SEMICOLON Expression SEMICOLON ) Statement
+	FOR ( ForInit SEMICOLON Expression SEMICOLON ForUpdate ) Statement
+
+ForStatementNoShortIf:
+	FOR ( SEMICOLON SEMICOLON ) StatementNoShortIf
+	FOR ( SEMICOLON SEMICOLON ForUpdate ) StatementNoShortIf
+	FOR ( SEMICOLON Expression SEMICOLON ) StatementNoShortIf
+	FOR ( SEMICOLON Expression SEMICOLON ForUpdate ) StatementNoShortIf
+	FOR ( ForInit SEMICOLON SEMICOLON ) StatementNoShortIf
+	FOR ( ForInit SEMICOLON SEMICOLON ForUpdate ) StatementNoShortIf
+	FOR ( ForInit SEMICOLON Expression SEMICOLON ) StatementNoShortIf
+	FOR ( ForInit SEMICOLON Expression SEMICOLON ForUpdate ) StatementNoShortIf
+
+ReturnStatement:
+	RETURN SEMICOLON
+	RETURN Expression SEMICOLON
+
+Primary:
+	PrimaryNoNewArray
+	ArrayCreationExpression
+
+PrimaryNoNewArray:
+	Literal
+	THIS
+	( Expression )
+	ClassInstanceCreationExpression
+	FieldAccess
+	MethodInvocation
+	ArrayAccess
+
+ClassInstanceCreationExpression:
+	NEW ClassType ( )
+	NEW ClassType ( ArgumentList )
+
+ArgumentList:
+	Expression
+	ArgumentList COMMA Expression
+
+ArrayCreationExpression:
+	NEW PrimitiveType DimExprs
+	NEW PrimitiveType DimExprs Dims
+	NEW ClassOrInterfaceType DimExprs
+	NEW ClassOrInterfaceType DimExprs Dims
+
+DimExprs:
+	DimExpr
+	DimExprs DimExpr
+
+DimExpr:
+	[ Expression ]
+
+Dims:
+	[ ]
+	Dims [ ]
+
+FieldAccess:
+	Primary DOT Identifier
+	SUPER DOT Identifier
+
+MethodInvocation:
+	Name ( )
+	Name ( ArgumentList )
+	Primary DOT Identifier ( )
+	Primary DOT Identifier ( ArgumentList )
+	SUPER DOT Identifier ( )
+	SUPER DOT Identifier ( ArgumentList )
+
+ArrayAccess
+	Name [ Expression ]
+	PrimaryNoNewArray [ Expression ]
+
+PostfixExpression:
+	Primary
+	Name
+
+UnaryExpression:
+	+ UnaryExpression
+	- UnaryExpression
+	UnaryExpressionNotSign
+
+UnaryExpressionNotSign:
+	PostfixExpression
+	~ UnaryExpression
+	! UnaryExpression
+	CastExpression
+
+CastExpression:
+	( PrimitiveType ) UnaryExpression
+	( PrimitiveType Dims ) UnaryExpression
+	( Expression ) UnaryExpressionNotSign
+	( Name Dims ) UnaryExpressionNotSign
+
+MultiplicativeExpression:
+	UnaryExpression
+	MultiplicativeExpression * UnaryExpression
+	MultiplicativeExpression / UnaryExpression
+	MultiplicativeExpression % UnaryExpression
+
+AdditiveExpression:
+	MultiplicativeExpression
+	AdditiveExpression + MultiplicativeExpression
+	AdditiveExpression - MultiplicativeExpression
+
+RelationalExpression:
+	AdditiveExpression
+	RelationalExpression < AdditiveExpression
+	RelationalExpression > AdditiveExpression
+	RelationalExpression <= AdditiveExpression
+	RelationalExpression >= AdditiveExpression
+	RelationalExpression INSTANCEOF AdditiveExpression
+
+EqualityExpression:
+	RelationalExpression
+	EqualityExpression == RelationalExpression
+	EqualityExpression != RelationalExpression
+
+AndExpression:
+	EqualityExpression
+	AndExpression & EqualityExpression
+
+ExclusiveOrExpression:
+	AndExpression
+	ExclusiveOrExpression ^ AndExpression
+
+InclusiveOrExpression:
+	ExclusiveOrExpression
+	InclusiveOrExpression | ExclusiveOrExpression
+
+ConditionalAndExpression:
+	InclusiveOrExpression
+	ConditionalAndExpression && InclusiveOrExpression
+
+ConditionalOrExpression:
+	ConditionalAndExpression
+	ConditionalOrExpression || ConditionalAndExpression
+
+AssignmentExpression:
+	ConditionalOrExpression
+	Assignment
+
+Assignment:
+	LeftHandSide AssignmentOperator AssignmentExpression
+
+LeftHandSide:
+	Name
+	FieldAccess
+	ArrayAccess
+
+AssignmentOperator:
+	=
+	*=
+	/=
+	%=
+	+=
+	-=
+	&=
+	^=
+	|=
+
+Expression:
+	AssignmentExpression
+
+ConstantExpression:
+	Expression
