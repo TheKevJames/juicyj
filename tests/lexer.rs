@@ -44,6 +44,20 @@ fn test_all_cases() {
     let paths = std::fs::read_dir("tests/cases/").unwrap();
     for path in paths {
         match path.unwrap().path().to_str() {
+            Some(name) if name.starts_with("tests/cases/Je") => {
+                // continue;
+                let src = read_src_file(String::from(name));
+                let lexer = juicyj::lexer::Lexer::new(&name, &src);
+
+                let errors = lexer.filter(|result| result.is_err()).collect::<Vec<_>>();
+                let errored = !errors.is_empty();
+
+                if !errored {
+                    println!("failed test: {}", name);
+                }
+                // TODO: most of these require a working parser to error
+                // assert!(errored);
+            }
             Some(name) => {
                 let src = read_src_file(String::from(name));
                 let lexer = juicyj::lexer::Lexer::new(&name, &src);
@@ -51,18 +65,10 @@ fn test_all_cases() {
                 let errors = lexer.filter(|result| result.is_err()).collect::<Vec<_>>();
                 let errored = !errors.is_empty();
 
-                if name.starts_with("tests/cases/Je") {
-                    if !errored {
-                        println!("failed test: {}", name);
-                    }
-                    // TODO: most of these require a working parser to error
-                    // assert!(errored);
-                } else {
-                    for err in errors {
-                        println!("{}", err.err().unwrap());
-                    }
-                    assert!(!errored);
+                for err in errors {
+                    println!("{}", err.err().unwrap());
                 }
+                assert!(!errored);
             }
             _ => continue,
         }

@@ -25,4 +25,5 @@ grammar/jlalr/Jlr1.class: grammar/jlalr/Jlalr1.java
 zip:
 	zip juicyj.zip Makefile
 	zip juicyj.zip Cargo.*
+	zip -r juicyj.zip grammar/joos.lr1
 	zip -r juicyj.zip src
