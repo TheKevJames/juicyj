@@ -19,6 +19,7 @@ PrimitiveType:
 	INT
 	LONG
 	CHAR
+	STRING
 
 ReferenceType:
 	ClassOrInterfaceType
@@ -43,10 +44,10 @@ Name:
 	QualifiedName
 
 SimpleName:
-	Identifier
+	IDENTIFIER
 
 QualifiedName:
-	Name DOT Identifier
+	Name DOT IDENTIFIER
 
 S:
 	\epsilon
@@ -61,7 +62,7 @@ S:
 PackageDeclaration:
 	PACKAGE Name SEMICOLON
 
-ImportDeclarations
+ImportDeclarations:
 	ImportDeclaration
 	ImportDeclarations ImportDeclaration
 
@@ -73,7 +74,7 @@ SingleImportDeclaration:
 	IMPORT Name
 
 StarredImportDeclaration:
-	IMPORT Name DOT STAR
+	IMPORT Name DOT *
 
 TypeDeclarations:
 	TypeDeclaration
@@ -85,14 +86,14 @@ TypeDeclaration:
 	SEMICOLON
 
 ClassDeclaration:
-	CLASS Identifier ClassBody
-	CLASS Identifier Implements ClassBody
-	CLASS Identifier ClassExtends ClassBody
-	CLASS Identifier ClassExtends Implements ClassBody
-	Modifiers CLASS Identifier ClassBody
-	Modifiers CLASS Identifier Implements ClassBody
-	Modifiers CLASS Identifier ClassExtends ClassBody
-	Modifiers CLASS Identifier ClassExtends Implements ClassBody
+	CLASS IDENTIFIER ClassBody
+	CLASS IDENTIFIER Implements ClassBody
+	CLASS IDENTIFIER ClassExtends ClassBody
+	CLASS IDENTIFIER ClassExtends Implements ClassBody
+	Modifiers CLASS IDENTIFIER ClassBody
+	Modifiers CLASS IDENTIFIER Implements ClassBody
+	Modifiers CLASS IDENTIFIER ClassExtends ClassBody
+	Modifiers CLASS IDENTIFIER ClassExtends Implements ClassBody
 
 Modifiers:
 	Inheritance
@@ -151,7 +152,7 @@ VariableDeclarator:
 	VariableDeclaratorId = VariableInitializer
 
 VariableDeclaratorId:
-	Identifier
+	IDENTIFIER
 	VariableDeclaratorId [ ]
 
 VariableInitializer:
@@ -167,8 +168,8 @@ MethodHeader:
 	VOID MethodDeclarator
 
 MethodDeclarator:
-	Identifier ( ParameterList )
-	Identifier ( )
+	IDENTIFIER ( ParameterList )
+	IDENTIFIER ( )
 	MethodDeclarator [ ]
 
 ParameterList:
@@ -204,12 +205,12 @@ ExplicitConstructorInvocation:
 	THIS ( ) SEMICOLON
 
 InterfaceDeclaration:
-	INTERFACE Identifier InterfaceBody
-	Modifiers INTERFACE Identifier InterfaceBody
-	INTERFACE Identifier InterfaceExtends InterfaceBody
-	Modifiers INTERFACE Identifier InterfaceExtends InterfaceBody
+	INTERFACE IDENTIFIER InterfaceBody
+	Modifiers INTERFACE IDENTIFIER InterfaceBody
+	INTERFACE IDENTIFIER InterfaceExtends InterfaceBody
+	Modifiers INTERFACE IDENTIFIER InterfaceExtends InterfaceBody
 
-InterfaceExtends
+InterfaceExtends:
 	EXTENDS InterfaceType
 	InterfaceExtends COMMA InterfaceType
 
@@ -257,7 +258,7 @@ Statement:
 	ForStatement
 
 StatementNoShortIf:
-	StatementWithoutTrailingSubstatementNoShortIf
+	StatementWithoutTrailingSubstatement
 	IfStatementNoShortIf
 	IfElseStatementNoShortIf
 	WhileStatementNoShortIf
@@ -315,6 +316,17 @@ ForStatementNoShortIf:
 	FOR ( ForInit SEMICOLON Expression SEMICOLON ) StatementNoShortIf
 	FOR ( ForInit SEMICOLON Expression SEMICOLON ForUpdate ) StatementNoShortIf
 
+ForInit:
+	StatementExpressionList
+	LocalVariableDeclaration
+
+ForUpdate:
+	StatementExpressionList
+
+StatementExpressionList:
+	StatementExpression
+	StatementExpressionList COMMA StatementExpression
+
 ReturnStatement:
 	RETURN SEMICOLON
 	RETURN Expression SEMICOLON
@@ -358,13 +370,13 @@ Dims:
 	Dims [ ]
 
 FieldAccess:
-	Primary DOT Identifier
+	Primary DOT IDENTIFIER
 
 MethodInvocation:
 	Name ( )
 	Name ( ArgumentList )
-	Primary DOT Identifier ( )
-	Primary DOT Identifier ( ArgumentList )
+	Primary DOT IDENTIFIER ( )
+	Primary DOT IDENTIFIER ( ArgumentList )
 
 ArrayAccess
 	Name [ Expression ]

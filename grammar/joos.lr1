@@ -1,62 +1,432 @@
-6
-BOF
-EOF
-id
--
+67
+||
+INTERFACE
+THIS
+DOT
+IntegerLit
+CharacterLit
+ArrayAccess
+PUBLIC
+COMMA
+!
+|
+PRIVATE
+NullLit
+&&
+RETURN
 (
+IMPORT
++
+>=
+FOR
 )
-3
+IF
+SHORT
+EXTENDS
+FINAL
+NEW
+==
+StringLit
+%
+PACKAGE
+WhileStatementNoShortIf
+INSTANCEOF
+-
+ELSE
+}
+{
+<=
+STATIC
+*
+WHILE
+INT
+]
+ABSTRACT
+BooleanLit
+BYTE
+IfStatementNoShortIf
+BOF
+VOID
+SEMICOLON
+=
+>
+CLASS
+^
+NATIVE
+CHAR
+BOOLEAN
+[
+!=
+<
+EOF
+LONG
+IMPLEMENTS
+STRING
+IDENTIFIER
+&
+/
+PROTECTED
+103
+Parameter
+InclusiveOrExpression
+TypeDeclaration
+InterfaceType
+InterfaceDeclaration
+InterfaceMemberDeclaration
+ImportDeclarations
+ExplicitConstructorInvocation
+ArrayType
+ClassInstanceCreationExpression
+InterfaceExtends
+StatementExpression
+Dims
+EqualityExpression
+ReferenceType
+ClassOrInterfaceType
+ConstantExpression
+StatementWithoutTrailingSubstatement
+ArgumentList
+AndExpression
+ForStatement
+LocalVariableDeclarationStatement
+RelationalExpression
+ClassBody
+DimExprs
+UnaryExpression
+IfStatement
+ForStatementNoShortIf
+Block
+MethodBody
+FieldDeclaration
+StatementExpressionList
+CastExpression
+Primary
+TypeDeclarations
+PackageDeclaration
+VariableDeclarators
+FieldAccess
+ConstructorDeclaration
+ConstantDeclaration
+InterfaceMemberDeclarations
+Name
+IfElseStatementNoShortIf
+IfElseStatement
+MethodInvocation
+UnaryExpressionNotSign
+Type
+LeftHandSide
+ConditionalAndExpression
+VariableDeclaratorId
+DimExpr
+ConstructorDeclarator
+MethodDeclarator
+ExpressionStatement
+ForInit
+VariableInitializer
+Assignment
+ConditionalOrExpression
+VariableDeclarator
+BlockStatement
+ClassMemberDeclaration
+SimpleName
+Expression
+AbstractMethodDeclaration
+StarredImportDeclaration
+LocalVariableDeclaration
+Modifiers
+StatementNoShortIf
+Literal
+MethodHeader
+SingleImportDeclaration
+PostfixExpression
+AssignmentExpression
+ParameterList
+ClassBodyDeclarations
+EmptyStatement
+Absinalative
+WhileStatement
+StaticInitializer
+BlockStatements
+ReturnStatement
+QualifiedName
+ImportDeclaration
+MultiplicativeExpression
+Start
+ClassExtends
+ClassDeclaration
+AdditiveExpression
+InterfaceTypeList
+InterfaceBody
+ExclusiveOrExpression
+PrimitiveType
+ClassType
 S
-expr
-term
+ForUpdate
+ArrayCreationExpression
+ConstructorBody
+PrimaryNoNewArray
+ClassBodyDeclaration
+Statement
+Inheritance
+MethodDeclaration
+Implements
+Start
+258
+ForStatementNoShortIf FOR ( SEMICOLON Expression SEMICOLON ForUpdate ) StatementNoShortIf
+MethodDeclarator IDENTIFIER ( )
+LocalVariableDeclarationStatement LocalVariableDeclaration SEMICOLON
+ConstructorBody { BlockStatements }
+StatementExpression MethodInvocation
+ForStatementNoShortIf FOR ( ForInit SEMICOLON Expression SEMICOLON ) StatementNoShortIf
+AndExpression AndExpression & EqualityExpression
+LeftHandSide FieldAccess
+Block { BlockStatements }
+Modifiers Inheritance STATIC Absinalative
+ArrayCreationExpression NEW ClassOrInterfaceType DimExprs
+CastExpression ( Name Dims ) UnaryExpressionNotSign
+PrimitiveType CHAR
+UnaryExpression + UnaryExpression
+ClassMemberDeclaration FieldDeclaration
+TypeDeclaration SEMICOLON
+ExclusiveOrExpression ExclusiveOrExpression ^ AndExpression
+InterfaceDeclaration Modifiers INTERFACE IDENTIFIER InterfaceBody
+Modifiers Absinalative
+VariableDeclarator VariableDeclaratorId = VariableInitializer
+ForStatement FOR ( SEMICOLON Expression SEMICOLON ForUpdate ) Statement
+UnaryExpressionNotSign CastExpression
+DimExprs DimExpr
+Type ReferenceType
+ClassBodyDeclaration ConstructorDeclaration
+TypeDeclaration InterfaceDeclaration
+Parameter Type VariableDeclaratorId
+ClassBody { }
+PrimitiveType SHORT
+ClassBodyDeclarations ClassBodyDeclarations ClassBodyDeclaration
+ExpressionStatement StatementExpression SEMICOLON
+Absinalative NATIVE
+EmptyStatement SEMICOLON
+SimpleName IDENTIFIER
+ClassInstanceCreationExpression NEW ClassType ( ArgumentList )
+InclusiveOrExpression InclusiveOrExpression | ExclusiveOrExpression
+ClassBodyDeclaration ClassMemberDeclaration
+Modifiers STATIC Absinalative
+EqualityExpression EqualityExpression != RelationalExpression
+MethodInvocation Name ( )
+ForStatementNoShortIf FOR ( SEMICOLON SEMICOLON ) StatementNoShortIf
+ClassDeclaration Modifiers CLASS IDENTIFIER ClassExtends Implements ClassBody
+ConditionalOrExpression ConditionalAndExpression
+UnaryExpression - UnaryExpression
+UnaryExpressionNotSign PostfixExpression
+ConstantExpression Expression
+Literal IntegerLit
+ArgumentList Expression
+PrimitiveType INT
+ReferenceType ClassOrInterfaceType
+ClassDeclaration Modifiers CLASS IDENTIFIER ClassBody
+ClassDeclaration Modifiers CLASS IDENTIFIER Implements ClassBody
+InterfaceBody { InterfaceMemberDeclarations }
+Primary PrimaryNoNewArray
+ExclusiveOrExpression AndExpression
+Literal BooleanLit
+ForStatement FOR ( ForInit SEMICOLON SEMICOLON ) Statement
+ClassBodyDeclaration StaticInitializer
+FieldDeclaration Modifiers Type VariableDeclarators SEMICOLON
+Dims [ ]
+BlockStatements BlockStatement
+S PackageDeclaration TypeDeclarations
+InterfaceTypeList InterfaceType
+ConditionalAndExpression ConditionalAndExpression && InclusiveOrExpression
+ExplicitConstructorInvocation THIS ( ArgumentList ) SEMICOLON
+ConstructorDeclaration ConstructorDeclarator ConstructorBody
+MultiplicativeExpression MultiplicativeExpression % UnaryExpression
+StatementNoShortIf WhileStatementNoShortIf
+ClassDeclaration CLASS IDENTIFIER ClassExtends Implements ClassBody
+MethodInvocation Primary DOT IDENTIFIER ( ArgumentList )
+ConstructorDeclarator SimpleName ( )
+WhileStatement WhileStatementNoShortIf
+EqualityExpression EqualityExpression == RelationalExpression
+S ImportDeclarations
+Modifiers Inheritance
+ClassDeclaration CLASS IDENTIFIER Implements ClassBody
+ClassDeclaration CLASS IDENTIFIER ClassExtends ClassBody
+InclusiveOrExpression ExclusiveOrExpression
+ClassDeclaration Modifiers CLASS IDENTIFIER ClassExtends ClassBody
+AdditiveExpression MultiplicativeExpression
+InterfaceMemberDeclarations InterfaceMemberDeclaration
+InterfaceDeclaration INTERFACE IDENTIFIER InterfaceExtends InterfaceBody
+PrimaryNoNewArray ( Expression )
+ParameterList Parameter
+ClassBody { ClassBodyDeclarations }
+PrimaryNoNewArray ArrayAccess
+ForStatement FOR ( SEMICOLON SEMICOLON ) Statement
+ForStatement FOR ( ForInit SEMICOLON Expression SEMICOLON ) Statement
+PostfixExpression Name
+Statement IfStatement
+MethodInvocation PrimaryNoNewArray [ Expression ]
+ImportDeclaration SingleImportDeclaration SEMICOLON
+InterfaceDeclaration INTERFACE IDENTIFIER InterfaceBody
+TypeDeclarations TypeDeclarations TypeDeclaration
+MethodHeader Type MethodDeclarator
+Inheritance PROTECTED
+DimExpr [ Expression ]
+CastExpression ( PrimitiveType Dims ) UnaryExpression
+ClassBodyDeclarations ClassBodyDeclaration
+ForStatement FOR ( SEMICOLON Expression SEMICOLON ) Statement
+TypeDeclaration ClassDeclaration
+StatementExpressionList StatementExpression
+InterfaceMemberDeclarations InterfaceMemberDeclarations InterfaceMemberDeclaration
+Expression AssignmentExpression
+Modifiers Inheritance STATIC
+WhileStatement WHILE ( Expression ) Statement
+InterfaceMemberDeclaration AbstractMethodDeclaration
+PackageDeclaration PACKAGE Name SEMICOLON
+Inheritance PRIVATE
+MethodDeclaration MethodHeader MethodBody
+StatementWithoutTrailingSubstatement Block
+StatementWithoutTrailingSubstatement ExpressionStatement
+PrimaryNoNewArray FieldAccess
+ArrayCreationExpression NEW ClassOrInterfaceType DimExprs Dims
+Literal StringLit
+MultiplicativeExpression MultiplicativeExpression / UnaryExpression
+Literal CharacterLit
+Literal NullLit
+S PackageDeclaration ImportDeclarations TypeDeclarations
+WhileStatement WHILE ( Expression ) StatementNoShortIf
+MethodHeader Modifiers Type MethodDeclarator
+VariableInitializer Expression
+StaticInitializer STATIC Block
+InterfaceTypeList InterfaceTypeList COMMA InterfaceType
+ForStatement FOR ( ForInit SEMICOLON Expression SEMICOLON ForUpdate ) Statement
+StatementNoShortIf ForStatementNoShortIf
+ArrayType Name [ ]
+ImportDeclaration StarredImportDeclaration SEMICOLON
+LeftHandSide Name
+ForStatementNoShortIf FOR ( ForInit SEMICOLON SEMICOLON ) StatementNoShortIf
+ConstructorDeclarator SimpleName ( ParameterList )
+IfElseStatement IF ( Expression ) StatementNoShortIf ELSE Statement
+S PackageDeclaration
+ReturnStatement RETURN Expression SEMICOLON
+IfElseStatementNoShortIf IF ( Expression ) StatementNoShortIf ELSE StatementNoShortIf
+VariableDeclarators VariableDeclarator
+UnaryExpressionNotSign ! UnaryExpression
+SingleImportDeclaration IMPORT Name
+QualifiedName Name DOT IDENTIFIER
+PostfixExpression Primary
+FieldDeclaration Type VariableDeclarators SEMICOLON
+CastExpression ( PrimitiveType ) UnaryExpression
+BlockStatement Statement
+AdditiveExpression AdditiveExpression - MultiplicativeExpression
+Statement WhileStatement
+ArrayCreationExpression NEW PrimitiveType DimExprs Dims
+ClassType ClassOrInterfaceType
+Absinalative FINAL
+ForUpdate StatementExpressionList
+AssignmentExpression ConditionalOrExpression
+ClassMemberDeclaration MethodDeclaration
+Block { }
+StatementWithoutTrailingSubstatement ReturnStatement
+ImportDeclarations ImportDeclarations ImportDeclaration
+VariableDeclaratorId IDENTIFIER
+ReturnStatement RETURN SEMICOLON
+ReferenceType ArrayType
+PrimitiveType LONG
+PrimitiveType STRING
+Implements IMPLEMENTS InterfaceTypeList
+PrimaryNoNewArray ClassInstanceCreationExpression
+MethodHeader VOID MethodDeclarator
+InterfaceExtends InterfaceExtends COMMA InterfaceType
+AssignmentExpression Assignment
+StatementNoShortIf IfStatementNoShortIf
+ConstantDeclaration FieldDeclaration
+Dims Dims [ ]
+VariableDeclarators VariableDeclarators COMMA VariableDeclarator
+S ImportDeclarations TypeDeclarations
+MethodHeader Modifiers VOID MethodDeclarator
+RelationalExpression AdditiveExpression
+ClassDeclaration CLASS IDENTIFIER ClassBody
+LocalVariableDeclaration Type VariableDeclarators
+InterfaceType ClassOrInterfaceType
+ConstructorDeclaration Modifiers ConstructorDeclarator ConstructorBody
+ArrayType PrimitiveType [ ]
+StarredImportDeclaration IMPORT Name DOT *
+TypeDeclarations TypeDeclaration
+StatementNoShortIf IfElseStatementNoShortIf
+StatementExpression ClassInstanceCreationExpression
+ForInit StatementExpressionList
+ClassExtends EXTENDS ClassType
+InterfaceDeclaration Modifiers INTERFACE IDENTIFIER InterfaceExtends InterfaceBody
+MethodInvocation ArrayAccess
+Start BOF S EOF
+Name QualifiedName
+ParameterList ParameterList COMMA Parameter
+BlockStatements BlockStatements BlockStatement
+CastExpression ( Expression ) UnaryExpressionNotSign
+MultiplicativeExpression UnaryExpression
+ClassOrInterfaceType Name
+FieldAccess Primary DOT IDENTIFIER
+RelationalExpression RelationalExpression <= AdditiveExpression
+VariableDeclaratorId VariableDeclaratorId [ ]
+S PackageDeclaration ImportDeclarations
+Absinalative ABSTRACT
+AdditiveExpression AdditiveExpression + MultiplicativeExpression
+InterfaceMemberDeclaration ConstantDeclaration
+PrimaryNoNewArray MethodInvocation
+StatementWithoutTrailingSubstatement EmptyStatement
+ClassInstanceCreationExpression NEW ClassType ( )
+RelationalExpression RelationalExpression < AdditiveExpression
+MethodInvocation Name ( ArgumentList )
+ConstructorBody { ExplicitConstructorInvocation BlockStatements }
+MethodDeclarator MethodDeclarator [ ]
+PrimaryNoNewArray Literal
+Name SimpleName
+Assignment LeftHandSide = AssignmentExpression
+ForStatement FOR ( ForInit SEMICOLON SEMICOLON ForUpdate ) Statement
+LeftHandSide ArrayAccess
+Inheritance PUBLIC
+InterfaceBody { }
+PrimaryNoNewArray THIS
+BlockStatement LocalVariableDeclarationStatement
+VariableDeclarator VariableDeclaratorId
+Statement IfElseStatement
+ForInit LocalVariableDeclaration
+ForStatementNoShortIf FOR ( ForInit SEMICOLON Expression SEMICOLON ForUpdate ) StatementNoShortIf
+ConditionalAndExpression InclusiveOrExpression
+StatementExpressionList StatementExpressionList COMMA StatementExpression
+RelationalExpression RelationalExpression >= AdditiveExpression
+ArrayType ArrayType [ ]
+MethodInvocation Primary DOT IDENTIFIER ( )
+AbstractMethodDeclaration MethodHeader SEMICOLON
+MethodDeclarator IDENTIFIER ( ParameterList )
+ArrayCreationExpression NEW PrimitiveType DimExprs
+ForStatementNoShortIf FOR ( ForInit SEMICOLON SEMICOLON ForUpdate ) StatementNoShortIf
+ForStatementNoShortIf FOR ( SEMICOLON SEMICOLON ForUpdate ) StatementNoShortIf
 S
-5
-S BOF expr EOF
-expr term
-expr expr - term
-term id
-term ( expr )
-18
-42
-3 ) shift 1
-16 EOF shift 2
-1 - reduce 4
-13 expr shift 3
-3 - shift 4
-9 id shift 5
-7 - reduce 2
-15 term shift 6
-12 - shift 4
-14 term shift 7
-8 ) reduce 1
-11 EOF reduce 3
-5 ) reduce 3
-8 - reduce 1
-17 ) reduce 2
-5 - reduce 3
-13 term shift 8
-1 EOF reduce 4
-6 EOF reduce 1
-2 BOF reduce 0
-9 ( shift 9
-12 ) shift 10
-11 - reduce 3
-13 ( shift 9
-14 id shift 11
-6 - reduce 1
-9 term shift 8
-9 expr shift 12
-15 id shift 11
-14 ( shift 13
-16 - shift 14
-13 id shift 5
-10 - reduce 4
-17 - reduce 2
-4 ( shift 9
-10 ) reduce 4
-7 EOF reduce 2
-0 BOF shift 15
-15 expr shift 16
-4 id shift 5
-15 ( shift 13
-4 term shift 17
+StatementNoShortIf StatementWithoutTrailingSubstatement
+ConditionalOrExpression ConditionalOrExpression || ConditionalAndExpression
+ConstructorBody { ExplicitConstructorInvocation }
+MethodInvocation Name [ Expression ]
+ForStatementNoShortIf FOR ( SEMICOLON Expression SEMICOLON ) StatementNoShortIf
+S TypeDeclarations
+Statement StatementWithoutTrailingSubstatement
+ForStatement FOR ( SEMICOLON SEMICOLON ForUpdate ) Statement
+StatementExpression Assignment
+PrimitiveType BOOLEAN
+Statement ForStatement
+MultiplicativeExpression MultiplicativeExpression * UnaryExpression
+UnaryExpression UnaryExpressionNotSign
+Primary ArrayCreationExpression
+RelationalExpression RelationalExpression INSTANCEOF AdditiveExpression
+ConstructorBody { }
+AndExpression EqualityExpression
+MethodBody SEMICOLON
+InterfaceExtends EXTENDS InterfaceType
+RelationalExpression RelationalExpression > AdditiveExpression
+ArgumentList ArgumentList COMMA Expression
+IfStatement IF ( Expression ) Statement
+DimExprs DimExprs DimExpr
+EqualityExpression RelationalExpression
+ExplicitConstructorInvocation THIS ( ) SEMICOLON
+Type PrimitiveType
+PrimitiveType BYTE
+ImportDeclarations ImportDeclaration
+MethodBody Block
