@@ -8,6 +8,10 @@ Literal:
 	StringLit
 	NullLit
 
+BooleanLit:
+	TRUE
+	FALSE
+
 Type:
 	PrimitiveType
 	ReferenceType
