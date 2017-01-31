@@ -1,13 +1,13 @@
 use std;
 use std::iter::Peekable;
 
+use common::error;
 use common::Token;
 use common::TokenKind;
-use lexer;
 use parser::dfa;
 use parser::tree;
 
-pub struct Parser<T: Iterator<Item = Result<Token, lexer::LexerError>>> {
+pub struct Parser<T: Iterator<Item = Result<Token, error::LexerError>>> {
     dfa: dfa::DFA,
     nodes: Vec<tree::Node>,
     states: Vec<usize>,
@@ -15,10 +15,18 @@ pub struct Parser<T: Iterator<Item = Result<Token, lexer::LexerError>>> {
     tokens: Peekable<T>,
 }
 
-impl<T: Iterator<Item = Result<Token, lexer::LexerError>>> Parser<T> {
+impl<T: Iterator<Item = Result<Token, error::LexerError>>> Parser<T> {
     pub fn new(it: T) -> Parser<T> {
+        let dfa = match dfa::DFA::new() {
+            Ok(dfa) => dfa,
+            Err(e) => {
+                println!("{}", e);
+                std::process::exit(42);
+            }
+        };
+
         Parser {
-            dfa: dfa::DFA::new(),
+            dfa: dfa,
             nodes: Vec::new(),
             states: vec![0],
             token_state: 0,
@@ -26,19 +34,22 @@ impl<T: Iterator<Item = Result<Token, lexer::LexerError>>> Parser<T> {
         }
     }
 
-    fn consume(&mut self, token: Token) {
+    fn consume(&mut self, token: Token) -> Result<(), error::ParserError> {
         match self.dfa.consume(self.states.last().unwrap_or(&0), &token) {
             Ok(transition) => {
-                match transition.function {
+                let result = match transition.function {
                     dfa::Function::Reduce => self.reduce(transition, token),
                     dfa::Function::Shift => self.shift(transition, token),
+                };
+                match result {
+                    Ok(_) => (),
+                    Err(e) => return Err(e),
                 }
             }
-            Err(e) => {
-                error!("could not get transition for {:?}: {:?}", token, e);
-                std::process::exit(42);
-            }
+            Err(e) => return Err(e),
         }
+
+        Ok(())
     }
 
     fn peek(&mut self) -> Option<Token> {
@@ -70,7 +81,10 @@ impl<T: Iterator<Item = Result<Token, lexer::LexerError>>> Parser<T> {
         }
     }
 
-    fn reduce(&mut self, transition: dfa::Transition, token: Token) {
+    fn reduce(&mut self,
+              transition: dfa::Transition,
+              token: Token)
+              -> Result<(), error::ParserError> {
         let mut children: Vec<tree::Node> = Vec::new();
         let ref rule = self.dfa.rules[transition.value].clone();
         for _ in 0..rule.rhs.len() {
@@ -89,11 +103,20 @@ impl<T: Iterator<Item = Result<Token, lexer::LexerError>>> Parser<T> {
             token: rule.lhs.token.clone(),
         });
 
-        self.consume(rule.lhs.token.clone());
-        self.consume(token);
+        match self.consume(rule.lhs.token.clone()) {
+            Ok(_) => (),
+            Err(e) => return Err(e),
+        }
+        match self.consume(token) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(e),
+        }
     }
 
-    fn shift(&mut self, transition: dfa::Transition, ref token: Token) {
+    fn shift(&mut self,
+             transition: dfa::Transition,
+             ref token: Token)
+             -> Result<(), error::ParserError> {
         self.states.push(transition.value);
         if transition.symbol.terminality == dfa::Terminality::Terminal {
             self.nodes.push(tree::Node {
@@ -101,29 +124,37 @@ impl<T: Iterator<Item = Result<Token, lexer::LexerError>>> Parser<T> {
                 token: token.clone(),
             });
         }
+
+        Ok(())
     }
 
-    pub fn get_tree(&mut self) -> tree::Tree {
+    pub fn get_tree(&mut self) -> Result<tree::Tree, error::ParserError> {
         while let Some(token) = self.peek() {
             match self.dfa.consume(self.states.last().unwrap_or(&0), &token) {
                 Ok(transition) => {
-                    match transition.function {
+                    let result = match transition.function {
                         dfa::Function::Reduce => self.reduce(transition, token),
                         dfa::Function::Shift => self.shift(transition, token),
+                    };
+                    match result {
+                        Ok(_) => (),
+                        Err(e) => return Err(e),
                     }
                     self.tokens.next();
                 }
-                Err(e) => {
-                    error!("could not get transition for {:?}: {:?}", token, e);
-                    std::process::exit(42);
-                }
+                Err(e) => return Err(e),
             }
         }
 
-        if self.nodes.len() != 3 {
-            error!("parse tree could not be reduced to Start");
-            std::process::exit(42);
+        // TODO: one more manual reduce step?
+        match self.nodes.len() {
+            3 => Ok(tree::Tree { root: self.nodes[1].clone() }),
+            _ => {
+                Err(error::ParserError {
+                    arg: "Start".to_string(),
+                    message: error::INVALID_PARSE_TREE,
+                })
+            }
         }
-        tree::Tree { root: self.nodes[1].clone() }
     }
 }

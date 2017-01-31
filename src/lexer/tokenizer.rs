@@ -5,9 +5,9 @@ use std::option::IntoIter;
 use std::str::Chars;
 use std::str::Split;
 
+use common::error;
 use common::Token;
 use common::TokenKind;
-use lexer::error;
 use lexer::identifier;
 
 pub struct Lexer<'file, 'src> {
@@ -80,7 +80,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
         };
     }
 
-    fn error(&self, message: error::LexerErrorMessage) -> error::LexerError {
+    fn error(&self, message: error::ErrorMessage) -> error::LexerError {
         error::LexerError {
             file: self.file.to_owned(),
             index: self.index_character,

@@ -4,9 +4,9 @@ use std::io::BufReader;
 use std::io::Read;
 use std::fs::File;
 
+use common::error;
 use common::Token;
 use common::TokenKind;
-use parser::error;
 
 #[derive(Debug,Clone)]
 pub enum Function {
@@ -48,38 +48,37 @@ pub struct Symbol {
 }
 
 impl Symbol {
-    pub fn new(terminality: Terminality, value: String) -> Symbol {
+    pub fn new(terminality: Terminality, value: String) -> Result<Symbol, error::ParserError> {
         match value.parse() {
             Ok(kind) => {
-                Symbol {
+                Ok(Symbol {
                     terminality: terminality,
                     token: Token {
                         kind: kind,
                         lexeme: Some(value),
                     },
-                }
+                })
             }
             Err(_) => {
-                error!("could not convert string {} to Token", value);
-                std::process::exit(1);
+                Err(error::ParserError {
+                    arg: value,
+                    message: error::STRING_NOT_TOKEN,
+                })
             }
         }
     }
 
-    fn new_from_terminalities(ref kinds_non_terminal: &Vec<TokenKind>,
-                              ref kinds_terminal: &Vec<TokenKind>,
-                              value: String)
-                              -> Symbol {
+    fn new_from_terminals(ref kinds_terminal: &Vec<TokenKind>,
+                          value: String)
+                          -> Result<Symbol, error::ParserError> {
         let kind = match value.parse() {
-            Ok(ref kind) if kinds_non_terminal.contains(kind) => Terminality::NonTerminal,
             Ok(ref kind) if kinds_terminal.contains(kind) => Terminality::Terminal,
-            Ok(_) => {
-                error!("token {:?} has no terminality", value);
-                std::process::exit(1);
-            }
+            Ok(_) => Terminality::NonTerminal,
             _ => {
-                error!("could not convert string {} to Token", value);
-                std::process::exit(1);
+                return Err(error::ParserError {
+                    arg: value,
+                    message: error::STRING_NOT_TOKEN,
+                })
             }
         };
 
@@ -105,12 +104,15 @@ pub struct DFA {
 }
 
 impl DFA {
-    pub fn new() -> DFA {
-        let mut file = match File::open("grammar/joos.lr1") {
+    pub fn new() -> Result<DFA, error::ParserError> {
+        let filename = "grammar/joos.lr1";
+        let mut file = match File::open(filename) {
             Ok(file) => BufReader::new(file),
             Err(_) => {
-                error!("could not read grammar file");
-                std::process::exit(1);
+                return Err(error::ParserError {
+                    arg: filename.to_string(),
+                    message: error::COULD_NOT_READ_FILE,
+                })
             }
         };
 
@@ -122,38 +124,52 @@ impl DFA {
         let num_terminals: u32 = file.by_ref().lines().next().unwrap().unwrap().parse().unwrap();
         for _ in 0..num_terminals {
             let symbol = file.by_ref().lines().next().unwrap().unwrap();
-            terminals.push(Symbol::new(Terminality::Terminal, symbol));
+            match Symbol::new(Terminality::Terminal, symbol) {
+                Ok(s) => terminals.push(s),
+                Err(e) => return Err(e),
+            }
         }
 
         let num_non_terminals: u32 =
             file.by_ref().lines().next().unwrap().unwrap().parse().unwrap();
         for _ in 0..num_non_terminals {
             let symbol = file.by_ref().lines().next().unwrap().unwrap();
-            non_terminals.push(Symbol::new(Terminality::NonTerminal, symbol));
+            match Symbol::new(Terminality::NonTerminal, symbol) {
+                Ok(s) => non_terminals.push(s),
+                Err(e) => return Err(e),
+            }
         }
 
-        let kinds_non_terminal: Vec<TokenKind> =
-            non_terminals.clone().into_iter().map(|t| t.token.kind).collect::<Vec<TokenKind>>();
         let kinds_terminal: Vec<TokenKind> =
             terminals.clone().into_iter().map(|t| t.token.kind).collect::<Vec<TokenKind>>();
 
-        let start = Symbol::new_from_terminalities(&kinds_non_terminal,
-                                                   &kinds_terminal,
-                                                   file.by_ref().lines().next().unwrap().unwrap());
+        let start =
+            match Symbol::new_from_terminals(&kinds_terminal,
+                                             file.by_ref().lines().next().unwrap().unwrap()) {
+                Ok(s) => s,
+                Err(e) => return Err(e),
+            };
 
         let num_rules: u32 = file.by_ref().lines().next().unwrap().unwrap().parse().unwrap();
         for _ in 0..num_rules {
             let rule = file.by_ref().lines().next().unwrap().unwrap();
             let mut sides = rule.splitn(2, " ");
 
-            let lhs = Symbol::new(Terminality::NonTerminal, sides.next().unwrap().to_string());
+            let lhs = match Symbol::new(Terminality::NonTerminal,
+                                        sides.next().unwrap().to_string()) {
+                Ok(s) => s,
+                Err(e) => return Err(e),
+            };
+
             let rhs = match sides.next() {
                 Some(side) => {
                     side.split_whitespace()
-                        .map(|s| {
-                            Symbol::new_from_terminalities(&kinds_non_terminal,
-                                                           &kinds_terminal,
-                                                           s.to_string())
+                        .map(|s| match Symbol::new_from_terminals(&kinds_terminal, s.to_string()) {
+                            Ok(s) => s,
+                            Err(e) => {
+                                println!("{}", e);
+                                std::process::exit(42);
+                            }
                         })
                         .collect()
                 }
@@ -186,24 +202,27 @@ impl DFA {
                     "reduce" => Function::Reduce,
                     "shift" => Function::Shift,
                     f => {
-                        error!("invalid function {}", f);
-                        std::process::exit(1);
+                        return Err(error::ParserError {
+                            arg: f.to_string(),
+                            message: error::INVALID_FUNCTION,
+                        })
                     }
                 },
                 start_state: start_state,
-                symbol: Symbol::new_from_terminalities(&kinds_non_terminal,
-                                                       &kinds_terminal,
-                                                       symbol.to_string()),
+                symbol: match Symbol::new_from_terminals(&kinds_terminal, symbol.to_string()) {
+                    Ok(s) => s,
+                    Err(e) => return Err(e),
+                },
             });
         }
 
-        DFA {
+        Ok(DFA {
             non_terminals: non_terminals,
             rules: rules,
             start: start,
             states: states,
             terminals: terminals,
-        }
+        })
     }
 
     pub fn consume(&self,
@@ -227,6 +246,9 @@ impl DFA {
             }
         }
 
-        Err(error::ParserError { message: "could not consume token".to_string() })
+        Err(error::ParserError {
+            arg: token.lexeme.clone().unwrap_or("".to_string()),
+            message: error::INVALID_TOKEN,
+        })
     }
 }

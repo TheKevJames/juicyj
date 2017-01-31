@@ -1,5 +1,4 @@
 mod dfa;
-mod error;
 mod generator;
 mod tree;
 
