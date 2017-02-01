@@ -307,17 +307,18 @@ impl<'file, 'src> Lexer<'file, 'src> {
             "char" => TokenKind::Char,
             "int" => TokenKind::Int,
             "short" => TokenKind::Short,
-            "String" => TokenKind::Str,
             "void" => TokenKind::Void,
 
             "false" => TokenKind::False,
             "true" => TokenKind::True,
             "null" => TokenKind::Null,
 
-            "Cloneable" => TokenKind::Cloneable,
-            "Integer" => TokenKind::Integer,
-            "Number" => TokenKind::Number,
-            "Object" => TokenKind::Object,
+            // NOTE <1>
+            // "Cloneable" => TokenKind::Cloneable,
+            // "Integer" => TokenKind::Integer,
+            // "Number" => TokenKind::Number,
+            // "Object" => TokenKind::Object,
+            // "String" => TokenKind::Str,
 
             "class" => TokenKind::Class,
             "delete" => TokenKind::Delete,

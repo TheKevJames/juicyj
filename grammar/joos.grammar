@@ -17,19 +17,11 @@ Type:
 	ReferenceType
 
 PrimitiveType:
-	PrimitiveClass
 	BOOLEAN
 	BYTE
 	CHAR
 	INT
 	SHORT
-
-PrimitiveClass:
-	CLONEABLE
-	INTEGER
-	NUMBER
-	OBJECT
-	STRING
 
 ReferenceType:
 	ClassOrInterfaceType
@@ -40,7 +32,6 @@ ClassOrInterfaceType:
 
 ClassType:
 	ClassOrInterfaceType
-	PrimitiveClass
 
 InterfaceType:
 	ClassOrInterfaceType

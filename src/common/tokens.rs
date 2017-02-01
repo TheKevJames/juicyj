@@ -57,17 +57,18 @@ pub enum TokenKind {
     Char,
     Int,
     Short,
-    Str,
     Void,
 
     False,
     True,
     Null,
 
-    Cloneable,
-    Integer,
-    Number,
-    Object,
+    // NOTE <1>: need to treat these as identifiers
+    // Cloneable,
+    // Integer,
+    // Number,
+    // Object,
+    // Str,
 
     Class,
     Delete,
@@ -188,7 +189,6 @@ impl FromStr for TokenKind {
             "CHAR" => Ok(TokenKind::Char),
             "CharacterLit" => Ok(TokenKind::CharValue),
             "CLASS" => Ok(TokenKind::Class),
-            "CLONEABLE" => Ok(TokenKind::Cloneable),
             "COLON" => Ok(TokenKind::Colon),
             "COMMA" => Ok(TokenKind::Comma),
             "CONTINUE" => Ok(TokenKind::Continue),
@@ -213,14 +213,11 @@ impl FromStr for TokenKind {
             "INSTANCEOF" => Ok(TokenKind::Instanceof),
             "INT" => Ok(TokenKind::Int),
             "IntegerLit" => Ok(TokenKind::NumValue),
-            "INTEGER" => Ok(TokenKind::Integer),
             "INTERFACE" => Ok(TokenKind::Interface),
             "LONG" => Ok(TokenKind::Long),
             "NATIVE" => Ok(TokenKind::Native),
             "NEW" => Ok(TokenKind::New),
             "NullLit" => Ok(TokenKind::Null),
-            "NUMBER" => Ok(TokenKind::Number),
-            "OBJECT" => Ok(TokenKind::Object),
             "PACKAGE" => Ok(TokenKind::Package),
             "PRIVATE" => Ok(TokenKind::Private),
             "PROTECTED" => Ok(TokenKind::Protected),
@@ -230,7 +227,6 @@ impl FromStr for TokenKind {
             "SHORT" => Ok(TokenKind::Short),
             "STATIC" => Ok(TokenKind::Static),
             "STRICTFP" => Ok(TokenKind::Strictfp),
-            "STRING" => Ok(TokenKind::Str),
             "StringLit" => Ok(TokenKind::StrValue),
             "SUPER" => Ok(TokenKind::Super),
             "SWITCH" => Ok(TokenKind::Switch),
@@ -250,6 +246,13 @@ impl FromStr for TokenKind {
             "||" => Ok(TokenKind::Or),
             "}" => Ok(TokenKind::RBrace),
             "~" => Ok(TokenKind::Complement),
+
+            // NOTE <1>
+            // "CLONEABLE" => Ok(TokenKind::Cloneable),
+            // "INTEGER" => Ok(TokenKind::Integer),
+            // "NUMBER" => Ok(TokenKind::Number),
+            // "OBJECT" => Ok(TokenKind::Object),
+            // "STRING" => Ok(TokenKind::Str),
 
             _ => Ok(TokenKind::NonTerminal),
         }
