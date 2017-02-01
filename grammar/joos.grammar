@@ -178,6 +178,7 @@ ParameterList:
 	ParameterList COMMA Parameter
 
 Parameter:
+	Type IDENTIFIER
 	Type IDENTIFIER Dim
 
 MethodBody:
