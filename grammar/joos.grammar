@@ -143,7 +143,6 @@ ClassBodyDeclarations:
 
 ClassBodyDeclaration:
 	ClassMemberDeclaration
-	StaticInitializer
 	ConstructorDeclaration
 
 ClassMemberDeclaration:
@@ -186,9 +185,6 @@ Parameter:
 MethodBody:
 	Block
 	SEMICOLON
-
-StaticInitializer:
-	STATIC Block
 
 ConstructorDeclaration:
 	Modifiers ConstructorDeclarator ConstructorBody
