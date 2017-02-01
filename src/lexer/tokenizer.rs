@@ -314,6 +314,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
             "null" => TokenKind::Null,
 
             "class" => TokenKind::Class,
+            "Cloneable" => TokenKind::Cloneable,
             "delete" => TokenKind::Delete,
             "instanceof" => TokenKind::Instanceof,
             "new" => TokenKind::New,

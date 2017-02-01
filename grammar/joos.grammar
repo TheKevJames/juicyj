@@ -26,6 +26,7 @@ PrimitiveType:
 	SHORT
 
 PrimitiveClass:
+	CLONEABLE
 	OBJECT
 	STRING
 
@@ -44,9 +45,9 @@ InterfaceType:
 	ClassOrInterfaceType
 
 ArrayType:
-	PrimitiveType [ ]
-	Name [ ]
-	ArrayType [ ]
+	PrimitiveType Dim
+	Name Dim
+	ArrayType Dim
 
 Name:
 	SimpleName
@@ -106,6 +107,7 @@ ClassDeclaration:
 
 Modifiers:
 	Inheritance
+	Inheritance Absinalative
 	Inheritance STATIC
 	Inheritance STATIC Absinalative
 	STATIC Absinalative
@@ -162,7 +164,7 @@ VariableDeclarator:
 
 VariableDeclaratorId:
 	IDENTIFIER
-	VariableDeclaratorId [ ]
+	VariableDeclaratorId Dim
 
 VariableInitializer:
 	Expression
@@ -179,7 +181,7 @@ MethodHeader:
 MethodDeclarator:
 	IDENTIFIER ( ParameterList )
 	IDENTIFIER ( )
-	MethodDeclarator [ ]
+	MethodDeclarator Dim
 
 ParameterList:
 	Parameter
@@ -205,13 +207,7 @@ ConstructorDeclarator:
 
 ConstructorBody:
 	{ }
-	{ ExplicitConstructorInvocation }
 	{ BlockStatements }
-	{ ExplicitConstructorInvocation BlockStatements }
-
-ExplicitConstructorInvocation:
-	THIS ( ArgumentList ) SEMICOLON
-	THIS ( ) SEMICOLON
 
 InterfaceDeclaration:
 	INTERFACE IDENTIFIER InterfaceBody
@@ -341,7 +337,6 @@ Primary:
 
 PrimaryNoNewArray:
 	Literal
-	THIS
 	( Expression )
 	ClassInstanceCreationExpression
 	FieldAccess
@@ -357,21 +352,17 @@ ArgumentList:
 	ArgumentList COMMA Expression
 
 ArrayCreationExpression:
-	NEW PrimitiveType DimExprs
-	NEW PrimitiveType DimExprs Dims
-	NEW ClassOrInterfaceType DimExprs
-	NEW ClassOrInterfaceType DimExprs Dims
-
-DimExprs:
-	DimExpr
-	DimExprs DimExpr
+	NEW PrimitiveType DimExpr
+	NEW PrimitiveType DimExpr Dim
+	NEW ClassOrInterfaceType DimExpr
+	NEW ClassOrInterfaceType DimExpr Dim
 
 DimExpr:
 	[ Expression ]
+	DimExpr [ Expression ]
 
-Dims:
+Dim:
 	[ ]
-	Dims [ ]
 
 FieldAccess:
 	Primary DOT IDENTIFIER
@@ -402,9 +393,9 @@ UnaryExpressionNotSign:
 
 CastExpression:
 	( PrimitiveType ) UnaryExpression
-	( PrimitiveType Dims ) UnaryExpression
+	( PrimitiveType Dim ) UnaryExpression
 	( Expression ) UnaryExpressionNotSign
-	( Name Dims ) UnaryExpressionNotSign
+	( Name Dim ) UnaryExpressionNotSign
 
 MultiplicativeExpression:
 	UnaryExpression

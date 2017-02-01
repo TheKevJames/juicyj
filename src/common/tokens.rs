@@ -65,6 +65,7 @@ pub enum TokenKind {
     Null,
 
     Class,
+    Cloneable,
     Delete,
     Instanceof,
     New,
@@ -184,6 +185,7 @@ impl FromStr for TokenKind {
             "CHAR" => Ok(TokenKind::Char),
             "CharacterLit" => Ok(TokenKind::CharValue),
             "CLASS" => Ok(TokenKind::Class),
+            "CLONEABLE" => Ok(TokenKind::Cloneable),
             "COLON" => Ok(TokenKind::Colon),
             "COMMA" => Ok(TokenKind::Comma),
             "CONTINUE" => Ok(TokenKind::Continue),
