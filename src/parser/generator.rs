@@ -133,19 +133,22 @@ impl<T: Iterator<Item = Result<Token, error::LexerError>>> Parser<T> {
             match self.dfa.consume(self.states.last().unwrap_or(&0), &token) {
                 Ok(transition) => {
                     let result = match transition.function {
-                        dfa::Function::Reduce => self.reduce(transition, token),
-                        dfa::Function::Shift => self.shift(transition, token),
+                        dfa::Function::Reduce => self.reduce(transition, token.clone()),
+                        dfa::Function::Shift => self.shift(transition, token.clone()),
                     };
                     match result {
                         Ok(_) => (),
                         Err(e) => return Err(e),
                     }
-                    self.tokens.next();
+                    if token.kind != TokenKind::BOF {
+                        self.tokens.next();
+                    }
                 }
                 Err(e) => {
                     for node in self.nodes.clone() {
                         node.print(0);
                     }
+                    debug!("Last known state: {}", self.states.last().unwrap_or(&0));
                     return Err(e);
                 }
             }
