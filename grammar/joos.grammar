@@ -208,7 +208,7 @@ InterfaceMemberDeclaration:
 	AbstractMethodDeclaration
 
 ConstantDeclaration:
-	FieldDeclaration
+	Modifiers Type IDENTIFIER = Expression SEMICOLON
 
 AbstractMethodDeclaration:
 	MethodHeader SEMICOLON
