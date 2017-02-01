@@ -1,6 +1,17 @@
 use std;
 
 #[derive(Debug)]
+pub struct ASTError {
+    pub message: &'static str,
+}
+
+impl std::fmt::Display for ASTError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "error: {}", self.message)
+    }
+}
+
+#[derive(Debug)]
 pub struct LexerError {
     pub file: String,
     pub index: u32,
@@ -39,6 +50,17 @@ pub struct ParserError {
 impl std::fmt::Display for ParserError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "error: {} ({})", self.message.message, self.arg)
+    }
+}
+
+#[derive(Debug)]
+pub struct WeederError {
+    pub message: &'static str,
+}
+
+impl std::fmt::Display for WeederError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "error: {}", self.message)
     }
 }
 
