@@ -366,6 +366,7 @@ UnaryNoSignExpression:
 CastExpression:
 	( PrimitiveType ) UnaryExpression
 	( PrimitiveType Dim ) UnaryExpression
+	( Expression ) UnaryNoSignExpression
 	( Name Dim ) UnaryNoSignExpression
 
 MultiplicativeExpression:
