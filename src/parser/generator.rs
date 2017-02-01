@@ -20,8 +20,9 @@ impl<T: Iterator<Item = Result<Token, error::LexerError>>> Parser<T> {
         let dfa = match dfa::DFA::new() {
             Ok(dfa) => dfa,
             Err(e) => {
-                println!("{}", e);
-                std::process::exit(42);
+                error!("could not create DFA");
+                error!("{}", e);
+                std::process::exit(1);
             }
         };
 
