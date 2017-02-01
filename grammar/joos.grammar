@@ -149,12 +149,8 @@ ClassMemberDeclaration:
 	MethodDeclaration
 
 FieldDeclaration:
-	Modifiers Type VariableDeclarators SEMICOLON
-	Type VariableDeclarators SEMICOLON
-
-VariableDeclarators:
-	VariableDeclarator
-	VariableDeclarators COMMA VariableDeclarator
+	Modifiers Type VariableDeclarator SEMICOLON
+	Type VariableDeclarator SEMICOLON
 
 VariableDeclarator:
 	IDENTIFIER
