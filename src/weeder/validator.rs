@@ -60,6 +60,12 @@ impl Weeder {
             }
             TokenKind::NonTerminal => {
                 match node.token.lexeme {
+                    Some(ref l) if l == "AbstractMethodDeclaration" => {
+                        if !node.children[1].clone().has_child_kind(&TokenKind::Abstract) {
+                            error!("Concrete method has no body!");
+                            std::process::exit(42);
+                        }
+                    }
                     Some(ref l) if l == "MethodDeclaration" => {
                         if node.children[1].clone().has_child_kind(&TokenKind::Abstract) {
                             match node.children[0].token.lexeme {
