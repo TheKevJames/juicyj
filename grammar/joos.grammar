@@ -22,7 +22,6 @@ PrimitiveType:
 	BYTE
 	CHAR
 	INT
-	LONG
 	SHORT
 
 PrimitiveClass:
