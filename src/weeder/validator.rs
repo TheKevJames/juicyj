@@ -37,6 +37,9 @@ impl<'filename, 'tree> Weeder<'filename, 'tree> {
                     Some(ref l) if l.starts_with("0") && l.len() > 1 => {
                         return Err(error::WeederError { message: "weeder found octal digit!" });
                     }
+                    Some(ref l) if l.parse().unwrap_or(0) > 2u64.pow(31) => {
+                        return Err(error::WeederError { message: "weeder found int out of range" });
+                    }
                     _ => (),
                 }
             }

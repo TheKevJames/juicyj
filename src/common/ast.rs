@@ -166,17 +166,6 @@ impl AST {
                             Err(e) => return Err(e),
                         }
 
-                        if children[1].token.kind == TokenKind::NumValue {
-                            match children[1].token.lexeme {
-                                Some(ref l) if l.parse().unwrap_or(0) > 2u64.pow(31) => {
-                                    return Err(error::ASTError {
-                                        message: "ast found int to small",
-                                    });
-                                }
-                                _ => (),
-                            }
-                        }
-
                         Ok(ASTNode {
                             token: node.children[0].token.clone(),
                             children: children,
@@ -189,7 +178,9 @@ impl AST {
                     // TODO: does this miss the following case?
                     // CastExpression:
                     //     ( Name Dim ) UnaryNoSignExpression
-                    Some(ref l) if node.children.len() == 1 && l == "UnaryExpression" => {
+
+                    // parent of UnaryExpression
+                    Some(ref l) if node.children.len() == 1 && l == "MultiplicativeExpression" => {
                         match AST::parse_types(&node.children[0]) {
                             Ok(node) => {
                                 if node.token.kind == TokenKind::NumValue {
@@ -197,7 +188,7 @@ impl AST {
                                         Some(ref l) if l.parse().unwrap_or(0) >
                                                        2u64.pow(31) - 1 => {
                                             return Err(error::ASTError {
-                                                message: "ast found int to big",
+                                                message: "ast found int too big",
                                             });
                                         }
                                         _ => (),
