@@ -359,9 +359,9 @@ PostfixExpression:
 
 UnaryExpression:
 	- UnaryExpression
-	UnaryExpressionNotSign
+	UnaryNoSignExpression
 
-UnaryExpressionNotSign:
+UnaryNoSignExpression:
 	PostfixExpression
 	! UnaryExpression
 	CastExpression
@@ -369,7 +369,7 @@ UnaryExpressionNotSign:
 CastExpression:
 	( PrimitiveType ) UnaryExpression
 	( PrimitiveType Dim ) UnaryExpression
-	( Name Dim ) UnaryExpressionNotSign
+	( Name Dim ) UnaryNoSignExpression
 
 MultiplicativeExpression:
 	UnaryExpression
