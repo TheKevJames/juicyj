@@ -13,12 +13,23 @@ macro_rules! feature_tests {
             let src: String = read_src_file(&filename);
 
             let lexer = juicyj::lexer::Lexer::new(&filename, &src);
+            for token in lexer.clone().collect::<Vec<Result<_, _>>>() {
+                match token {
+                    Ok(_) => (),
+                    Err(e) => {
+                        println!("Lexer Error");
+                        println!("{}", e);
+                        assert!(false);
+                        std::process::exit(1);
+                    },
+                }
+            }
 
             let mut parser = juicyj::parser::Parser::new(lexer);
             let parse_tree = match parser.get_tree() {
                 Ok(pt) => Ok(pt),
                 Err(e) => {
-                    println!("Lexer/Parser Error");
+                    println!("Parser Error");
                     println!("{}", e);
                     assert!(false);
                     std::process::exit(1);

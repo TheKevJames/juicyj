@@ -10,6 +10,7 @@ use common::Token;
 use common::TokenKind;
 use lexer::identifier;
 
+#[derive(Clone)]
 pub struct Lexer<'file, 'src> {
     current: Option<char>,
     file: &'file str,
