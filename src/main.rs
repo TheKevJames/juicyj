@@ -47,7 +47,7 @@ fn main() {
 
     let lexer = juicyj::lexer::Lexer::new(&file, &src);
     let mut parser = juicyj::parser::Parser::new(lexer);
-    let mut weeder = juicyj::weeder::Weeder::new(parser.get_tree());
+    let mut weeder = juicyj::weeder::Weeder::new(&file, parser.get_tree());
     weeder.verify(None);
 }
 

@@ -5,13 +5,14 @@ use common::TokenKind;
 use parser::Node;
 use parser::Tree;
 
-pub struct Weeder {
+pub struct Weeder<'filename> {
+    filename: &'filename str,
     has_class: bool,
     tree: Tree,
 }
 
-impl Weeder {
-    pub fn new(tree: Result<Tree, error::ParserError>) -> Weeder {
+impl<'filename> Weeder<'filename> {
+    pub fn new(filename: &'filename str, tree: Result<Tree, error::ParserError>) -> Weeder {
         let tree = match tree {
             Ok(t) => t,
             Err(e) => {
@@ -22,6 +23,7 @@ impl Weeder {
         tree.clone().print();
 
         Weeder {
+            filename: filename.split("/").last().unwrap_or(""),
             has_class: false,
             tree: tree,
         }
@@ -111,6 +113,32 @@ impl Weeder {
                             if !node.children[1].clone().has_child_kind(&TokenKind::Static) {
                                 error!("Native method must be static!");
                                 std::process::exit(42);
+                            }
+                        }
+                    }
+                    Some(ref l) if l == "ClassDeclaration" => {
+                        for (idx, child) in node.children.iter().enumerate() {
+                            if child.token.kind == TokenKind::Class {
+                                match node.children[idx - 1].token.lexeme {
+                                    Some(ref l) if format!("{}.java", l) == self.filename => (),
+                                    _ => {
+                                        error!("Class name must match filename!");
+                                        std::process::exit(42);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Some(ref l) if l == "InterfaceDeclaration" => {
+                        for (idx, child) in node.children.iter().enumerate() {
+                            if child.token.kind == TokenKind::Interface {
+                                match node.children[idx - 1].token.lexeme {
+                                    Some(ref l) if format!("{}.java", l) == self.filename => (),
+                                    _ => {
+                                        error!("Interface name must match filename!");
+                                        std::process::exit(42);
+                                    }
+                                }
                             }
                         }
                     }
