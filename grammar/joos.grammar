@@ -335,6 +335,7 @@ Primary:
 
 PrimaryNoNewArray:
 	Literal
+	THIS
 	( Expression )
 	ClassInstanceCreationExpression
 	FieldAccess
