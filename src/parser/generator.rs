@@ -20,6 +20,7 @@ impl<T: Iterator<Item = Result<Token, error::LexerError>>> Parser<T> {
         let dfa = match dfa::DFA::new() {
             Ok(dfa) => dfa,
             Err(e) => {
+                // TODO: get this out of here
                 error!("could not create DFA");
                 error!("{}", e);
                 std::process::exit(1);
@@ -64,6 +65,7 @@ impl<T: Iterator<Item = Result<Token, error::LexerError>>> Parser<T> {
             match self.tokens.peek() {
                 Some(&Ok(ref t)) => Some(t.clone()),
                 Some(&Err(ref e)) => {
+                    // TODO: get this out of here
                     println!("{}", e);
                     std::process::exit(42);
                 }
@@ -93,8 +95,10 @@ impl<T: Iterator<Item = Result<Token, error::LexerError>>> Parser<T> {
             match self.nodes.pop() {
                 Some(n) => children.insert(0, n),
                 _ => {
-                    error!("could not reduce entire rule {:?}", rule);
-                    std::process::exit(1);
+                    return Err(error::ParserError {
+                        arg: format!("{:?}", rule),
+                        message: error::COULD_NOT_REDUCE_STACK,
+                    })
                 }
             }
         }
@@ -109,9 +113,11 @@ impl<T: Iterator<Item = Result<Token, error::LexerError>>> Parser<T> {
             Err(e) => return Err(e),
         }
         match self.consume(token) {
-            Ok(_) => Ok(()),
-            Err(e) => Err(e),
+            Ok(_) => (),
+            Err(e) => return Err(e),
         }
+
+        Ok(())
     }
 
     fn shift(&mut self,

@@ -46,7 +46,10 @@ pub struct ParserError {
 
 impl std::fmt::Display for ParserError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "error: {} ({})", self.message.message, self.arg)
+        write!(f,
+               "error: {}\n |\n | {}\n |",
+               self.message.message,
+               self.arg)
     }
 }
 
@@ -72,6 +75,9 @@ pub const CHAR_TOO_LONG_OCTAL: ErrorMessage =
     ErrorMessage { message: "too many characters in char (maybe malformed octal?)" };
 
 pub const COULD_NOT_READ_FILE: ErrorMessage = ErrorMessage { message: "could not read file" };
+
+pub const COULD_NOT_REDUCE_STACK: ErrorMessage =
+    ErrorMessage { message: "could entirely not reduce stack" };
 
 pub const INT_OOB: ErrorMessage = ErrorMessage { message: "integer out of bounds" };
 

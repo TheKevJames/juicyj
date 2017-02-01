@@ -247,8 +247,7 @@ impl DFA {
         }
 
         Err(error::ParserError {
-            // arg: token.lexeme.clone().unwrap_or("[NONE]".to_string()),
-            arg: format!("{:?}", token.kind),
+            arg: format!("{:?}", token),
             message: error::INVALID_TOKEN,
         })
     }
