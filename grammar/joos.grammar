@@ -57,7 +57,7 @@ SimpleName:
 	IDENTIFIER
 
 QualifiedName:
-	Name DOT IDENTIFIER
+	Name DOT SimpleName
 
 S:
 	\epsilon
