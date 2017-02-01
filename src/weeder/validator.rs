@@ -87,6 +87,33 @@ impl Weeder {
                             }
                         }
                     }
+                    Some(ref l) if l == "MethodHeader" => {
+                        if node.children[1].clone().has_child_kind(&TokenKind::Abstract) {
+                            if node.children[1].clone().has_child_kind(&TokenKind::Final) {
+                                error!("Abstract method can not be final!");
+                                std::process::exit(42);
+                            }
+
+                            if node.children[1].clone().has_child_kind(&TokenKind::Static) {
+                                error!("Abstract method can not be static!");
+                                std::process::exit(42);
+                            }
+                        }
+
+                        if node.children[1].clone().has_child_kind(&TokenKind::Static) {
+                            if node.children[1].clone().has_child_kind(&TokenKind::Final) {
+                                error!("Static method can not be final!");
+                                std::process::exit(42);
+                            }
+                        }
+
+                        if node.children[1].clone().has_child_kind(&TokenKind::Native) {
+                            if !node.children[1].clone().has_child_kind(&TokenKind::Static) {
+                                error!("Native method must be static!");
+                                std::process::exit(42);
+                            }
+                        }
+                    }
                     _ => (),
                 }
             }
