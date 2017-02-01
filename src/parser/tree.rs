@@ -28,6 +28,16 @@ impl Node {
         }
     }
 
+    pub fn collect_child_kinds(self, kinds: &Vec<&TokenKind>, collector: &mut Vec<Token>) {
+        if kinds.contains(&&self.token.kind) {
+            collector.push(self.token.clone());
+        }
+
+        for child in self.children {
+            child.collect_child_kinds(kinds, collector);
+        }
+    }
+
     pub fn has_child_kind(self, kind: &TokenKind) -> bool {
         if &self.token.kind == kind {
             return true;

@@ -90,7 +90,7 @@ impl<T: Iterator<Item = Result<Token, error::LexerError>>> Parser<T> {
         for _ in 0..rule.rhs.len() {
             self.states.pop();
             match self.nodes.pop() {
-                Some(n) => children.push(n),
+                Some(n) => children.insert(0, n),
                 _ => {
                     error!("could not reduce entire rule {:?}", rule);
                     std::process::exit(1);
@@ -148,7 +148,7 @@ impl<T: Iterator<Item = Result<Token, error::LexerError>>> Parser<T> {
                     for node in self.nodes.clone() {
                         node.print(0);
                     }
-                    debug!("Last known state: {}", self.states.last().unwrap_or(&0));
+                    println!("Last known state: {}", self.states.last().unwrap_or(&0));
                     return Err(e);
                 }
             }
