@@ -27,7 +27,7 @@ macro_rules! public_succeed_tests {
 
             let mut parser = juicyj::parser::Parser::new(lexer);
             let parse_tree = match parser.get_tree() {
-                Ok(pt) => Ok(pt),
+                Ok(pt) => pt,
                 Err(e) => {
                     println!("Parser Error");
                     println!("{}", e);
@@ -36,15 +36,7 @@ macro_rules! public_succeed_tests {
                 }
             };
 
-            let mut weeder = match juicyj::weeder::Weeder::new(&filename, &parse_tree) {
-                Ok(w) => w,
-                Err(e) => {
-                    println!("Weeder Construction Error");
-                    println!("{}", e);
-                    assert!(false);
-                    std::process::exit(1);
-                }
-            };
+            let mut weeder = juicyj::weeder::Weeder::new(&filename, &parse_tree);
             match weeder.verify(None) {
                 Ok(_) => (),
                 Err(e) => {

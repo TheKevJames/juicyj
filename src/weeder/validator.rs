@@ -11,18 +11,13 @@ pub struct Weeder<'filename, 'tree> {
 
 impl<'filename, 'tree> Weeder<'filename, 'tree> {
     pub fn new(filename: &'filename str,
-               tree: &'tree Result<Tree, error::ParserError>)
-               -> Result<Weeder<'filename, 'tree>, error::WeederError> {
-        let tree = match tree {
-            &Ok(ref t) => t,
-            &Err(ref e) => return Err(error::WeederError { message: e.message.message }),
-        };
-
-        Ok(Weeder {
+               tree: &'tree Tree)
+               -> Weeder<'filename, 'tree> {
+        Weeder {
             filename: filename.split("/").last().unwrap_or(""),
             has_class: false,
             tree: tree,
-        })
+        }
     }
 
     pub fn verify(&mut self, node: Option<Node>) -> Result<(), error::WeederError> {

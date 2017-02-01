@@ -48,15 +48,15 @@ fn main() {
     let lexer = juicyj::lexer::Lexer::new(&file, &src);
 
     let mut parser = juicyj::parser::Parser::new(lexer);
-    let parse_tree = parser.get_tree();
-
-    let mut weeder = match juicyj::weeder::Weeder::new(&file, &parse_tree) {
-        Ok(weed) => weed,
+    let parse_tree = match parser.get_tree() {
+        Ok(pt) => pt,
         Err(e) => {
             println!("{}", e);
             std::process::exit(42);
         }
     };
+
+    let mut weeder = juicyj::weeder::Weeder::new(&file, &parse_tree);
     match weeder.verify(None) {
         Ok(_) => (),
         Err(e) => {

@@ -28,16 +28,11 @@ pub struct ASTNodePackage {
 }
 
 impl AST {
-    pub fn new(parse_tree: &Result<Tree, error::ParserError>) -> Result<AST, error::ASTError> {
-        let node = match parse_tree {
-            &Ok(ref t) => t.clone().root,
-            &Err(ref e) => return Err(error::ASTError { message: e.message.message }),
-        };
-
+    pub fn new(parse_tree: &Tree) -> Result<AST, error::ASTError> {
         let mut imports = None;
         let mut package = None;
         let mut root = None;
-        for child in node.children {
+        for child in parse_tree.root.clone().children {
             match child.token.lexeme {
                 Some(ref l) if l == "PackageDeclaration" => {
                     package = match AST::parse_package(&child) {
