@@ -76,6 +76,16 @@ impl Weeder {
                                 _ => (),
                             }
                         }
+
+                        if node.children[1].clone().has_child_kind(&TokenKind::Native) {
+                            match node.children[0].token.lexeme {
+                                Some(ref l) if l == "MethodBody" => {
+                                    error!("Native method has body!");
+                                    std::process::exit(42);
+                                }
+                                _ => (),
+                            }
+                        }
                     }
                     _ => (),
                 }
