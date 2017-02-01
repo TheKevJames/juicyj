@@ -1,6 +1,5 @@
 use std;
 
-#[derive(Debug)]
 pub struct ASTError {
     pub message: ErrorMessage,
 }
@@ -11,7 +10,6 @@ impl std::fmt::Display for ASTError {
     }
 }
 
-#[derive(Debug)]
 pub struct LexerError {
     pub file: String,
     pub index: u32,
@@ -41,7 +39,6 @@ impl std::fmt::Display for LexerError {
     }
 }
 
-#[derive(Debug)]
 pub struct ParserError {
     pub arg: String,
     pub message: ErrorMessage,
@@ -53,7 +50,6 @@ impl std::fmt::Display for ParserError {
     }
 }
 
-#[derive(Debug)]
 pub struct WeederError {
     pub message: &'static str,
 }
@@ -64,7 +60,6 @@ impl std::fmt::Display for WeederError {
     }
 }
 
-#[derive(Debug)]
 pub struct ErrorMessage {
     pub message: &'static str,
 }
