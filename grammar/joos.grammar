@@ -110,9 +110,6 @@ Modifiers:
 	Inheritance Absinalative
 	Inheritance STATIC
 	Inheritance STATIC Absinalative
-	Absinalative
-	STATIC
-	STATIC Absinalative
 
 Inheritance:
 	PUBLIC
