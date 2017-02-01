@@ -96,10 +96,6 @@ TypeDeclaration:
 	SEMICOLON
 
 ClassDeclaration:
-	CLASS IDENTIFIER ClassBody
-	CLASS IDENTIFIER Implements ClassBody
-	CLASS IDENTIFIER ClassExtends ClassBody
-	CLASS IDENTIFIER ClassExtends Implements ClassBody
 	Modifiers CLASS IDENTIFIER ClassBody
 	Modifiers CLASS IDENTIFIER Implements ClassBody
 	Modifiers CLASS IDENTIFIER ClassExtends ClassBody
