@@ -371,7 +371,6 @@ PostfixExpression:
 	Name
 
 UnaryExpression:
-	+ UnaryExpression
 	- UnaryExpression
 	UnaryExpressionNotSign
 
