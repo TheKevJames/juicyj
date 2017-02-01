@@ -1,4 +1,9 @@
 // PARSER_WEEDER,CODE_GENERATION
+package com.tests.cases;
+
+import java.lang.*;
+import java.util.something;
+
 public class J1_01 {
     public J1_01() {}
     public static int test() {
@@ -17,7 +22,7 @@ public class J1_01 {
 	if (r4==6) r=r+1;
 	if (r5==9) r=r+1;
 	if (r6==6) r=r+1;
-	
+
 	return 117+r;
     }
 
