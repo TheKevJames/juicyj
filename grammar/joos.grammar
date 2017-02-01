@@ -148,10 +148,7 @@ FieldDeclaration:
 
 VariableDeclarator:
 	IDENTIFIER
-	IDENTIFIER = VariableInitializer
-
-VariableInitializer:
-	Expression
+	IDENTIFIER = Expression
 
 MethodDeclaration:
 	MethodHeader MethodBody
