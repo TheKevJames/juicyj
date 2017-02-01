@@ -55,15 +55,15 @@ macro_rules! feature_tests {
                 }
             }
 
-            // match juicyj::common::AST::new(&parse_tree) {
-            //     Ok(_) => assert!(true),
-            //     Err(e) => {
-            //         println!("AST Construction Error");
-            //         println!("{}", e);
-            //         assert!(false);
-            //         std::process::exit(1);
-            //     }
-            // };
+            match juicyj::common::AST::new(&parse_tree) {
+                Ok(_) => assert!(true),
+                Err(e) => {
+                    println!("AST Construction Error");
+                    println!("{}", e);
+                    assert!(false);
+                    std::process::exit(1);
+                }
+            };
 
             assert!(true);
         }
