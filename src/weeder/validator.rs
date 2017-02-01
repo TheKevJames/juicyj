@@ -42,12 +42,6 @@ impl<'filename> Weeder<'filename> {
                         error!("Octal digit!");
                         std::process::exit(42);
                     }
-                    Some(ref n) => {
-                        if n.parse::<i64>().unwrap_or(0) > (2i64.pow(31) - 1) {
-                            error!("Out of bounds int!");
-                            std::process::exit(42);
-                        }
-                    }
                     _ => (),
                 }
             }
