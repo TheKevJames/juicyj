@@ -21,6 +21,8 @@ def main(infile, outfile):
                 cur_non_term = NON_TERM.match(line).groups()[0]
                 nontermlist.add(cur_non_term)
             except AttributeError:
+                assert line.startswith('\t'), line
+
                 line = line.strip()
                 if line == '\\epsilon':
                     ruleset.add(cur_non_term)
