@@ -100,6 +100,13 @@ impl<'filename, 'tree> Weeder<'filename, 'tree> {
                             }
                         }
                     }
+                    Some(ref l) if l == "FieldDeclaration" &&
+                                   node.children[0].clone().has_child_kind(&TokenKind::Final) &&
+                                   node.children[2].clone().children.len() != 3 => {
+                        return Err(error::WeederError {
+                            message: "weeder found final field with no initializer",
+                        });
+                    }
                     Some(ref l) if l == "ClassDeclaration" => {
                         for (idx, child) in node.children.iter().enumerate() {
                             if child.token.kind == TokenKind::Class {

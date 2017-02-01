@@ -137,8 +137,11 @@ impl AST {
                             Ok(child) => {
                                 if child.token.kind == TokenKind::NumValue {
                                     match child.token.lexeme {
-                                        Some(ref l) if l.parse().unwrap_or(0) > 2u64.pow(31) - 1 => {
-                                            return Err(error::ASTError { message: "ast found int to big" });
+                                        Some(ref l) if l.parse().unwrap_or(0) >
+                                                       2u64.pow(31) - 1 => {
+                                            return Err(error::ASTError {
+                                                message: "ast found int to big",
+                                            });
                                         }
                                         _ => (),
                                     }
@@ -166,7 +169,9 @@ impl AST {
                         if children[1].token.kind == TokenKind::NumValue {
                             match children[1].token.lexeme {
                                 Some(ref l) if l.parse().unwrap_or(0) > 2u64.pow(31) => {
-                                    return Err(error::ASTError { message: "ast found int to small" });
+                                    return Err(error::ASTError {
+                                        message: "ast found int to small",
+                                    });
                                 }
                                 _ => (),
                             }
@@ -181,21 +186,26 @@ impl AST {
                                node.children[1].token.kind == TokenKind::Semicolon => {
                         AST::parse_types(&node.children[0])
                     }
-                    // TODO: does this miss the case of CastExpression: ( Name Dim ) UnaryNoSignExpression ?
+                    // TODO: does this miss the following case?
+                    // CastExpression:
+                    //     ( Name Dim ) UnaryNoSignExpression
                     Some(ref l) if node.children.len() == 1 && l == "UnaryExpression" => {
                         match AST::parse_types(&node.children[0]) {
                             Ok(node) => {
                                 if node.token.kind == TokenKind::NumValue {
                                     match node.token.lexeme {
-                                        Some(ref l) if l.parse().unwrap_or(0) > 2u64.pow(31) - 1 => {
-                                            return Err(error::ASTError { message: "ast found int to big" });
+                                        Some(ref l) if l.parse().unwrap_or(0) >
+                                                       2u64.pow(31) - 1 => {
+                                            return Err(error::ASTError {
+                                                message: "ast found int to big",
+                                            });
                                         }
                                         _ => (),
                                     }
                                 }
 
                                 Ok(node)
-                            },
+                            }
                             Err(e) => Err(e),
                         }
                     }
