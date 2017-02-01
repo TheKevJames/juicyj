@@ -39,6 +39,10 @@ impl Weeder {
                     debug!("Octal digit!");
                     std::process::exit(42);
                 },
+                Some(ref n) => if n.parse::<i64>().unwrap_or(0) > (2i64.pow(31) - 1) {
+                    debug!("Out of bounds int!");
+                    std::process::exit(42);
+                },
                 _ => (),
             },
             TokenKind::Class => match self.has_class {
