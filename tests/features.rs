@@ -15,10 +15,8 @@ macro_rules! feature_tests {
             let lexer = juicyj::lexer::Lexer::new(&filename, &src);
 
             let mut parser = juicyj::parser::Parser::new(lexer);
-            // let parse_tree = match parser.get_tree() {
-                // Ok(pt) => Ok(pt),
-            match parser.get_tree() {
-                Ok(_) => (),
+            let parse_tree = match parser.get_tree() {
+                Ok(pt) => Ok(pt),
                 Err(e) => {
                     println!("Lexer/Parser Error");
                     println!("{}", e);
@@ -27,24 +25,24 @@ macro_rules! feature_tests {
                 }
             };
 
-            // let mut weeder = match juicyj::weeder::Weeder::new(&filename, &parse_tree) {
-            //     Ok(w) => w,
-            //     Err(e) => {
-            //         println!("Weeder Construction Error");
-            //         println!("{}", e);
-            //         assert!(false);
-            //         std::process::exit(1);
-            //     }
-            // };
-            // match weeder.verify(None) {
-            //     Ok(_) => (),
-            //     Err(e) => {
-            //         println!("Weeder Verification Error");
-            //         println!("{}", e);
-            //         assert!(false);
-            //         std::process::exit(1);
-            //     }
-            // }
+            let mut weeder = match juicyj::weeder::Weeder::new(&filename, &parse_tree) {
+                Ok(w) => w,
+                Err(e) => {
+                    println!("Weeder Construction Error");
+                    println!("{}", e);
+                    assert!(false);
+                    std::process::exit(1);
+                }
+            };
+            match weeder.verify(None) {
+                Ok(_) => (),
+                Err(e) => {
+                    println!("Weeder Verification Error");
+                    println!("{}", e);
+                    assert!(false);
+                    std::process::exit(1);
+                }
+            }
 
             // match juicyj::common::AST::new(&parse_tree) {
             //     Ok(_) => assert!(true),
