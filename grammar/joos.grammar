@@ -47,7 +47,6 @@ InterfaceType:
 ArrayType:
 	PrimitiveType Dim
 	Name Dim
-	ArrayType Dim
 
 Name:
 	SimpleName
@@ -352,14 +351,13 @@ ArgumentList:
 	ArgumentList COMMA Expression
 
 ArrayCreationExpression:
+	NEW PrimitiveType Dim
 	NEW PrimitiveType DimExpr
-	NEW PrimitiveType DimExpr Dim
+	NEW ClassOrInterfaceType Dim
 	NEW ClassOrInterfaceType DimExpr
-	NEW ClassOrInterfaceType DimExpr Dim
 
 DimExpr:
 	[ Expression ]
-	DimExpr [ Expression ]
 
 Dim:
 	[ ]
