@@ -144,7 +144,6 @@ ClassMemberDeclaration:
 
 FieldDeclaration:
 	Modifiers Type VariableDeclarator SEMICOLON
-	Type VariableDeclarator SEMICOLON
 
 VariableDeclarator:
 	IDENTIFIER
@@ -158,9 +157,7 @@ MethodDeclaration:
 
 MethodHeader:
 	Modifiers Type MethodDeclarator
-	Type MethodDeclarator
 	Modifiers VOID MethodDeclarator
-	VOID MethodDeclarator
 
 MethodDeclarator:
 	IDENTIFIER ( ParameterList )
@@ -181,7 +178,6 @@ MethodBody:
 
 ConstructorDeclaration:
 	Modifiers ConstructorDeclarator ConstructorBody
-	ConstructorDeclarator ConstructorBody
 
 ConstructorDeclarator:
 	SimpleName ( ParameterList )
@@ -192,9 +188,7 @@ ConstructorBody:
 	{ BlockStatements }
 
 InterfaceDeclaration:
-	INTERFACE IDENTIFIER InterfaceBody
 	Modifiers INTERFACE IDENTIFIER InterfaceBody
-	INTERFACE IDENTIFIER InterfaceExtends InterfaceBody
 	Modifiers INTERFACE IDENTIFIER InterfaceExtends InterfaceBody
 
 InterfaceExtends:
