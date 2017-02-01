@@ -157,12 +157,8 @@ VariableDeclarators:
 	VariableDeclarators COMMA VariableDeclarator
 
 VariableDeclarator:
-	VariableDeclaratorId
-	VariableDeclaratorId = VariableInitializer
-
-VariableDeclaratorId:
 	IDENTIFIER
-	VariableDeclaratorId Dim
+	IDENTIFIER = VariableInitializer
 
 VariableInitializer:
 	Expression
@@ -186,7 +182,7 @@ ParameterList:
 	ParameterList COMMA Parameter
 
 Parameter:
-	Type VariableDeclaratorId
+	Type IDENTIFIER Dim
 
 MethodBody:
 	Block
