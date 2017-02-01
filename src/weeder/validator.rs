@@ -35,7 +35,7 @@ impl Weeder {
 
         match node.token.kind {
             TokenKind::NumValue => match node.token.lexeme {
-                Some(ref n) if n.starts_with("0") => {
+                Some(ref n) if n.starts_with("0") && n.len() > 1 => {
                     debug!("Octal digit!");
                     std::process::exit(42);
                 },
