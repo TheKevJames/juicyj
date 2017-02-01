@@ -47,14 +47,7 @@ fn main() {
 
     let lexer = juicyj::lexer::Lexer::new(&file, &src);
     let mut parser = juicyj::parser::Parser::new(lexer);
-    let tree = match parser.get_tree() {
-        Ok(t) => t,
-        Err(e) => {
-            println!("{}", e);
-            std::process::exit(42);
-        }
-    };
-    tree.print();
+    let weeder = juicyj::weeder::Weeder::new(parser.get_tree());
 }
 
 fn read_src_file(file: &String) -> String {

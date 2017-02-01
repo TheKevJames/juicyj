@@ -1,6 +1,6 @@
 use common::Token;
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct Tree {
     pub root: Node,
 }
