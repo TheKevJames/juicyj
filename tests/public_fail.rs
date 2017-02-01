@@ -13,25 +13,49 @@ macro_rules! public_fail_tests {
             let src: String = read_src_file(&filename);
 
             let lexer = juicyj::lexer::Lexer::new(&filename, &src);
+            for token in lexer.clone().collect::<Vec<Result<_, _>>>() {
+                match token {
+                    Ok(_) => (),
+                    Err(_) => {
+                        println!("Lexer Error");
+                        assert!(true);
+                        return;
+                    },
+                }
+            }
 
             let mut parser = juicyj::parser::Parser::new(lexer);
-            let parse_tree = parser.get_tree();
+            let parse_tree = match parser.get_tree() {
+                Ok(pt) => Ok(pt),
+                Err(_) => {
+                    println!("Parser Error");
+                    assert!(true);
+                    return;
+                }
+            };
 
-            match juicyj::weeder::Weeder::new(&filename, &parse_tree) {
-                Ok(w) => {
-                    let mut weeder = w;
-                    match weeder.verify(None) {
-                        Ok(_) => {
-                            match juicyj::common::AST::new(&parse_tree) {
-                                Ok(_) => {
-                                    assert!(false);
-                                    std::process::exit(1);
-                                },
-                                Err(_) => assert!(true),
-                            };
-                        },
-                        Err(_) => assert!(true),
-                    }
+            let mut weeder = match juicyj::weeder::Weeder::new(&filename, &parse_tree) {
+                Ok(w) => w,
+                Err(_) => {
+                    println!("Weeder Construction Error");
+                    assert!(true);
+                    return;
+                }
+            };
+
+            match weeder.verify(None) {
+                Ok(_) => (),
+                Err(_) => {
+                    println!("Weeder Verification Error");
+                    assert!(true);
+                    return;
+                }
+            }
+
+            match juicyj::common::AST::new(&parse_tree) {
+                Ok(_) => {
+                    println!("No Error Found");
+                    assert!(false);
                 },
                 Err(_) => assert!(true),
             };
