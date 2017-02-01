@@ -142,7 +142,12 @@ impl<T: Iterator<Item = Result<Token, error::LexerError>>> Parser<T> {
                     }
                     self.tokens.next();
                 }
-                Err(e) => return Err(e),
+                Err(e) => {
+                    for node in self.nodes.clone() {
+                        node.print(0);
+                    }
+                    return Err(e);
+                }
             }
         }
 

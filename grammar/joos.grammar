@@ -17,13 +17,16 @@ Type:
 	ReferenceType
 
 PrimitiveType:
+	PrimitiveClass
 	BOOLEAN
 	BYTE
 	CHAR
 	INT
 	LONG
-	OBJECT
 	SHORT
+
+PrimitiveClass:
+	OBJECT
 	STRING
 
 ReferenceType:
@@ -35,7 +38,7 @@ ClassOrInterfaceType:
 
 ClassType:
 	ClassOrInterfaceType
-	OBJECT
+	PrimitiveClass
 
 InterfaceType:
 	ClassOrInterfaceType
@@ -420,7 +423,7 @@ RelationalExpression:
 	RelationalExpression > AdditiveExpression
 	RelationalExpression <= AdditiveExpression
 	RelationalExpression >= AdditiveExpression
-	RelationalExpression INSTANCEOF AdditiveExpression
+	RelationalExpression INSTANCEOF ClassType
 
 EqualityExpression:
 	RelationalExpression
