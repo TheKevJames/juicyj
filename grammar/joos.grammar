@@ -19,10 +19,11 @@ Type:
 PrimitiveType:
 	BOOLEAN
 	BYTE
-	SHORT
+	CHAR
 	INT
 	LONG
-	CHAR
+	OBJECT
+	SHORT
 	STRING
 
 ReferenceType:
@@ -34,6 +35,7 @@ ClassOrInterfaceType:
 
 ClassType:
 	ClassOrInterfaceType
+	OBJECT
 
 InterfaceType:
 	ClassOrInterfaceType
