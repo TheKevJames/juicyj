@@ -1,4 +1,5 @@
 use common::Token;
+use common::TokenKind;
 
 #[derive(Debug,Clone)]
 pub struct Tree {
@@ -25,5 +26,19 @@ impl Node {
         for child in self.children {
             child.print(indent + 2);
         }
+    }
+
+    pub fn has_child_kind(self, kind: &TokenKind) -> bool {
+        if &self.token.kind == kind {
+            return true;
+        }
+
+        for child in self.children {
+            if child.has_child_kind(&kind) {
+                return true;
+            }
+        }
+
+        false
     }
 }

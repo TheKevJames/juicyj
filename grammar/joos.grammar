@@ -141,6 +141,7 @@ ClassBodyDeclaration:
 ClassMemberDeclaration:
 	FieldDeclaration
 	MethodDeclaration
+	AbstractMethodDeclaration
 
 FieldDeclaration:
 	Modifiers Type VariableDeclarator SEMICOLON
@@ -174,7 +175,6 @@ Parameter:
 
 MethodBody:
 	Block
-	SEMICOLON
 
 ConstructorDeclaration:
 	Modifiers ConstructorDeclarator ConstructorBody
