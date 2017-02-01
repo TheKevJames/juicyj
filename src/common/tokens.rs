@@ -213,7 +213,7 @@ impl FromStr for TokenKind {
             "INSTANCEOF" => Ok(TokenKind::Instanceof),
             "INT" => Ok(TokenKind::Int),
             "IntegerLit" => Ok(TokenKind::NumValue),
-            "INTEGER" => Ok(TokenKind::Number),
+            "INTEGER" => Ok(TokenKind::Integer),
             "INTERFACE" => Ok(TokenKind::Interface),
             "LONG" => Ok(TokenKind::Long),
             "NATIVE" => Ok(TokenKind::Native),
