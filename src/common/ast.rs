@@ -52,7 +52,7 @@ impl AST {
                         Err(e) => return Err(e),
                     };
                 }
-                _ => return Err(error::ASTError { message: "invalid root child" }),
+                _ => return Err(error::ASTError { message: error::INVALID_ROOT_CHILD }),
             }
         }
 
@@ -71,7 +71,7 @@ impl AST {
 
     fn parse_imports(node: &Node) -> Result<Vec<ASTNodeImport>, error::ASTError> {
         if node.token.lexeme != Some("ImportDeclarations".to_string()) {
-            return Err(error::ASTError { message: "incorrect import declarations" });
+            return Err(error::ASTError { message: error::INVALID_IMPORT_DECLS });
         }
 
         let mut imports: Vec<ASTNodeImport> = Vec::new();
@@ -87,7 +87,7 @@ impl AST {
     fn parse_package(node: &Node) -> Result<ASTNodePackage, error::ASTError> {
         if node.children.len() != 3 || node.children[0].token.kind != TokenKind::Package ||
            node.children[2].token.kind != TokenKind::Semicolon {
-            return Err(error::ASTError { message: "incorrect package declaration" });
+            return Err(error::ASTError { message: error::INVALID_PACKAGE_DECLS });
         }
 
         let mut names: Vec<Token> = Vec::new();
@@ -128,24 +128,7 @@ impl AST {
                         })
                     }
                     Some(ref l) if node.children.len() == 3 && l == "PrimaryNoNewArray" => {
-                        match AST::parse_types(&node.children[1]) {
-                            Ok(child) => {
-                                if child.token.kind == TokenKind::NumValue {
-                                    match child.token.lexeme {
-                                        Some(ref l) if l.parse().unwrap_or(0) >
-                                                       2u64.pow(31) - 1 => {
-                                            return Err(error::ASTError {
-                                                message: "ast found int to big",
-                                            });
-                                        }
-                                        _ => (),
-                                    }
-                                }
-
-                                Ok(child)
-                            }
-                            Err(e) => Err(e),
-                        }
+                        AST::parse_types(&node.children[1])
                     }
                     Some(ref l) if node.children.len() == 2 && l == "UnaryExpression" => {
                         let mut children: Vec<ASTNode> = Vec::new();
@@ -182,9 +165,7 @@ impl AST {
                                     match node.token.lexeme {
                                         Some(ref l) if l.parse().unwrap_or(0) >
                                                        2u64.pow(31) - 1 => {
-                                            return Err(error::ASTError {
-                                                message: "ast found int too big",
-                                            });
+                                            return Err(error::ASTError { message: error::INT_OOB });
                                         }
                                         _ => (),
                                     }

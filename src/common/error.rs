@@ -2,12 +2,12 @@ use std;
 
 #[derive(Debug)]
 pub struct ASTError {
-    pub message: &'static str,
+    pub message: ErrorMessage,
 }
 
 impl std::fmt::Display for ASTError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "error: {}", self.message)
+        write!(f, "error: {}", self.message.message)
     }
 }
 
@@ -78,14 +78,25 @@ pub const CHAR_TOO_LONG_OCTAL: ErrorMessage =
 
 pub const COULD_NOT_READ_FILE: ErrorMessage = ErrorMessage { message: "could not read file" };
 
+pub const INT_OOB: ErrorMessage = ErrorMessage { message: "integer out of bounds" };
+
 pub const INVALID_ESCAPE: ErrorMessage = ErrorMessage { message: "invalid escape character" };
 
 pub const INVALID_FUNCTION: ErrorMessage = ErrorMessage { message: "invalid grammar function" };
 
+pub const INVALID_IMPORT_DECLS: ErrorMessage =
+    ErrorMessage { message: "invalid import declarations" };
+
 pub const INVALID_OCTAL: ErrorMessage = ErrorMessage { message: "invalid octal" };
+
+pub const INVALID_PACKAGE_DECLS: ErrorMessage =
+    ErrorMessage { message: "invalid package declarations" };
 
 pub const INVALID_PARSE_TREE: ErrorMessage =
     ErrorMessage { message: "parse tree could not be entirely reduced" };
+
+pub const INVALID_ROOT_CHILD: ErrorMessage =
+    ErrorMessage { message: "invalid child of root token" };
 
 pub const INVALID_TOKEN: ErrorMessage = ErrorMessage { message: "unparseable token" };
 

@@ -10,9 +10,7 @@ pub struct Weeder<'filename, 'tree> {
 }
 
 impl<'filename, 'tree> Weeder<'filename, 'tree> {
-    pub fn new(filename: &'filename str,
-               tree: &'tree Tree)
-               -> Weeder<'filename, 'tree> {
+    pub fn new(filename: &'filename str, tree: &'tree Tree) -> Weeder<'filename, 'tree> {
         Weeder {
             filename: filename.split("/").last().unwrap_or(""),
             has_class: false,
