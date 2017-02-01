@@ -132,9 +132,72 @@ impl AST {
                             children: children,
                         })
                     }
+                    Some(ref l) if node.children.len() == 3 && l == "PrimaryNoNewArray" => {
+                        match AST::parse_types(&node.children[1]) {
+                            Ok(child) => {
+                                if child.token.kind == TokenKind::NumValue {
+                                    match child.token.lexeme {
+                                        Some(ref l) if l.parse().unwrap_or(0) > 2u64.pow(31) - 1 => {
+                                            return Err(error::ASTError { message: "ast found int to big" });
+                                        }
+                                        _ => (),
+                                    }
+                                }
+
+                                Ok(child)
+                            }
+                            Err(e) => Err(e),
+                        }
+                    }
+                    Some(ref l) if node.children.len() == 2 && l == "UnaryExpression" => {
+                        let mut children: Vec<ASTNode> = Vec::new();
+                        children.push(ASTNode {
+                            token: Token {
+                                kind: TokenKind::NumValue,
+                                lexeme: Some("0".to_string()),
+                            },
+                            children: Vec::new(),
+                        });
+                        match AST::parse_types(&node.children[1]) {
+                            Ok(child) => children.push(child),
+                            Err(e) => return Err(e),
+                        }
+
+                        if children[1].token.kind == TokenKind::NumValue {
+                            match children[1].token.lexeme {
+                                Some(ref l) if l.parse().unwrap_or(0) > 2u64.pow(31) => {
+                                    return Err(error::ASTError { message: "ast found int to small" });
+                                }
+                                _ => (),
+                            }
+                        }
+
+                        Ok(ASTNode {
+                            token: node.children[0].token.clone(),
+                            children: children,
+                        })
+                    }
                     Some(_) if node.children.len() == 2 &&
                                node.children[1].token.kind == TokenKind::Semicolon => {
                         AST::parse_types(&node.children[0])
+                    }
+                    // TODO: does this miss the case of CastExpression: ( Name Dim ) UnaryNoSignExpression ?
+                    Some(ref l) if node.children.len() == 1 && l == "UnaryExpression" => {
+                        match AST::parse_types(&node.children[0]) {
+                            Ok(node) => {
+                                if node.token.kind == TokenKind::NumValue {
+                                    match node.token.lexeme {
+                                        Some(ref l) if l.parse().unwrap_or(0) > 2u64.pow(31) - 1 => {
+                                            return Err(error::ASTError { message: "ast found int to big" });
+                                        }
+                                        _ => (),
+                                    }
+                                }
+
+                                Ok(node)
+                            },
+                            Err(e) => Err(e),
+                        }
                     }
                     Some(_) if node.children.len() == 1 => AST::parse_types(&node.children[0]),
                     _ => {
