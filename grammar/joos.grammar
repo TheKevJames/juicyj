@@ -27,6 +27,8 @@ PrimitiveType:
 
 PrimitiveClass:
 	CLONEABLE
+	INTEGER
+	NUMBER
 	OBJECT
 	STRING
 
@@ -446,6 +448,3 @@ LeftHandSide:
 
 Expression:
 	AssignmentExpression
-
-ConstantExpression:
-	Expression

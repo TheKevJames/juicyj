@@ -313,12 +313,15 @@ impl<'file, 'src> Lexer<'file, 'src> {
             "true" => TokenKind::True,
             "null" => TokenKind::Null,
 
-            "class" => TokenKind::Class,
             "Cloneable" => TokenKind::Cloneable,
+            "Integer" => TokenKind::Integer,
+            "Number" => TokenKind::Number,
+            "Object" => TokenKind::Object,
+
+            "class" => TokenKind::Class,
             "delete" => TokenKind::Delete,
             "instanceof" => TokenKind::Instanceof,
             "new" => TokenKind::New,
-            "Object" => TokenKind::Object,
             "this" => TokenKind::This,
 
             "else" => TokenKind::Else,
