@@ -120,7 +120,9 @@ impl AST {
                             }
 
                             let mut nodes: Vec<Node> = Vec::new();
-                            node.children[1].clone().collect_child_lexeme("PrimaryNoNewArray", &mut nodes);
+                            node.children[1]
+                                .clone()
+                                .collect_child_lexeme("PrimaryNoNewArray", &mut nodes);
                             for n in nodes {
                                 if n.children.len() != 1 {
                                     return Err(error::ASTError { message: error::INVALID_CAST });
