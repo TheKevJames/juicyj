@@ -4,7 +4,7 @@ mod common;
 
 use common::read_src_file;
 
-macro_rules! public_fail_tests {
+macro_rules! a1_fail_tests {
     ($($name:ident: $case:tt,)*) => {
     $(
         #[test]
@@ -56,7 +56,7 @@ macro_rules! public_fail_tests {
     }
 }
 
-public_fail_tests! {
+a1_fail_tests! {
     je_16_circularity_1: "Je_16_Circularity_1",
     je_16_circularity_2: "Je_16_Circularity_2",
     je_16_circularity_3: "Je_16_Circularity_3",
