@@ -9,7 +9,7 @@ macro_rules! public_fail_tests {
     $(
         #[test]
         fn $name() {
-            let filename: String = format!("tests/cases/public_fail/{}.java", $case);
+            let filename: String = format!("tests/cases/a1/fail/{}.java", $case);
             let src: String = read_src_file(&filename);
 
             let lexer = juicyj::lexer::Lexer::new(&filename, &src);
