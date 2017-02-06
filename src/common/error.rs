@@ -81,6 +81,8 @@ pub const COULD_NOT_REDUCE_STACK: ErrorMessage =
 
 pub const INT_OOB: ErrorMessage = ErrorMessage { message: "integer out of bounds" };
 
+pub const INVALID_CAST: ErrorMessage = ErrorMessage { message: "invalid cast type" };
+
 pub const INVALID_ESCAPE: ErrorMessage = ErrorMessage { message: "invalid escape character" };
 
 pub const INVALID_FUNCTION: ErrorMessage = ErrorMessage { message: "invalid grammar function" };

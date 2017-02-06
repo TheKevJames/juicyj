@@ -319,7 +319,6 @@ impl<'file, 'src> Lexer<'file, 'src> {
             // "Number" => TokenKind::Number,
             // "Object" => TokenKind::Object,
             // "String" => TokenKind::Str,
-
             "class" => TokenKind::Class,
             "delete" => TokenKind::Delete,
             "instanceof" => TokenKind::Instanceof,

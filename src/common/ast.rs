@@ -100,6 +100,33 @@ impl AST {
         match node.token.kind {
             TokenKind::NonTerminal => {
                 match node.token.lexeme {
+                    // TODO: Je_1_Cast_DoubleParenthese
+                    Some(ref l) if node.children.len() == 4 && l == "CastExpression" => {
+                        let mut children: Vec<ASTNode> = Vec::new();
+                        for child in node.children.clone() {
+                            match AST::parse_types(&child) {
+                                Ok(child) => children.push(child),
+                                Err(e) => return Err(e),
+                            }
+                        }
+
+                        if node.children[1].token.lexeme == Some("Expression".to_string()) {
+                            // TODO: catch double parens
+                            match children[1].token.kind {
+                                // TODO: does this cover x.y ?
+                                TokenKind::Identifier => (),
+                                _ => {
+                                    children[1].clone().print(0);
+                                    return Err(error::ASTError { message: error::INVALID_CAST });
+                                }
+                            }
+                        }
+
+                        Ok(ASTNode {
+                            token: node.token.clone(),
+                            children: children,
+                        })
+                    }
                     Some(ref l) if node.children.len() == 3 &&
                                    (l.ends_with("Expression") || l == "VariableDeclarator") => {
                         let mut children: Vec<ASTNode> = Vec::new();

@@ -69,7 +69,6 @@ pub enum TokenKind {
     // Number,
     // Object,
     // Str,
-
     Class,
     Delete,
     Instanceof,
@@ -253,7 +252,6 @@ impl FromStr for TokenKind {
             // "NUMBER" => Ok(TokenKind::Number),
             // "OBJECT" => Ok(TokenKind::Object),
             // "STRING" => Ok(TokenKind::Str),
-
             _ => Ok(TokenKind::NonTerminal),
         }
     }

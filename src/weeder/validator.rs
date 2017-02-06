@@ -18,11 +18,6 @@ impl<'filename, 'tree> Weeder<'filename, 'tree> {
         }
     }
 
-    // TODO: Je_1_Cast_DoubleParenthese
-    // TODO: Je_1_Cast_Expression or in ast check reduce to one
-    // TODO: Je_1_Cast_NonstaticField or in ast check reduce to one
-    // TODO: Je_1_Cast_ToMethodInvoke or in ast check reduce to one
-    // TODO: Je_1_CastToArrayLvalue or in ast check reduce to one
     pub fn verify(&mut self, node: Option<Node>) -> Result<(), error::WeederError> {
         let node = match node {
             Some(n) => n,
