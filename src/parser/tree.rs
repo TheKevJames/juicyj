@@ -38,6 +38,17 @@ impl Node {
         }
     }
 
+    pub fn collect_child_lexeme(self, lexeme: &str, collector: &mut Vec<Node>) {
+        match self.token.lexeme {
+            Some(ref l) if l == lexeme => collector.push(self.clone()),
+            _ => (),
+        }
+
+        for child in self.children {
+            child.collect_child_lexeme(lexeme, collector);
+        }
+    }
+
     pub fn has_child_kind(self, kind: &TokenKind) -> bool {
         if &self.token.kind == kind {
             return true;
