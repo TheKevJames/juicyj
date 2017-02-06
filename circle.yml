@@ -28,5 +28,5 @@ dependencies:
 test:
     override:
         - cargo fmt -- --write-mode=diff
-        - cargo build -v
+        - cargo build
         - cargo test --no-fail-fast
