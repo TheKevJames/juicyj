@@ -1,16 +1,16 @@
 use scanner::common::error;
 use scanner::common::TokenKind;
-use scanner::parser::Node;
-use scanner::parser::Tree;
+use scanner::parser::ParseNode;
+use scanner::parser::ParseTree;
 
 pub struct Weeder<'filename, 'tree> {
     filename: &'filename str,
     has_class: bool,
-    tree: &'tree Tree,
+    tree: &'tree ParseTree,
 }
 
 impl<'filename, 'tree> Weeder<'filename, 'tree> {
-    pub fn new(filename: &'filename str, tree: &'tree Tree) -> Weeder<'filename, 'tree> {
+    pub fn new(filename: &'filename str, tree: &'tree ParseTree) -> Weeder<'filename, 'tree> {
         Weeder {
             filename: filename.split("/").last().unwrap_or(""),
             has_class: false,
@@ -18,7 +18,7 @@ impl<'filename, 'tree> Weeder<'filename, 'tree> {
         }
     }
 
-    pub fn verify(&mut self, node: Option<Node>) -> Result<(), error::WeederError> {
+    pub fn verify(&mut self, node: Option<ParseNode>) -> Result<(), error::WeederError> {
         let node = match node {
             Some(n) => n,
             _ => self.tree.root.clone(),

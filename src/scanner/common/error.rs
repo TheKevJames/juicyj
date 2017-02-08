@@ -1,3 +1,4 @@
+// TODO: global error module
 use std;
 
 pub struct ASTError {

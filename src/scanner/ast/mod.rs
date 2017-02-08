@@ -3,7 +3,7 @@ mod node;
 use std::fmt;
 
 use scanner::common::error;
-use scanner::parser::Tree;
+use scanner::parser::ParseTree;
 
 use self::node::ASTNodeImport;
 use self::node::ASTNode;
@@ -16,7 +16,7 @@ pub struct AST {
 }
 
 impl AST {
-    pub fn new(tree: &Tree) -> Result<AST, error::ASTError> {
+    pub fn new(tree: &ParseTree) -> Result<AST, error::ASTError> {
         let mut imports = Vec::new();
         let mut package = None;
         let mut root = None;

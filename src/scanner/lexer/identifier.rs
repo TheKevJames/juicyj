@@ -1,7 +1,7 @@
-pub fn valid_continuation(character: char) -> bool {
-    return character.is_alphabetic() || character.is_numeric() || character == '_';
+pub fn valid_continuation(c: char) -> bool {
+    return c.is_alphabetic() || c.is_numeric() || c == '_';
 }
 
-pub fn valid_start(character: char) -> bool {
-    return character.is_alphabetic() || character == '_';
+pub fn valid_start(c: char) -> bool {
+    return c.is_alphabetic() || c == '_';
 }

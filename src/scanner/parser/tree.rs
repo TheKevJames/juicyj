@@ -1,26 +1,24 @@
 use scanner::common::Token;
 use scanner::common::TokenKind;
 
-// TODO: ParseTree
 #[derive(Clone)]
-pub struct Tree {
-    pub root: Node,
+pub struct ParseTree {
+    pub root: ParseNode,
 }
 
-impl Tree {
+impl ParseTree {
     pub fn print(self) {
         self.root.print(0);
     }
 }
 
-// TODO: ParseNode
 #[derive(Clone)]
-pub struct Node {
-    pub children: Vec<Node>,
+pub struct ParseNode {
+    pub children: Vec<ParseNode>,
     pub token: Token,
 }
 
-impl Node {
+impl ParseNode {
     pub fn print(self, indent: u32) {
         let spaces = (0..indent).map(|_| " ").collect::<String>();
         println!("{}{}", spaces, self.token);
@@ -40,7 +38,7 @@ impl Node {
         }
     }
 
-    pub fn collect_child_lexeme(&self, lexeme: &str, collector: &mut Vec<Node>) {
+    pub fn collect_child_lexeme(&self, lexeme: &str, collector: &mut Vec<ParseNode>) {
         match self.token.lexeme {
             Some(ref l) if l == lexeme => collector.push(self.clone()),
             _ => (),

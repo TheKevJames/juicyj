@@ -3,5 +3,5 @@ mod generator;
 mod tree;
 
 pub use self::generator::Parser;
-pub use self::tree::Node;
-pub use self::tree::Tree;
+pub use self::tree::ParseNode;
+pub use self::tree::ParseTree;

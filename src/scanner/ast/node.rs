@@ -3,7 +3,7 @@ use std::fmt;
 use scanner::common::error;
 use scanner::common::Token;
 use scanner::common::TokenKind;
-use scanner::parser::Node;
+use scanner::parser::ParseNode;
 
 #[derive(Clone)]
 pub struct ASTNode {
@@ -20,7 +20,8 @@ pub struct ASTNodePackage {
 }
 
 impl ASTNode {
-    pub fn new(node: &Node) -> Result<ASTNode, error::ASTError> {
+    // TODO: cleanup
+    pub fn new(node: &ParseNode) -> Result<ASTNode, error::ASTError> {
         match node.token.kind {
             TokenKind::NonTerminal => {
                 match node.token.lexeme {
@@ -43,7 +44,7 @@ impl ASTNode {
                                 }
                             }
 
-                            let mut nodes: Vec<Node> = Vec::new();
+                            let mut nodes: Vec<ParseNode> = Vec::new();
                             node.children[1].collect_child_lexeme("PrimaryNoNewArray", &mut nodes);
                             for n in nodes {
                                 if n.children.len() != 1 {
@@ -171,7 +172,7 @@ impl ASTNode {
 }
 
 impl ASTNodeImport {
-    pub fn new(node: &Node) -> Result<ASTNodeImport, error::ASTError> {
+    pub fn new(node: &ParseNode) -> Result<ASTNodeImport, error::ASTError> {
         let mut names: Vec<Token> = Vec::new();
         node.collect_child_kinds(&vec![&TokenKind::Identifier, &TokenKind::Star], &mut names);
 
@@ -180,7 +181,7 @@ impl ASTNodeImport {
 }
 
 impl ASTNodePackage {
-    pub fn new(node: &Node) -> Result<ASTNodePackage, error::ASTError> {
+    pub fn new(node: &ParseNode) -> Result<ASTNodePackage, error::ASTError> {
         let mut names: Vec<Token> = Vec::new();
         node.children[1].collect_child_kinds(&vec![&TokenKind::Identifier], &mut names);
 

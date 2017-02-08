@@ -9,7 +9,7 @@ use scanner::parser::tree;
 
 pub struct Parser<T: Iterator<Item = Result<Token, error::LexerError>>> {
     dfa: dfa::DFA,
-    nodes: Vec<tree::Node>,
+    nodes: Vec<tree::ParseNode>,
     states: Vec<usize>,
     token_state: u8,
     tokens: Peekable<T>,
@@ -88,7 +88,7 @@ impl<T: Iterator<Item = Result<Token, error::LexerError>>> Parser<T> {
               transition: dfa::Transition,
               token: Token)
               -> Result<(), error::ParserError> {
-        let mut children: Vec<tree::Node> = Vec::new();
+        let mut children: Vec<tree::ParseNode> = Vec::new();
         let ref rule = self.dfa.rules[transition.value].clone();
         for _ in 0..rule.rhs.len() {
             self.states.pop();
@@ -103,7 +103,7 @@ impl<T: Iterator<Item = Result<Token, error::LexerError>>> Parser<T> {
             }
         }
 
-        self.nodes.push(tree::Node {
+        self.nodes.push(tree::ParseNode {
             children: children,
             token: rule.lhs.token.clone(),
         });
@@ -126,7 +126,7 @@ impl<T: Iterator<Item = Result<Token, error::LexerError>>> Parser<T> {
              -> Result<(), error::ParserError> {
         self.states.push(transition.value);
         if transition.symbol.terminality == dfa::Terminality::Terminal {
-            self.nodes.push(tree::Node {
+            self.nodes.push(tree::ParseNode {
                 children: Vec::new(),
                 token: token.clone(),
             });
@@ -135,7 +135,7 @@ impl<T: Iterator<Item = Result<Token, error::LexerError>>> Parser<T> {
         Ok(())
     }
 
-    pub fn get_tree(&mut self) -> Result<tree::Tree, error::ParserError> {
+    pub fn get_tree(&mut self) -> Result<tree::ParseTree, error::ParserError> {
         while let Some(token) = self.peek() {
             match self.dfa.consume(self.states.last().unwrap_or(&0), &token) {
                 Ok(transition) => {
@@ -163,7 +163,7 @@ impl<T: Iterator<Item = Result<Token, error::LexerError>>> Parser<T> {
 
         // TODO: one more manual reduce step?
         match self.nodes.len() {
-            3 => Ok(tree::Tree { root: self.nodes[1].clone() }),
+            3 => Ok(tree::ParseTree { root: self.nodes[1].clone() }),
             _ => {
                 Err(error::ParserError {
                     arg: "Start".to_string(),
