@@ -1,30 +1,55 @@
+use std::fmt;
+
 use scanner::common::error;
 use scanner::common::Token;
 use scanner::common::TokenKind;
 use scanner::parser::Node;
 use scanner::parser::Tree;
 
-#[derive(Debug)]
 pub struct AST {
     pub package: Option<ASTNodePackage>,
     pub imports: Option<Vec<ASTNodeImport>>,
     pub root: Option<ASTNode>,
 }
 
-#[derive(Debug,Clone)]
+#[derive(Clone)]
 pub struct ASTNode {
     pub token: Token,
     pub children: Vec<ASTNode>,
 }
 
-#[derive(Debug)]
 pub struct ASTNodeImport {
     pub import: Vec<Token>,
 }
 
-#[derive(Debug)]
+impl fmt::Display for ASTNodeImport {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f,
+               "{}",
+               self.import
+                   .clone()
+                   .into_iter()
+                   .map(|t| format!("{}", t))
+                   .collect::<Vec<String>>()
+                   .join(" "))
+    }
+}
+
 pub struct ASTNodePackage {
     pub package: Vec<Token>,
+}
+
+impl fmt::Display for ASTNodePackage {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f,
+               "{}",
+               self.package
+                   .clone()
+                   .into_iter()
+                   .map(|t| format!("{}", t))
+                   .collect::<Vec<String>>()
+                   .join(" "))
+    }
 }
 
 impl AST {
@@ -64,8 +89,19 @@ impl AST {
     }
 
     pub fn print(&self) {
-        println!("{:?}", self.package);
-        println!("{:?}", self.imports);
+        match self.package {
+            Some(ref p) => println!("Package: {}", p),
+            None => println!("[no package declaration]"),
+        }
+        match self.imports {
+            Some(ref is) => {
+                println!("Imports:");
+                for i in is {
+                    println!(" {}", i);
+                }
+            }
+            None => println!("[no imports]"),
+        }
         self.root.clone().unwrap().print(0);
     }
 
@@ -74,8 +110,11 @@ impl AST {
             return Err(error::ASTError { message: error::INVALID_IMPORT_DECLS });
         }
 
+        let mut statements: Vec<Node> = Vec::new();
+        node.clone().collect_child_lexeme("ImportDeclaration", &mut statements);
+
         let mut imports: Vec<ASTNodeImport> = Vec::new();
-        for child in node.children.clone() {
+        for child in statements {
             let mut names: Vec<Token> = Vec::new();
             child.collect_child_kinds(&vec![&TokenKind::Identifier, &TokenKind::Star], &mut names);
             imports.push(ASTNodeImport { import: names });
@@ -240,7 +279,7 @@ impl AST {
 impl ASTNode {
     pub fn print(&self, indent: u32) {
         let spaces = (0..indent).map(|_| " ").collect::<String>();
-        println!("{}{:?}", spaces, self.token);
+        println!("{}{}", spaces, self.token);
 
         for child in self.children.clone() {
             child.print(indent + 2);

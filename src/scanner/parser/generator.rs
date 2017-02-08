@@ -96,7 +96,7 @@ impl<T: Iterator<Item = Result<Token, error::LexerError>>> Parser<T> {
                 Some(n) => children.insert(0, n),
                 _ => {
                     return Err(error::ParserError {
-                        arg: format!("{:?}", rule),
+                        arg: format!("{}", rule),
                         message: error::COULD_NOT_REDUCE_STACK,
                     })
                 }

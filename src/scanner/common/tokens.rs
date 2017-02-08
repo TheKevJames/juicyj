@@ -1,9 +1,24 @@
+use std::fmt;
 use std::str::FromStr;
 
-#[derive(Debug,Clone)]
+#[derive(Clone)]
 pub struct Token {
     pub kind: TokenKind,
     pub lexeme: Option<String>,
+}
+
+impl fmt::Display for Token {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self.lexeme {
+            Some(ref l) => {
+                match self.kind {
+                    TokenKind::NonTerminal => write!(f, "<{}>", l),
+                    _ => write!(f, "{} [{:?}]", l, self.kind),
+                }
+            }
+            _ => write!(f, "{:?}", self.kind),
+        }
+    }
 }
 
 #[derive(Debug,Clone,PartialEq)]

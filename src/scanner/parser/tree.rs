@@ -1,7 +1,7 @@
 use scanner::common::Token;
 use scanner::common::TokenKind;
 
-#[derive(Debug,Clone)]
+#[derive(Clone)]
 pub struct Tree {
     pub root: Node,
 }
@@ -12,7 +12,7 @@ impl Tree {
     }
 }
 
-#[derive(Debug,Clone)]
+#[derive(Clone)]
 pub struct Node {
     pub children: Vec<Node>,
     pub token: Token,
@@ -21,7 +21,7 @@ pub struct Node {
 impl Node {
     pub fn print(self, indent: u32) {
         let spaces = (0..indent).map(|_| " ").collect::<String>();
-        println!("{}{:?}", spaces, self.token);
+        println!("{}{}", spaces, self.token);
 
         for child in self.children {
             child.print(indent + 2);

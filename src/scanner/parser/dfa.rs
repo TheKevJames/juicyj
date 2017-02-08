@@ -9,7 +9,7 @@ use scanner::common::error;
 use scanner::common::Token;
 use scanner::common::TokenKind;
 
-#[derive(Debug,Clone)]
+#[derive(Clone)]
 pub enum Function {
     Reduce,
     Shift,
@@ -27,13 +27,25 @@ impl FromStr for Function {
     }
 }
 
-#[derive(Debug,Clone)]
+#[derive(Clone)]
 pub struct Rule {
     pub lhs: Symbol, // NonTerminal
     pub rhs: Vec<Symbol>,
 }
 
-#[derive(Debug)]
+impl std::fmt::Display for Rule {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let rhs = format!("[{}]",
+                          self.rhs
+                              .clone()
+                              .into_iter()
+                              .map(|s| format!("{}", s.token))
+                              .collect::<Vec<String>>()
+                              .join(", "));
+        write!(f, "{} -> {}", self.lhs.token, rhs)
+    }
+}
+
 pub struct State {
     state: usize,
     transitions: Vec<Transition>,
@@ -48,13 +60,22 @@ impl State {
     }
 }
 
-#[derive(Debug,Clone,PartialEq)]
+#[derive(Clone,PartialEq)]
 pub enum Terminality {
     NonTerminal,
     Terminal,
 }
 
-#[derive(Debug,Clone)]
+impl std::fmt::Display for Terminality {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match *self {
+            Terminality::NonTerminal => write!(f, "Non-Terminal"),
+            Terminality::Terminal => write!(f, "Terminal"),
+        }
+    }
+}
+
+#[derive(Clone)]
 pub struct Symbol {
     pub terminality: Terminality,
     pub token: Token,
@@ -99,7 +120,7 @@ impl Symbol {
     }
 }
 
-#[derive(Debug,Clone)]
+#[derive(Clone)]
 pub struct Transition {
     pub value: usize,
     pub function: Function,
@@ -107,7 +128,6 @@ pub struct Transition {
     pub symbol: Symbol,
 }
 
-#[derive(Debug)]
 pub struct DFA {
     pub non_terminals: Vec<Symbol>, // NonTerminal
     pub terminals: Vec<Symbol>, // Terminal
@@ -251,7 +271,7 @@ impl DFA {
         }
 
         Err(error::ParserError {
-            arg: format!("{:?}", token),
+            arg: format!("{}", token),
             message: error::INVALID_TOKEN,
         })
     }
