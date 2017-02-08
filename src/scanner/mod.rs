@@ -34,7 +34,7 @@ pub fn scan_or_exit(file: &str, src: &str) {
     }
 
     match AST::new(&parse_tree) {
-        Ok(ast) => ast.print(),
+        Ok(ast) => println!("{}", ast),
         Err(e) => {
             println!("{}", e);
             std::process::exit(42);

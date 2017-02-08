@@ -1,3 +1,5 @@
+use std::fmt;
+
 use scanner::common::error;
 use scanner::common::Token;
 use scanner::common::TokenKind;
@@ -50,23 +52,6 @@ impl AST {
             package: package,
             root: root,
         })
-    }
-
-    pub fn print(&self) {
-        match self.package {
-            Some(ref p) => println!("Package: {}", p),
-            None => println!("[no package declaration]"),
-        }
-        match self.imports {
-            Some(ref is) => {
-                println!("Imports:");
-                for i in is {
-                    println!(" {}", i);
-                }
-            }
-            None => println!("[no imports]"),
-        }
-        println!("{}", self.root.clone().unwrap());
     }
 
     fn parse_imports(node: &Node) -> Result<Vec<ASTNodeImport>, error::ASTError> {
@@ -237,5 +222,24 @@ impl AST {
                 })
             }
         }
+    }
+}
+
+impl fmt::Display for AST {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self.package {
+            Some(ref p) => try!(writeln!(f, "Package: {}", p)),
+            None => try!(writeln!(f, "[no package declaration]")),
+        }
+        match self.imports {
+            Some(ref is) => {
+                try!(writeln!(f, "Imports:"));
+                for i in is {
+                    try!(writeln!(f, "{:2}", i));
+                }
+            }
+            None => try!(writeln!(f, "[no imports]")),
+        }
+        write!(f, "{}", self.root.clone().unwrap())
     }
 }
