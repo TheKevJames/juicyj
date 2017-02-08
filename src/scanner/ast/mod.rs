@@ -23,7 +23,7 @@ impl AST {
         let mut imports = Vec::new();
         let mut package = None;
         let mut root = None;
-        for child in parse_tree.root.clone().children {
+        for child in &parse_tree.root.children {
             match child.token.lexeme {
                 Some(ref l) if l == "PackageDeclaration" => {
                     package = match ASTNodePackage::new(&child) {
@@ -33,7 +33,7 @@ impl AST {
                 }
                 Some(ref l) if l == "ImportDeclarations" => {
                     let mut statements: Vec<Node> = Vec::new();
-                    child.clone().collect_child_lexeme("ImportDeclaration", &mut statements);
+                    child.collect_child_lexeme("ImportDeclaration", &mut statements);
 
                     for child in statements {
                         imports.push(match ASTNodeImport::new(&child) {
@@ -65,7 +65,7 @@ impl AST {
                 match node.token.lexeme {
                     Some(ref l) if node.children.len() == 4 && l == "CastExpression" => {
                         let mut children: Vec<ASTNode> = Vec::new();
-                        for child in node.children.clone() {
+                        for child in &node.children {
                             match AST::parse_types(&child) {
                                 Ok(child) => children.push(child),
                                 Err(e) => return Err(e),
@@ -77,15 +77,13 @@ impl AST {
                                 // TODO: does this cover x.y ?
                                 TokenKind::Identifier => (),
                                 _ => {
-                                    println!("{}", children[1].clone());
+                                    println!("{}", children[1]);
                                     return Err(error::ASTError { message: error::INVALID_CAST });
                                 }
                             }
 
                             let mut nodes: Vec<Node> = Vec::new();
-                            node.children[1]
-                                .clone()
-                                .collect_child_lexeme("PrimaryNoNewArray", &mut nodes);
+                            node.children[1].collect_child_lexeme("PrimaryNoNewArray", &mut nodes);
                             for n in nodes {
                                 if n.children.len() != 1 {
                                     return Err(error::ASTError { message: error::INVALID_CAST });
@@ -177,7 +175,7 @@ impl AST {
                     Some(_) if node.children.len() == 1 => AST::parse_types(&node.children[0]),
                     _ => {
                         let mut children: Vec<ASTNode> = Vec::new();
-                        for child in node.children.clone() {
+                        for child in &node.children {
                             match AST::parse_types(&child) {
                                 Ok(child) => children.push(child),
                                 Err(e) => return Err(e),
