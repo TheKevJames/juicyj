@@ -18,6 +18,7 @@ impl<'filename, 'tree> Weeder<'filename, 'tree> {
         }
     }
 
+    // TODO: cleanup
     pub fn verify(&mut self, node: Option<ParseNode>) -> Result<(), error::WeederError> {
         let node = match node {
             Some(n) => n,
