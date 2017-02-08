@@ -1,55 +1,19 @@
-use std::fmt;
-
 use scanner::common::error;
 use scanner::common::Token;
 use scanner::common::TokenKind;
 use scanner::parser::Node;
 use scanner::parser::Tree;
 
+mod node;
+
+use self::node::import::ASTNodeImport;
+use self::node::node::ASTNode;
+use self::node::package::ASTNodePackage;
+
 pub struct AST {
     pub package: Option<ASTNodePackage>,
     pub imports: Option<Vec<ASTNodeImport>>,
     pub root: Option<ASTNode>,
-}
-
-#[derive(Clone)]
-pub struct ASTNode {
-    pub token: Token,
-    pub children: Vec<ASTNode>,
-}
-
-pub struct ASTNodeImport {
-    pub import: Vec<Token>,
-}
-
-impl fmt::Display for ASTNodeImport {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f,
-               "{}",
-               self.import
-                   .clone()
-                   .into_iter()
-                   .map(|t| format!("{}", t))
-                   .collect::<Vec<String>>()
-                   .join(" "))
-    }
-}
-
-pub struct ASTNodePackage {
-    pub package: Vec<Token>,
-}
-
-impl fmt::Display for ASTNodePackage {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f,
-               "{}",
-               self.package
-                   .clone()
-                   .into_iter()
-                   .map(|t| format!("{}", t))
-                   .collect::<Vec<String>>()
-                   .join(" "))
-    }
 }
 
 impl AST {
@@ -272,17 +236,6 @@ impl AST {
                     children: Vec::new(),
                 })
             }
-        }
-    }
-}
-
-impl ASTNode {
-    pub fn print(&self, indent: u32) {
-        let spaces = (0..indent).map(|_| " ").collect::<String>();
-        println!("{}{}", spaces, self.token);
-
-        for child in self.children.clone() {
-            child.print(indent + 2);
         }
     }
 }

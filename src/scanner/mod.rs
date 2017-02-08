@@ -2,11 +2,12 @@ use std;
 
 mod common;
 
+mod ast;
 mod lexer;
 mod parser;
 mod weeder;
 
-use self::common::AST;
+use self::ast::AST;
 use self::lexer::Lexer;
 use self::parser::Parser;
 use self::weeder::Weeder;
@@ -46,7 +47,7 @@ pub fn scan_or_exit(file: &str, src: &str) {
 pub mod tests {
     use std;
 
-    use super::common::AST;
+    use super::ast::AST;
     use super::lexer::Lexer;
     use super::parser::Parser;
     use super::weeder::Weeder;
