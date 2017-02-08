@@ -20,6 +20,144 @@ pub struct ASTNodePackage {
 }
 
 impl ASTNode {
+    pub fn new(node: &Node) -> Result<ASTNode, error::ASTError> {
+        match node.token.kind {
+            TokenKind::NonTerminal => {
+                match node.token.lexeme {
+                    Some(ref l) if node.children.len() == 4 && l == "CastExpression" => {
+                        let mut children: Vec<ASTNode> = Vec::new();
+                        for child in &node.children {
+                            match ASTNode::new(&child) {
+                                Ok(child) => children.push(child),
+                                Err(e) => return Err(e),
+                            }
+                        }
+
+                        if node.children[1].token.lexeme == Some("Expression".to_string()) {
+                            match children[1].token.kind {
+                                // TODO: does this cover x.y ?
+                                TokenKind::Identifier => (),
+                                _ => {
+                                    println!("{}", children[1]);
+                                    return Err(error::ASTError { message: error::INVALID_CAST });
+                                }
+                            }
+
+                            let mut nodes: Vec<Node> = Vec::new();
+                            node.children[1].collect_child_lexeme("PrimaryNoNewArray", &mut nodes);
+                            for n in nodes {
+                                if n.children.len() != 1 {
+                                    return Err(error::ASTError { message: error::INVALID_CAST });
+                                }
+                            }
+                        }
+
+                        Ok(ASTNode {
+                            token: node.token.clone(),
+                            children: children,
+                        })
+                    }
+                    Some(ref l) if node.children.len() == 3 &&
+                                   (l.ends_with("Expression") || l == "VariableDeclarator") => {
+                        let mut children: Vec<ASTNode> = Vec::new();
+                        match ASTNode::new(&node.children[0]) {
+                            Ok(child) => children.push(child),
+                            Err(e) => return Err(e),
+                        }
+                        match ASTNode::new(&node.children[2]) {
+                            Ok(child) => children.push(child),
+                            Err(e) => return Err(e),
+                        }
+                        Ok(ASTNode {
+                            token: node.children[1].token.clone(),
+                            children: children,
+                        })
+                    }
+                    Some(ref l) if node.children.len() == 3 && l == "ReturnStatement" => {
+                        let mut children: Vec<ASTNode> = Vec::new();
+                        match ASTNode::new(&node.children[1]) {
+                            Ok(child) => children.push(child),
+                            Err(e) => return Err(e),
+                        }
+                        Ok(ASTNode {
+                            token: node.children[0].token.clone(),
+                            children: children,
+                        })
+                    }
+                    Some(ref l) if node.children.len() == 3 && l == "PrimaryNoNewArray" => {
+                        ASTNode::new(&node.children[1])
+                    }
+                    Some(ref l) if node.children.len() == 2 && l == "UnaryExpression" => {
+                        let mut children: Vec<ASTNode> = Vec::new();
+                        children.push(ASTNode {
+                            token: Token {
+                                kind: TokenKind::NumValue,
+                                lexeme: Some("0".to_string()),
+                            },
+                            children: Vec::new(),
+                        });
+                        match ASTNode::new(&node.children[1]) {
+                            Ok(child) => children.push(child),
+                            Err(e) => return Err(e),
+                        }
+
+                        Ok(ASTNode {
+                            token: node.children[0].token.clone(),
+                            children: children,
+                        })
+                    }
+                    Some(_) if node.children.len() == 2 &&
+                               node.children[1].token.kind == TokenKind::Semicolon => {
+                        ASTNode::new(&node.children[0])
+                    }
+                    // TODO: does this miss the following case?
+                    // CastExpression:
+                    //     ( Name Dim ) UnaryNoSignExpression
+
+                    // parent of UnaryExpression
+                    Some(ref l) if node.children.len() == 1 && l == "MultiplicativeExpression" => {
+                        match ASTNode::new(&node.children[0]) {
+                            Ok(node) => {
+                                if node.token.kind == TokenKind::NumValue {
+                                    match node.token.lexeme {
+                                        Some(ref l) if l.parse().unwrap_or(0) >
+                                                       2u64.pow(31) - 1 => {
+                                            return Err(error::ASTError { message: error::INT_OOB });
+                                        }
+                                        _ => (),
+                                    }
+                                }
+
+                                Ok(node)
+                            }
+                            Err(e) => Err(e),
+                        }
+                    }
+                    Some(_) if node.children.len() == 1 => ASTNode::new(&node.children[0]),
+                    _ => {
+                        let mut children: Vec<ASTNode> = Vec::new();
+                        for child in &node.children {
+                            match ASTNode::new(&child) {
+                                Ok(child) => children.push(child),
+                                Err(e) => return Err(e),
+                            }
+                        }
+                        Ok(ASTNode {
+                            token: node.token.clone(),
+                            children: children,
+                        })
+                    }
+                }
+            }
+            _ => {
+                Ok(ASTNode {
+                    token: node.token.clone(),
+                    children: Vec::new(),
+                })
+            }
+        }
+    }
+
     pub fn print(&self, f: &mut fmt::Formatter, indent: usize) -> fmt::Result {
         match indent {
             0 => try!(write!(f, "{:width$}{}", "", self.token, width = indent)),
