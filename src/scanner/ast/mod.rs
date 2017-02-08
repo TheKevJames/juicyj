@@ -26,7 +26,7 @@ impl AST {
         for child in parse_tree.root.clone().children {
             match child.token.lexeme {
                 Some(ref l) if l == "PackageDeclaration" => {
-                    package = match AST::parse_package(&child) {
+                    package = match ASTNodePackage::new(&child) {
                         Ok(i) => Some(i),
                         Err(e) => return Err(e),
                     };
@@ -70,18 +70,6 @@ impl AST {
         }
 
         Ok(imports)
-    }
-
-    fn parse_package(node: &Node) -> Result<ASTNodePackage, error::ASTError> {
-        if node.children.len() != 3 || node.children[0].token.kind != TokenKind::Package ||
-           node.children[2].token.kind != TokenKind::Semicolon {
-            return Err(error::ASTError { message: error::INVALID_PACKAGE_DECLS });
-        }
-
-        let mut names: Vec<Token> = Vec::new();
-        node.children[1].clone().collect_child_kinds(&vec![&TokenKind::Identifier], &mut names);
-
-        Ok(ASTNodePackage { package: names })
     }
 
     fn parse_types(node: &Node) -> Result<ASTNode, error::ASTError> {

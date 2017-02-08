@@ -1,6 +1,9 @@
 use std::fmt;
 
+use scanner::common::error;
 use scanner::common::Token;
+use scanner::common::TokenKind;
+use scanner::parser::Node;
 
 #[derive(Clone)]
 pub struct ASTNode {
@@ -26,6 +29,15 @@ impl ASTNode {
             try!(child.print(f, indent + 2));
         }
         Ok(())
+    }
+}
+
+impl ASTNodePackage {
+    pub fn new(node: &Node) -> Result<ASTNodePackage, error::ASTError> {
+        let mut names: Vec<Token> = Vec::new();
+        node.children[1].clone().collect_child_kinds(&vec![&TokenKind::Identifier], &mut names);
+
+        Ok(ASTNodePackage { package: names })
     }
 }
 

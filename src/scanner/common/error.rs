@@ -90,9 +90,6 @@ pub const INVALID_IMPORT_DECLS: ErrorMessage =
 
 pub const INVALID_OCTAL: ErrorMessage = ErrorMessage { message: "invalid octal" };
 
-pub const INVALID_PACKAGE_DECLS: ErrorMessage =
-    ErrorMessage { message: "invalid package declarations" };
-
 pub const INVALID_PARSE_TREE: ErrorMessage =
     ErrorMessage { message: "parse tree could not be entirely reduced" };
 

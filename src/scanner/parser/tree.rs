@@ -1,6 +1,7 @@
 use scanner::common::Token;
 use scanner::common::TokenKind;
 
+// TODO: ParseTree
 #[derive(Clone)]
 pub struct Tree {
     pub root: Node,
@@ -12,6 +13,7 @@ impl Tree {
     }
 }
 
+// TODO: ParseNode
 #[derive(Clone)]
 pub struct Node {
     pub children: Vec<Node>,
