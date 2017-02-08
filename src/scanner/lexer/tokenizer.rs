@@ -5,10 +5,10 @@ use std::option::IntoIter;
 use std::str::Chars;
 use std::str::Split;
 
-use common::error;
-use common::Token;
-use common::TokenKind;
-use lexer::identifier;
+use scanner::common::error;
+use scanner::common::Token;
+use scanner::common::TokenKind;
+use scanner::lexer::identifier;
 
 #[derive(Clone)]
 pub struct Lexer<'file, 'src> {

@@ -1,8 +1,8 @@
-use common::error;
-use common::Token;
-use common::TokenKind;
-use parser::Node;
-use parser::Tree;
+use scanner::common::error;
+use scanner::common::Token;
+use scanner::common::TokenKind;
+use scanner::parser::Node;
+use scanner::parser::Tree;
 
 #[derive(Debug)]
 pub struct AST {

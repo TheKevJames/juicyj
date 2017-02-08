@@ -12,45 +12,7 @@ macro_rules! a1_fail_tests {
             let filename: String = format!("tests/cases/a1/fail/{}.java", $case);
             let src: String = read_src_file(&filename);
 
-            let lexer = juicyj::lexer::Lexer::new(&filename, &src);
-            for token in lexer.clone().collect::<Vec<Result<_, _>>>() {
-                match token {
-                    Ok(_) => (),
-                    Err(_) => {
-                        println!("Lexer Error");
-                        assert!(true);
-                        return;
-                    },
-                }
-            }
-
-            let mut parser = juicyj::parser::Parser::new(lexer);
-            let parse_tree = match parser.get_tree() {
-                Ok(pt) => pt,
-                Err(_) => {
-                    println!("Parser Error");
-                    assert!(true);
-                    return;
-                }
-            };
-
-            let mut weeder = juicyj::weeder::Weeder::new(&filename, &parse_tree);
-            match weeder.verify(None) {
-                Ok(_) => (),
-                Err(_) => {
-                    println!("Weeder Verification Error");
-                    assert!(true);
-                    return;
-                }
-            }
-
-            match juicyj::common::AST::new(&parse_tree) {
-                Ok(_) => {
-                    println!("No Error Found");
-                    assert!(false);
-                },
-                Err(_) => assert!(true),
-            };
+            juicyj::scanner::tests::scan_and_assert(&filename, &src);
         }
     )*
     }

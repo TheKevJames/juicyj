@@ -12,52 +12,7 @@ macro_rules! feature_tests {
             let filename: String = format!("tests/cases/features/{}.java", $case);
             let src: String = read_src_file(&filename);
 
-            let lexer = juicyj::lexer::Lexer::new(&filename, &src);
-            for token in lexer.clone().collect::<Vec<Result<_, _>>>() {
-                match token {
-                    Ok(_) => (),
-                    Err(e) => {
-                        println!("Lexer Error");
-                        println!("{}", e);
-                        assert!(false);
-                        std::process::exit(1);
-                    },
-                }
-            }
-
-            let mut parser = juicyj::parser::Parser::new(lexer);
-            let parse_tree = match parser.get_tree() {
-                Ok(pt) => pt,
-                Err(e) => {
-                    println!("Parser Error");
-                    println!("{}", e);
-                    assert!(false);
-                    std::process::exit(1);
-                }
-            };
-
-            let mut weeder = juicyj::weeder::Weeder::new(&filename, &parse_tree);
-            match weeder.verify(None) {
-                Ok(_) => (),
-                Err(e) => {
-                    println!("Weeder Verification Error");
-                    println!("{}", e);
-                    assert!(false);
-                    std::process::exit(1);
-                }
-            }
-
-            match juicyj::common::AST::new(&parse_tree) {
-                Ok(_) => assert!(true),
-                Err(e) => {
-                    println!("AST Construction Error");
-                    println!("{}", e);
-                    assert!(false);
-                    std::process::exit(1);
-                }
-            };
-
-            assert!(true);
+            juicyj::scanner::tests::scan_or_assert(&filename, &src);
         }
     )*
     }

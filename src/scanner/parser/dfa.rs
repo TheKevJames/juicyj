@@ -4,9 +4,9 @@ use std::io::BufReader;
 use std::io::Read;
 use std::fs::File;
 
-use common::error;
-use common::Token;
-use common::TokenKind;
+use scanner::common::error;
+use scanner::common::Token;
+use scanner::common::TokenKind;
 
 #[derive(Debug,Clone)]
 pub enum Function {

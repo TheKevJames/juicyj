@@ -45,33 +45,7 @@ fn main() {
 
     let src = read_src_file(&file);
 
-    let lexer = juicyj::lexer::Lexer::new(&file, &src);
-
-    let mut parser = juicyj::parser::Parser::new(lexer);
-    let parse_tree = match parser.get_tree() {
-        Ok(pt) => pt,
-        Err(e) => {
-            println!("{}", e);
-            std::process::exit(42);
-        }
-    };
-
-    let mut weeder = juicyj::weeder::Weeder::new(&file, &parse_tree);
-    match weeder.verify(None) {
-        Ok(_) => (),
-        Err(e) => {
-            println!("{}", e);
-            std::process::exit(42);
-        }
-    }
-
-    match juicyj::common::AST::new(&parse_tree) {
-        Ok(ast) => ast.print(),
-        Err(e) => {
-            println!("{}", e);
-            std::process::exit(42);
-        }
-    };
+    juicyj::scanner::scan_or_exit(&file, &src);
 }
 
 fn read_src_file(file: &String) -> String {

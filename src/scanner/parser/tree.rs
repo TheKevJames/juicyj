@@ -1,5 +1,5 @@
-use common::Token;
-use common::TokenKind;
+use scanner::common::Token;
+use scanner::common::TokenKind;
 
 #[derive(Debug,Clone)]
 pub struct Tree {

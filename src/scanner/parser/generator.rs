@@ -1,11 +1,11 @@
 use std;
 use std::iter::Peekable;
 
-use common::error;
-use common::Token;
-use common::TokenKind;
-use parser::dfa;
-use parser::tree;
+use scanner::common::error;
+use scanner::common::Token;
+use scanner::common::TokenKind;
+use scanner::parser::dfa;
+use scanner::parser::tree;
 
 pub struct Parser<T: Iterator<Item = Result<Token, error::LexerError>>> {
     dfa: dfa::DFA,

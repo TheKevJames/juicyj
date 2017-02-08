@@ -1,7 +1,7 @@
-use common::error;
-use common::TokenKind;
-use parser::Node;
-use parser::Tree;
+use scanner::common::error;
+use scanner::common::TokenKind;
+use scanner::parser::Node;
+use scanner::parser::Tree;
 
 pub struct Weeder<'filename, 'tree> {
     filename: &'filename str,
