@@ -85,8 +85,6 @@ pub const INVALID_CAST: ErrorMessage = ErrorMessage { message: "invalid cast typ
 
 pub const INVALID_ESCAPE: ErrorMessage = ErrorMessage { message: "invalid escape character" };
 
-pub const INVALID_FUNCTION: ErrorMessage = ErrorMessage { message: "invalid grammar function" };
-
 pub const INVALID_IMPORT_DECLS: ErrorMessage =
     ErrorMessage { message: "invalid import declarations" };
 

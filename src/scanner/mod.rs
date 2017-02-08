@@ -60,7 +60,7 @@ pub mod tests {
                     println!("Lexer Error");
                     assert!(true);
                     return;
-                },
+                }
             }
         }
 
@@ -88,7 +88,7 @@ pub mod tests {
             Ok(_) => {
                 println!("No Error Found");
                 assert!(false);
-            },
+            }
             Err(_) => assert!(true),
         };
     }
@@ -103,7 +103,7 @@ pub mod tests {
                     println!("{}", e);
                     assert!(false);
                     std::process::exit(1);
-                },
+                }
             }
         }
 

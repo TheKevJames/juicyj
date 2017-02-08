@@ -3,6 +3,7 @@ use std::io::BufRead;
 use std::io::BufReader;
 use std::io::Read;
 use std::fs::File;
+use std::str::FromStr;
 
 use scanner::common::error;
 use scanner::common::Token;
@@ -12,6 +13,18 @@ use scanner::common::TokenKind;
 pub enum Function {
     Reduce,
     Shift,
+}
+
+impl FromStr for Function {
+    type Err = &'static str;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "reduce" => Ok(Function::Reduce),
+            "shift" => Ok(Function::Shift),
+            _ => Err("invalid grammar function"),
+        }
+    }
 }
 
 #[derive(Debug,Clone)]
@@ -193,21 +206,12 @@ impl DFA {
 
             let start_state: usize = tx.next().unwrap().parse().unwrap();
             let symbol = tx.next().unwrap();
-            let function = tx.next().unwrap();
+            let function: Function = tx.next().unwrap().parse().unwrap();
             let value: usize = tx.next().unwrap().parse().unwrap();
 
             states[start_state].transitions.push(Transition {
                 value: value,
-                function: match function {
-                    "reduce" => Function::Reduce,
-                    "shift" => Function::Shift,
-                    f => {
-                        return Err(error::ParserError {
-                            arg: f.to_string(),
-                            message: error::INVALID_FUNCTION,
-                        })
-                    }
-                },
+                function: function,
                 start_state: start_state,
                 symbol: match Symbol::new_from_terminals(&kinds_terminal, symbol.to_string()) {
                     Ok(s) => s,
