@@ -3,7 +3,6 @@ mod node;
 use std::fmt;
 
 use scanner::common::error;
-use scanner::parser::Node;
 use scanner::parser::Tree;
 
 use self::node::ASTNodeImport;
@@ -17,11 +16,11 @@ pub struct AST {
 }
 
 impl AST {
-    pub fn new(parse_tree: &Tree) -> Result<AST, error::ASTError> {
+    pub fn new(tree: &Tree) -> Result<AST, error::ASTError> {
         let mut imports = Vec::new();
         let mut package = None;
         let mut root = None;
-        for child in &parse_tree.root.children {
+        for child in &tree.root.children {
             match child.token.lexeme {
                 Some(ref l) if l == "PackageDeclaration" => {
                     package = match ASTNodePackage::new(&child) {
@@ -30,7 +29,7 @@ impl AST {
                     };
                 }
                 Some(ref l) if l == "ImportDeclarations" => {
-                    let mut statements: Vec<Node> = Vec::new();
+                    let mut statements = Vec::new();
                     child.collect_child_lexeme("ImportDeclaration", &mut statements);
 
                     for child in statements {
