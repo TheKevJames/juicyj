@@ -6,9 +6,9 @@ use scanner::parser::Tree;
 
 mod node;
 
-use self::node::import::ASTNodeImport;
-use self::node::node::ASTNode;
-use self::node::package::ASTNodePackage;
+use self::node::ASTNodeImport;
+use self::node::ASTNode;
+use self::node::ASTNodePackage;
 
 pub struct AST {
     pub package: Option<ASTNodePackage>,
