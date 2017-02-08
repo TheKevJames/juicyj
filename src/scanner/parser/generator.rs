@@ -15,6 +15,7 @@ pub struct Parser<T: Iterator<Item = Result<Token, error::LexerError>>> {
     tokens: Peekable<T>,
 }
 
+// TODO: cleanup
 impl<T: Iterator<Item = Result<Token, error::LexerError>>> Parser<T> {
     pub fn new(it: T) -> Parser<T> {
         let dfa = match dfa::DFA::new() {
@@ -153,7 +154,7 @@ impl<T: Iterator<Item = Result<Token, error::LexerError>>> Parser<T> {
                 }
                 Err(e) => {
                     for node in self.nodes.clone() {
-                        node.print(0);
+                        println!("{}", node);
                     }
                     println!("Last known state: {}", self.states.last().unwrap_or(&0));
                     return Err(e);

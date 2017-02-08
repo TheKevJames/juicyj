@@ -9,6 +9,7 @@ use scanner::common::error;
 use scanner::common::Token;
 use scanner::common::TokenKind;
 
+// TODO: move some of these to new module
 #[derive(Clone)]
 pub enum Function {
     Reduce,
@@ -137,6 +138,7 @@ pub struct DFA {
 }
 
 impl DFA {
+    // TODO: cleanup
     pub fn new() -> Result<DFA, error::ParserError> {
         let filename = "grammar/joos.lr1";
         let mut file = match File::open(filename) {
