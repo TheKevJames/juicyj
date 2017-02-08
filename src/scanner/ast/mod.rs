@@ -14,13 +14,13 @@ use self::node::ASTNodePackage;
 
 pub struct AST {
     pub package: Option<ASTNodePackage>,
-    pub imports: Option<Vec<ASTNodeImport>>,
+    pub imports: Vec<ASTNodeImport>,
     pub root: Option<ASTNode>,
 }
 
 impl AST {
     pub fn new(parse_tree: &Tree) -> Result<AST, error::ASTError> {
-        let mut imports = None;
+        let mut imports = Vec::new();
         let mut package = None;
         let mut root = None;
         for child in parse_tree.root.clone().children {
@@ -32,10 +32,15 @@ impl AST {
                     };
                 }
                 Some(ref l) if l == "ImportDeclarations" => {
-                    imports = match AST::parse_imports(&child) {
-                        Ok(i) => Some(i),
-                        Err(e) => return Err(e),
-                    };
+                    let mut statements: Vec<Node> = Vec::new();
+                    child.clone().collect_child_lexeme("ImportDeclaration", &mut statements);
+
+                    for child in statements {
+                        imports.push(match ASTNodeImport::new(&child) {
+                            Ok(i) => i,
+                            Err(e) => return Err(e),
+                        });
+                    }
                 }
                 Some(ref l) if l == "TypeDeclarations" => {
                     root = match AST::parse_types(&child) {
@@ -52,24 +57,6 @@ impl AST {
             package: package,
             root: root,
         })
-    }
-
-    fn parse_imports(node: &Node) -> Result<Vec<ASTNodeImport>, error::ASTError> {
-        if node.token.lexeme != Some("ImportDeclarations".to_string()) {
-            return Err(error::ASTError { message: error::INVALID_IMPORT_DECLS });
-        }
-
-        let mut statements: Vec<Node> = Vec::new();
-        node.clone().collect_child_lexeme("ImportDeclaration", &mut statements);
-
-        let mut imports: Vec<ASTNodeImport> = Vec::new();
-        for child in statements {
-            let mut names: Vec<Token> = Vec::new();
-            child.collect_child_kinds(&vec![&TokenKind::Identifier, &TokenKind::Star], &mut names);
-            imports.push(ASTNodeImport { import: names });
-        }
-
-        Ok(imports)
     }
 
     fn parse_types(node: &Node) -> Result<ASTNode, error::ASTError> {
@@ -219,15 +206,14 @@ impl fmt::Display for AST {
             Some(ref p) => try!(writeln!(f, "Package: {}", p)),
             None => try!(writeln!(f, "[no package declaration]")),
         }
-        match self.imports {
-            Some(ref is) => {
-                try!(writeln!(f, "Imports:"));
-                for i in is {
-                    try!(writeln!(f, "{:2}", i));
-                }
-            }
-            None => try!(writeln!(f, "[no imports]")),
+
+        if !self.imports.is_empty() {
+            try!(writeln!(f, "Imports:"));
         }
+        for i in &self.imports {
+            try!(writeln!(f, "{:2}", i));
+        }
+
         write!(f, "{}", self.root.clone().unwrap())
     }
 }
