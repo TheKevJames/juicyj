@@ -16,6 +16,25 @@ pub struct ASTNodePackage {
     pub package: Vec<Token>,
 }
 
+impl ASTNode {
+    pub fn print(&self, f: &mut fmt::Formatter, indent: usize) -> fmt::Result {
+        match indent {
+            0 => try!(write!(f, "{:width$}{}", "", self.token, width = indent)),
+            _ => try!(write!(f, "{:width$}{}", "\n", self.token, width = indent)),
+        }
+        for child in self.children.clone() {
+            try!(child.print(f, indent + 2));
+        }
+        Ok(())
+    }
+}
+
+impl fmt::Display for ASTNode {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.print(f, 0)
+    }
+}
+
 impl fmt::Display for ASTNodeImport {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for t in &self.import {
@@ -31,17 +50,5 @@ impl fmt::Display for ASTNodePackage {
             try!(write!(f, "{} ", t));
         }
         Ok(())
-    }
-}
-
-// TODO: Display
-impl ASTNode {
-    pub fn print(&self, indent: u32) {
-        let spaces = (0..indent).map(|_| " ").collect::<String>();
-        println!("{}{}", spaces, self.token);
-
-        for child in self.children.clone() {
-            child.print(indent + 2);
-        }
     }
 }

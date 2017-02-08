@@ -66,7 +66,7 @@ impl AST {
             }
             None => println!("[no imports]"),
         }
-        self.root.clone().unwrap().print(0);
+        println!("{}", self.root.clone().unwrap());
     }
 
     fn parse_imports(node: &Node) -> Result<Vec<ASTNodeImport>, error::ASTError> {
@@ -117,7 +117,7 @@ impl AST {
                                 // TODO: does this cover x.y ?
                                 TokenKind::Identifier => (),
                                 _ => {
-                                    children[1].clone().print(0);
+                                    println!("{}", children[1].clone());
                                     return Err(error::ASTError { message: error::INVALID_CAST });
                                 }
                             }
