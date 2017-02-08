@@ -5,7 +5,8 @@ use std::io::Read;
 use std::fs::File;
 use std::str::FromStr;
 
-use scanner::common::error;
+use error::ErrorMessage;
+use error::ParserError;
 use scanner::common::Token;
 use scanner::common::TokenKind;
 
@@ -14,6 +15,15 @@ use scanner::common::TokenKind;
 pub enum Function {
     Reduce,
     Shift,
+}
+
+impl std::fmt::Display for Function {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match *self {
+            Function::Reduce => write!(f, "reduce"),
+            Function::Shift => write!(f, "shift"),
+        }
+    }
 }
 
 impl FromStr for Function {
@@ -61,6 +71,16 @@ impl State {
     }
 }
 
+impl std::fmt::Display for State {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        try!(write!(f, "{}", self.state));
+        for transition in &self.transitions {
+            try!(write!(f, "\n  {}", transition));
+        }
+        Ok(())
+    }
+}
+
 #[derive(Clone,PartialEq)]
 pub enum Terminality {
     NonTerminal,
@@ -83,7 +103,7 @@ pub struct Symbol {
 }
 
 impl Symbol {
-    pub fn new(terminality: Terminality, value: String) -> Result<Symbol, error::ParserError> {
+    pub fn new(terminality: Terminality, value: String) -> Result<Symbol, ParserError> {
         match value.parse() {
             Ok(kind) => {
                 Ok(Symbol {
@@ -94,30 +114,26 @@ impl Symbol {
                     },
                 })
             }
-            Err(_) => {
-                Err(error::ParserError {
-                    arg: value,
-                    message: error::STRING_NOT_TOKEN,
-                })
-            }
+            Err(_) => return Err(ParserError::new(ErrorMessage::StringNotToken(value), None)),
         }
     }
 
     fn new_from_terminals(ref kinds_terminal: &Vec<TokenKind>,
                           value: String)
-                          -> Result<Symbol, error::ParserError> {
+                          -> Result<Symbol, ParserError> {
         let kind = match value.parse() {
             Ok(ref kind) if kinds_terminal.contains(kind) => Terminality::Terminal,
             Ok(_) => Terminality::NonTerminal,
-            _ => {
-                return Err(error::ParserError {
-                    arg: value,
-                    message: error::STRING_NOT_TOKEN,
-                })
-            }
+            _ => return Err(ParserError::new(ErrorMessage::StringNotToken(value), None)),
         };
 
         Symbol::new(kind, value)
+    }
+}
+
+impl std::fmt::Display for Symbol {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{} [{}]", self.token, self.terminality)
     }
 }
 
@@ -127,6 +143,17 @@ pub struct Transition {
     pub function: Function,
     pub start_state: usize,
     pub symbol: Symbol,
+}
+
+impl std::fmt::Display for Transition {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f,
+               "{}: {} {} {}",
+               self.start_state,
+               self.symbol,
+               self.function,
+               self.value)
+    }
 }
 
 pub struct DFA {
@@ -139,15 +166,13 @@ pub struct DFA {
 
 impl DFA {
     // TODO: cleanup
-    pub fn new() -> Result<DFA, error::ParserError> {
+    pub fn new() -> Result<DFA, ParserError> {
         let filename = "grammar/joos.lr1";
         let mut file = match File::open(filename) {
             Ok(file) => BufReader::new(file),
             Err(_) => {
-                return Err(error::ParserError {
-                    arg: filename.to_string(),
-                    message: error::COULD_NOT_READ_FILE,
-                })
+                return Err(ParserError::new(ErrorMessage::CouldNotReadFile(filename.to_string()),
+                                            None));
             }
         };
 
@@ -251,10 +276,7 @@ impl DFA {
         })
     }
 
-    pub fn consume(&self,
-                   state: &usize,
-                   ref token: &Token)
-                   -> Result<Transition, error::ParserError> {
+    pub fn consume(&self, state: &usize, ref token: &Token) -> Result<Transition, ParserError> {
         let ref state = self.states[*state];
         let ref transitions = state.transitions;
         for transition in transitions {
@@ -272,9 +294,7 @@ impl DFA {
             }
         }
 
-        Err(error::ParserError {
-            arg: format!("{}", token),
-            message: error::INVALID_TOKEN,
-        })
+        Err(ParserError::new(ErrorMessage::UnparseableToken(format!("{}", token)),
+                             Some(format!("last known state: {}", state))))
     }
 }

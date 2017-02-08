@@ -1,6 +1,7 @@
 use std::fmt;
 
-use scanner::common::error;
+use error::ASTError;
+use error::ErrorMessage;
 use scanner::common::Token;
 use scanner::common::TokenKind;
 use scanner::parser::ParseNode;
@@ -21,7 +22,7 @@ pub struct ASTNodePackage {
 
 impl ASTNode {
     // TODO: cleanup
-    pub fn new(node: &ParseNode) -> Result<ASTNode, error::ASTError> {
+    pub fn new(node: &ParseNode) -> Result<ASTNode, ASTError> {
         match node.token.kind {
             TokenKind::NonTerminal => {
                 match node.token.lexeme {
@@ -39,16 +40,16 @@ impl ASTNode {
                                 // TODO: does this cover x.y ?
                                 TokenKind::Identifier => (),
                                 _ => {
-                                    println!("{}", children[1]);
-                                    return Err(error::ASTError { message: error::INVALID_CAST });
+                                    return Err(ASTError::new(ErrorMessage::InvalidCast,
+                                                             &children[1]));
                                 }
                             }
 
                             let mut nodes: Vec<ParseNode> = Vec::new();
                             node.children[1].collect_child_lexeme("PrimaryNoNewArray", &mut nodes);
-                            for n in nodes {
+                            for n in &nodes {
                                 if n.children.len() != 1 {
-                                    return Err(error::ASTError { message: error::INVALID_CAST });
+                                    return Err(ASTError::new(ErrorMessage::InvalidCast, n));
                                 }
                             }
                         }
@@ -123,7 +124,7 @@ impl ASTNode {
                                     match node.token.lexeme {
                                         Some(ref l) if l.parse().unwrap_or(0) >
                                                        2u64.pow(31) - 1 => {
-                                            return Err(error::ASTError { message: error::INT_OOB });
+                                            return Err(ASTError::new(ErrorMessage::IntOOB, &node));
                                         }
                                         _ => (),
                                     }
@@ -172,7 +173,7 @@ impl ASTNode {
 }
 
 impl ASTNodeImport {
-    pub fn new(node: &ParseNode) -> Result<ASTNodeImport, error::ASTError> {
+    pub fn new(node: &ParseNode) -> Result<ASTNodeImport, ASTError> {
         let mut names: Vec<Token> = Vec::new();
         node.collect_child_kinds(&vec![&TokenKind::Identifier, &TokenKind::Star], &mut names);
 
@@ -181,7 +182,7 @@ impl ASTNodeImport {
 }
 
 impl ASTNodePackage {
-    pub fn new(node: &ParseNode) -> Result<ASTNodePackage, error::ASTError> {
+    pub fn new(node: &ParseNode) -> Result<ASTNodePackage, ASTError> {
         let mut names: Vec<Token> = Vec::new();
         node.children[1].collect_child_kinds(&vec![&TokenKind::Identifier], &mut names);
 

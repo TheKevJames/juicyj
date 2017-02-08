@@ -2,7 +2,8 @@ mod node;
 
 use std::fmt;
 
-use scanner::common::error;
+use error::ASTError;
+use error::ErrorMessage;
 use scanner::parser::ParseTree;
 
 use self::node::ASTNodeImport;
@@ -16,7 +17,7 @@ pub struct AST {
 }
 
 impl AST {
-    pub fn new(tree: &ParseTree) -> Result<AST, error::ASTError> {
+    pub fn new(tree: &ParseTree) -> Result<AST, ASTError> {
         let mut imports = Vec::new();
         let mut package = None;
         let mut root = None;
@@ -45,7 +46,7 @@ impl AST {
                         Err(e) => return Err(e),
                     };
                 }
-                _ => return Err(error::ASTError { message: error::INVALID_ROOT_CHILD }),
+                _ => return Err(ASTError::new(ErrorMessage::InvalidRootChild, child)),
             }
         }
 

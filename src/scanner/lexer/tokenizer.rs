@@ -5,7 +5,8 @@ use std::option::IntoIter;
 use std::str::Chars;
 use std::str::Split;
 
-use scanner::common::error;
+use error::ErrorMessage;
+use error::LexerError;
 use scanner::common::Token;
 use scanner::common::TokenKind;
 use scanner::lexer::identifier;
@@ -82,8 +83,8 @@ impl<'file, 'src> Lexer<'file, 'src> {
         };
     }
 
-    fn error(&self, message: error::ErrorMessage) -> error::LexerError {
-        error::LexerError {
+    fn error(&self, message: ErrorMessage) -> LexerError {
+        LexerError {
             file: self.file.to_owned(),
             index: self.index_character,
             line: self.line.unwrap_or("").to_owned(),
@@ -108,34 +109,42 @@ impl<'file, 'src> Lexer<'file, 'src> {
                 current_kind: TokenKind,
                 aheads_char: Option<Vec<(char, Option<TokenKind>)>>,
                 aheads_str: Option<Vec<(&str, Option<TokenKind>)>>)
-                -> Result<Token, error::LexerError> {
+                -> Result<Token, LexerError> {
         self.consume();
 
         for (ahead_char, ahead_kind) in aheads_char.unwrap_or(Vec::new()) {
             if self.current == Some(ahead_char) {
                 self.consume();
                 return match ahead_kind {
-                    Some(TokenKind::AssignmentAddition) => Err(self.error(error::INVALID_TOKEN)),
-                    Some(TokenKind::AssignmentAnd) => Err(self.error(error::INVALID_TOKEN)),
-                    Some(TokenKind::AssignmentDivision) => Err(self.error(error::INVALID_TOKEN)),
-                    Some(TokenKind::AssignmentModulus) => Err(self.error(error::INVALID_TOKEN)),
-                    Some(TokenKind::AssignmentMultiplication) => {
-                        Err(self.error(error::INVALID_TOKEN))
+                    Some(TokenKind::AssignmentAddition) => {
+                        Err(self.error(ErrorMessage::InvalidToken))
                     }
-                    Some(TokenKind::AssignmentOr) => Err(self.error(error::INVALID_TOKEN)),
-                    Some(TokenKind::AssignmentSubtraction) => Err(self.error(error::INVALID_TOKEN)),
-                    Some(TokenKind::AssignmentXor) => Err(self.error(error::INVALID_TOKEN)),
-                    Some(TokenKind::Decrement) => Err(self.error(error::INVALID_TOKEN)),
-                    Some(TokenKind::Increment) => Err(self.error(error::INVALID_TOKEN)),
-                    Some(TokenKind::LShift) => Err(self.error(error::INVALID_TOKEN)),
-                    Some(TokenKind::RShift) => Err(self.error(error::INVALID_TOKEN)),
+                    Some(TokenKind::AssignmentAnd) => Err(self.error(ErrorMessage::InvalidToken)),
+                    Some(TokenKind::AssignmentDivision) => {
+                        Err(self.error(ErrorMessage::InvalidToken))
+                    }
+                    Some(TokenKind::AssignmentModulus) => {
+                        Err(self.error(ErrorMessage::InvalidToken))
+                    }
+                    Some(TokenKind::AssignmentMultiplication) => {
+                        Err(self.error(ErrorMessage::InvalidToken))
+                    }
+                    Some(TokenKind::AssignmentOr) => Err(self.error(ErrorMessage::InvalidToken)),
+                    Some(TokenKind::AssignmentSubtraction) => {
+                        Err(self.error(ErrorMessage::InvalidToken))
+                    }
+                    Some(TokenKind::AssignmentXor) => Err(self.error(ErrorMessage::InvalidToken)),
+                    Some(TokenKind::Decrement) => Err(self.error(ErrorMessage::InvalidToken)),
+                    Some(TokenKind::Increment) => Err(self.error(ErrorMessage::InvalidToken)),
+                    Some(TokenKind::LShift) => Err(self.error(ErrorMessage::InvalidToken)),
+                    Some(TokenKind::RShift) => Err(self.error(ErrorMessage::InvalidToken)),
                     Some(kind) => {
                         Ok(Token {
                             kind: kind,
                             lexeme: None,
                         })
                     }
-                    None => Err(self.error(error::INVALID_TOKEN)),
+                    None => Err(self.error(ErrorMessage::InvalidToken)),
                 };
             }
         }
@@ -163,17 +172,17 @@ impl<'file, 'src> Lexer<'file, 'src> {
                 self.consume();
             }
             return match ahead_kind {
-                Some(TokenKind::AssignmentLShift) => Err(self.error(error::INVALID_TOKEN)),
-                Some(TokenKind::AssignmentRRShift) => Err(self.error(error::INVALID_TOKEN)),
-                Some(TokenKind::AssignmentRShift) => Err(self.error(error::INVALID_TOKEN)),
-                Some(TokenKind::RRShift) => Err(self.error(error::INVALID_TOKEN)),
+                Some(TokenKind::AssignmentLShift) => Err(self.error(ErrorMessage::InvalidToken)),
+                Some(TokenKind::AssignmentRRShift) => Err(self.error(ErrorMessage::InvalidToken)),
+                Some(TokenKind::AssignmentRShift) => Err(self.error(ErrorMessage::InvalidToken)),
+                Some(TokenKind::RRShift) => Err(self.error(ErrorMessage::InvalidToken)),
                 Some(kind) => {
                     Ok(Token {
                         kind: kind,
                         lexeme: None,
                     })
                 }
-                None => Err(self.error(error::INVALID_TOKEN)),
+                None => Err(self.error(ErrorMessage::InvalidToken)),
             };
         }
 
@@ -183,7 +192,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
         });
     }
 
-    fn next_char(&mut self) -> Result<Token, error::LexerError> {
+    fn next_char(&mut self) -> Result<Token, LexerError> {
         let mut char_length = 1;
 
         self.consume();
@@ -197,7 +206,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
 
             if c == '\n' {
                 self.consume();
-                return Err(self.error(error::CHAR_NEWLINE));
+                return Err(self.error(ErrorMessage::CharNewline));
             }
 
             if c == '\\' {
@@ -225,7 +234,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
                                                 char_length = 4;
                                                 continue;
                                             }
-                                            _ => return Err(self.error(error::INVALID_OCTAL)),
+                                            _ => return Err(self.error(ErrorMessage::InvalidOctal)),
                                         }
                                     }
                                     Some('\'') => {
@@ -234,7 +243,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
                                         break;
                                     }
                                     _ => {
-                                        return Err(self.error(error::CHAR_TOO_LONG_OCTAL));
+                                        return Err(self.error(ErrorMessage::CharTooLongOctal));
                                     }
                                 }
                             }
@@ -244,7 +253,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
                                 break;
                             }
                             _ => {
-                                return Err(self.error(error::CHAR_TOO_LONG_OCTAL));
+                                return Err(self.error(ErrorMessage::CharTooLongOctal));
                             }
                         }
                     }
@@ -258,7 +267,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
                         self.consume();
                         continue;
                     }
-                    _ => return Err(self.error(error::INVALID_ESCAPE)),
+                    _ => return Err(self.error(ErrorMessage::InvalidEscape)),
                 }
             }
 
@@ -267,7 +276,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
         }
 
         if identifier.len() != char_length {
-            return Err(self.error(error::CHAR_TOO_LONG));
+            return Err(self.error(ErrorMessage::CharTooLong));
         }
 
         Ok(Token {
@@ -276,7 +285,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
         })
     }
 
-    fn next_identifier(&mut self) -> Result<Token, error::LexerError> {
+    fn next_identifier(&mut self) -> Result<Token, LexerError> {
         let mut identifier = String::new();
         while let Some(c) = self.current {
             if !identifier::valid_continuation(c) {
@@ -363,7 +372,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
 
         // match kind {
         //     // TODO: no reason these can't be variable names
-        //     TokenKind::Break => Err(self.error(error::INVALID_TOKEN)),
+        //     TokenKind::Break => Err(self.error(ErrorMessage::InvalidToken)),
         //     // etc
         //     kind => {
         //         Ok(Token {
@@ -378,7 +387,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
         })
     }
 
-    fn next_number(&mut self) -> Result<Token, error::LexerError> {
+    fn next_number(&mut self) -> Result<Token, LexerError> {
         let mut identifier = String::new();
         while let Some(c) = self.current {
             if !c.is_digit(10) {
@@ -395,7 +404,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
         })
     }
 
-    fn next_string(&mut self) -> Result<Token, error::LexerError> {
+    fn next_string(&mut self) -> Result<Token, LexerError> {
         self.consume();
 
         let mut identifier = String::new();
@@ -407,7 +416,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
 
             if c == '\n' {
                 self.consume();
-                return Err(self.error(error::STRING_NEWLINE));
+                return Err(self.error(ErrorMessage::StringNewline));
             }
 
             if c == '\\' {
@@ -423,7 +432,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
                         self.consume();
                         continue;
                     }
-                    _ => return Err(self.error(error::INVALID_ESCAPE)),
+                    _ => return Err(self.error(ErrorMessage::InvalidEscape)),
                 }
             }
 
@@ -437,7 +446,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
         })
     }
 
-    fn next_token(&mut self) -> Option<Result<Token, error::LexerError>> {
+    fn next_token(&mut self) -> Option<Result<Token, LexerError>> {
         self.skip_comments();
 
         let kind = match self.current {
@@ -461,15 +470,15 @@ impl<'file, 'src> Lexer<'file, 'src> {
         match kind {
             Some(TokenKind::Colon) => {
                 self.consume();
-                return Some(Err(self.error(error::INVALID_TOKEN)));
+                return Some(Err(self.error(ErrorMessage::InvalidToken)));
             }
             Some(TokenKind::Complement) => {
                 self.consume();
-                return Some(Err(self.error(error::INVALID_TOKEN)));
+                return Some(Err(self.error(ErrorMessage::InvalidToken)));
             }
             Some(TokenKind::Question) => {
                 self.consume();
-                return Some(Err(self.error(error::INVALID_TOKEN)));
+                return Some(Err(self.error(ErrorMessage::InvalidToken)));
             }
             Some(kind) => {
                 self.consume();
@@ -560,7 +569,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
 
             Some(_) => {
                 self.consume();
-                Some(Err(self.error(error::INVALID_TOKEN)))
+                Some(Err(self.error(ErrorMessage::InvalidToken)))
             }
             _ => None,
         }
@@ -611,9 +620,9 @@ impl<'file, 'src> Lexer<'file, 'src> {
 }
 
 impl<'file, 'src> Iterator for Lexer<'file, 'src> {
-    type Item = Result<Token, error::LexerError>;
+    type Item = Result<Token, LexerError>;
 
-    fn next(&mut self) -> Option<Result<Token, error::LexerError>> {
+    fn next(&mut self) -> Option<Result<Token, LexerError>> {
         self.next_token()
     }
 }

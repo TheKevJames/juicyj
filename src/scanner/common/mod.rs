@@ -1,4 +1,3 @@
-pub mod error;
 mod tokens;
 
 pub use self::tokens::Token;

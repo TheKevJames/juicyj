@@ -1,4 +1,5 @@
-use scanner::common::error;
+use error::ErrorMessage;
+use error::WeederError;
 use scanner::common::TokenKind;
 use scanner::parser::ParseNode;
 use scanner::parser::ParseTree;
@@ -18,8 +19,12 @@ impl<'filename, 'tree> Weeder<'filename, 'tree> {
         }
     }
 
+    fn error(&self, message: ErrorMessage, node: &ParseNode) -> Result<(), WeederError> {
+        Err(WeederError::new(self.filename.to_owned(), message, &node))
+    }
+
     // TODO: cleanup
-    pub fn verify(&mut self, node: Option<ParseNode>) -> Result<(), error::WeederError> {
+    pub fn verify(&mut self, node: Option<ParseNode>) -> Result<(), WeederError> {
         let node = match node {
             Some(n) => n,
             _ => self.tree.root.clone(),
@@ -29,16 +34,16 @@ impl<'filename, 'tree> Weeder<'filename, 'tree> {
             TokenKind::NumValue => {
                 match node.token.lexeme {
                     Some(ref l) if l.starts_with("0") && l.len() > 1 => {
-                        return Err(error::WeederError { message: "weeder found octal digit!" });
+                        return self.error(ErrorMessage::InvalidOctal, &node);
                     }
                     Some(ref l) if l.parse().unwrap_or(0) > 2u64.pow(31) => {
-                        return Err(error::WeederError { message: "weeder found int out of range" });
+                        return self.error(ErrorMessage::IntOOB, &node);
                     }
                     _ => (),
                 }
             }
             TokenKind::Class if self.has_class => {
-                return Err(error::WeederError { message: "weeder found multiple classes!" });
+                return self.error(ErrorMessage::MultipleClasses, &node);
             }
             TokenKind::Class => self.has_class = true,
             TokenKind::NonTerminal => {
@@ -46,74 +51,55 @@ impl<'filename, 'tree> Weeder<'filename, 'tree> {
                     Some(ref l) if l == "AbstractMethodDeclaration" => {
                         if !node.children[0].clone().has_child_kind(&TokenKind::Abstract) &&
                            !node.children[0].clone().has_child_kind(&TokenKind::Native) {
-                            return Err(error::WeederError {
-                                message: "weeder found concrete method with no body",
-                            });
+                            return self.error(ErrorMessage::ConcreteNoBody, &node);
                         }
                     }
                     Some(ref l) if l == "MethodDeclaration" &&
                                    node.children[1].token.lexeme ==
                                    Some("MethodBody".to_string()) => {
                         if node.children[0].clone().has_child_kind(&TokenKind::Abstract) {
-                            return Err(error::WeederError {
-                                message: "weeder found abstract method with body",
-                            });
+                            return self.error(ErrorMessage::AbstractBody, &node);
                         }
 
                         if node.children[0].clone().has_child_kind(&TokenKind::Native) {
-                            return Err(error::WeederError {
-                                message: "weeder found native method with body",
-                            });
+                            return self.error(ErrorMessage::NativeBody, &node);
                         }
                     }
                     Some(ref l) if l == "MethodHeader" => {
                         if node.children[0].clone().has_child_kind(&TokenKind::Abstract) {
                             if node.children[0].clone().has_child_kind(&TokenKind::Final) {
-                                return Err(error::WeederError {
-                                    message: "weeder found final abstract method",
-                                });
+                                return self.error(ErrorMessage::FinalAbstract, &node);
                             }
 
                             if node.children[0].clone().has_child_kind(&TokenKind::Static) {
-                                return Err(error::WeederError {
-                                    message: "weeder found static abstract method",
-                                });
+                                return self.error(ErrorMessage::StaticAbstract, &node);
                             }
                         }
 
                         if node.children[0].clone().has_child_kind(&TokenKind::Static) {
                             if node.children[0].clone().has_child_kind(&TokenKind::Final) {
-                                return Err(error::WeederError {
-                                    message: "weeder found static final method",
-                                });
+                                return self.error(ErrorMessage::StaticFinal, &node);
                             }
                         }
 
                         if node.children[0].clone().has_child_kind(&TokenKind::Native) {
                             if !node.children[0].clone().has_child_kind(&TokenKind::Static) {
-                                return Err(error::WeederError {
-                                    message: "weeder found non-static native method",
-                                });
+                                return self.error(ErrorMessage::NonStaticNative, &node);
                             }
                         }
                     }
                     Some(ref l) if l == "FieldDeclaration" &&
                                    node.children[0].clone().has_child_kind(&TokenKind::Final) &&
                                    node.children[2].clone().children.len() != 3 => {
-                        return Err(error::WeederError {
-                            message: "weeder found final field with no initializer",
-                        });
+                        return self.error(ErrorMessage::FinalNoInit, &node);
                     }
                     Some(ref l) if l == "ClassDeclaration" => {
                         for (idx, child) in node.children.iter().enumerate() {
                             if child.token.kind == TokenKind::Class {
                                 match node.children[idx + 1].clone().token.lexeme {
-                                    Some(lexeme) => {
-                                        if format!("{}.java", lexeme) != self.filename {
-                                            return Err(error::WeederError {
-                                                message: "weeder found mis-named class",
-                                            });
-                                        }
+                                    Some(ref lexeme) if format!("{}.java", lexeme) !=
+                                                        self.filename => {
+                                        return self.error(ErrorMessage::ClassBadName, &node);
                                     }
                                     _ => (),
                                 }
@@ -124,12 +110,9 @@ impl<'filename, 'tree> Weeder<'filename, 'tree> {
                         for (idx, child) in node.children.iter().enumerate() {
                             if child.token.kind == TokenKind::Interface {
                                 match node.children[idx + 1].clone().token.lexeme {
-                                    Some(lexeme) => {
-                                        if format!("{}.java", lexeme) != self.filename {
-                                            return Err(error::WeederError {
-                                                message: "weeder found mis-named interface",
-                                            });
-                                        }
+                                    Some(ref lexeme) if format!("{}.java", lexeme) !=
+                                                        self.filename => {
+                                        return self.error(ErrorMessage::InterfaceBadName, &node);
                                     }
                                     _ => (),
                                 }

@@ -1,13 +1,15 @@
 use std;
 use std::iter::Peekable;
 
-use scanner::common::error;
+use error::ErrorMessage;
+use error::LexerError;
+use error::ParserError;
 use scanner::common::Token;
 use scanner::common::TokenKind;
 use scanner::parser::dfa;
 use scanner::parser::tree;
 
-pub struct Parser<T: Iterator<Item = Result<Token, error::LexerError>>> {
+pub struct Parser<T: Iterator<Item = Result<Token, LexerError>>> {
     dfa: dfa::DFA,
     nodes: Vec<tree::ParseNode>,
     states: Vec<usize>,
@@ -16,7 +18,7 @@ pub struct Parser<T: Iterator<Item = Result<Token, error::LexerError>>> {
 }
 
 // TODO: cleanup
-impl<T: Iterator<Item = Result<Token, error::LexerError>>> Parser<T> {
+impl<T: Iterator<Item = Result<Token, LexerError>>> Parser<T> {
     pub fn new(it: T) -> Parser<T> {
         let dfa = match dfa::DFA::new() {
             Ok(dfa) => dfa,
@@ -37,7 +39,7 @@ impl<T: Iterator<Item = Result<Token, error::LexerError>>> Parser<T> {
         }
     }
 
-    fn consume(&mut self, token: Token) -> Result<(), error::ParserError> {
+    fn consume(&mut self, token: Token) -> Result<(), ParserError> {
         match self.dfa.consume(self.states.last().unwrap_or(&0), &token) {
             Ok(transition) => {
                 let result = match transition.function {
@@ -85,10 +87,7 @@ impl<T: Iterator<Item = Result<Token, error::LexerError>>> Parser<T> {
         }
     }
 
-    fn reduce(&mut self,
-              transition: dfa::Transition,
-              token: Token)
-              -> Result<(), error::ParserError> {
+    fn reduce(&mut self, transition: dfa::Transition, token: Token) -> Result<(), ParserError> {
         let mut children: Vec<tree::ParseNode> = Vec::new();
         let ref rule = self.dfa.rules[transition.value].clone();
         for _ in 0..rule.rhs.len() {
@@ -96,10 +95,8 @@ impl<T: Iterator<Item = Result<Token, error::LexerError>>> Parser<T> {
             match self.nodes.pop() {
                 Some(n) => children.insert(0, n),
                 _ => {
-                    return Err(error::ParserError {
-                        arg: format!("{}", rule),
-                        message: error::COULD_NOT_REDUCE_STACK,
-                    })
+                    return Err(ParserError::new(ErrorMessage::CouldNotReduceStack,
+                                                Some(format!("{}", rule))));
                 }
             }
         }
@@ -121,10 +118,7 @@ impl<T: Iterator<Item = Result<Token, error::LexerError>>> Parser<T> {
         Ok(())
     }
 
-    fn shift(&mut self,
-             transition: dfa::Transition,
-             ref token: Token)
-             -> Result<(), error::ParserError> {
+    fn shift(&mut self, transition: dfa::Transition, ref token: Token) -> Result<(), ParserError> {
         self.states.push(transition.value);
         if transition.symbol.terminality == dfa::Terminality::Terminal {
             self.nodes.push(tree::ParseNode {
@@ -136,7 +130,7 @@ impl<T: Iterator<Item = Result<Token, error::LexerError>>> Parser<T> {
         Ok(())
     }
 
-    pub fn get_tree(&mut self) -> Result<tree::ParseTree, error::ParserError> {
+    pub fn get_tree(&mut self) -> Result<tree::ParseTree, ParserError> {
         while let Some(token) = self.peek() {
             match self.dfa.consume(self.states.last().unwrap_or(&0), &token) {
                 Ok(transition) => {
@@ -146,19 +140,13 @@ impl<T: Iterator<Item = Result<Token, error::LexerError>>> Parser<T> {
                     };
                     match result {
                         Ok(_) => (),
-                        Err(e) => return Err(e),
+                        Err(e) => return Err(e.with_nodes(self.nodes.clone())),
                     }
                     if token.kind != TokenKind::BOF {
                         self.tokens.next();
                     }
                 }
-                Err(e) => {
-                    for node in self.nodes.clone() {
-                        println!("{}", node);
-                    }
-                    println!("Last known state: {}", self.states.last().unwrap_or(&0));
-                    return Err(e);
-                }
+                Err(e) => return Err(e.with_nodes(self.nodes.clone())),
             }
         }
 
@@ -166,10 +154,8 @@ impl<T: Iterator<Item = Result<Token, error::LexerError>>> Parser<T> {
         match self.nodes.len() {
             3 => Ok(tree::ParseTree { root: self.nodes[1].clone() }),
             _ => {
-                Err(error::ParserError {
-                    arg: "Start".to_string(),
-                    message: error::INVALID_PARSE_TREE,
-                })
+                Err(ParserError::new(ErrorMessage::InvalidParseTree, None)
+                    .with_nodes(self.nodes.clone()))
             }
         }
     }
