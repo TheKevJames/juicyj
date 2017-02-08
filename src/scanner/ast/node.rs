@@ -25,7 +25,7 @@ impl ASTNode {
             0 => try!(write!(f, "{:width$}{}", "", self.token, width = indent)),
             _ => try!(write!(f, "{:width$}{}", "\n", self.token, width = indent)),
         }
-        for child in self.children.clone() {
+        for child in &self.children {
             try!(child.print(f, indent + 2));
         }
         Ok(())
