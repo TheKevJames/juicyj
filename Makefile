@@ -12,6 +12,10 @@ clean:
 	rm -rf **/*.rs.bk
 	rm -rf grammar/jlalr/*.class
 
+docs: docs/a1.pdf
+docs/a1.pdf: docs/a1.md
+	pandoc -s $^ -o $@
+
 release:
 	@cargo build --release
 	cp target/release/juicyj joosc

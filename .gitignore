@@ -1,6 +1,7 @@
 /target/
 **/*.rs.bk
 *.class
+*.pdf
 
 joosc
 juicyj.zip

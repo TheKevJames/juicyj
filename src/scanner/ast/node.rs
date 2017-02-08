@@ -37,8 +37,15 @@ impl ASTNode {
 
                         if node.children[1].token.lexeme == Some("Expression".to_string()) {
                             match children[1].token.kind {
-                                // TODO: does this cover x.y ?
+                                TokenKind::Dot => (),
                                 TokenKind::Identifier => (),
+                                TokenKind::NonTerminal => {
+                                    if children[1].token.lexeme !=
+                                       Some("QualifiedName".to_string()) {
+                                        return Err(ASTError::new(ErrorMessage::InvalidCast,
+                                                                 &children[1]));
+                                    }
+                                }
                                 _ => {
                                     return Err(ASTError::new(ErrorMessage::InvalidCast,
                                                              &children[1]));
