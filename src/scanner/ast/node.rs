@@ -35,8 +35,7 @@ impl ASTNode {
 impl ASTNodeImport {
     pub fn new(node: &Node) -> Result<ASTNodeImport, error::ASTError> {
         let mut names: Vec<Token> = Vec::new();
-        node.clone()
-            .collect_child_kinds(&vec![&TokenKind::Identifier, &TokenKind::Star], &mut names);
+        node.collect_child_kinds(&vec![&TokenKind::Identifier, &TokenKind::Star], &mut names);
 
         Ok(ASTNodeImport { import: names })
     }
@@ -45,7 +44,7 @@ impl ASTNodeImport {
 impl ASTNodePackage {
     pub fn new(node: &Node) -> Result<ASTNodePackage, error::ASTError> {
         let mut names: Vec<Token> = Vec::new();
-        node.children[1].clone().collect_child_kinds(&vec![&TokenKind::Identifier], &mut names);
+        node.children[1].collect_child_kinds(&vec![&TokenKind::Identifier], &mut names);
 
         Ok(ASTNodePackage { package: names })
     }
