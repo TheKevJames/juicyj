@@ -138,7 +138,8 @@ a5_pass_tests! {
     j1e_a_casttostring: "J1e_A_CastToString",
     j1e_divisionbyzero: "J1e_divisionbyzero",
     j2_a_fieldinitialization_static_before: "J2_A_FieldInitialization_Static_Before",
-    j2_a_fieldinitialization_static_nonconstant_before: "J2_A_FieldInitialization_Static_NonConstant_Before",
+    j2_a_fieldinitialization_static_nonconstant_before:
+        "J2_A_FieldInitialization_Static_NonConstant_Before",
     j2_fieldinit_forward_ref: "J2_fieldinit_forward_ref",
     j2_forwardref: "J2_forwardRef",
 }
