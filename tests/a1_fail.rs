@@ -1,16 +1,12 @@
 extern crate juicyj;
 
-mod common;
-
-use common::read_src_file;
-
 macro_rules! a1_fail_tests {
     ($($name:ident: $case:tt,)*) => {
     $(
         #[test]
         fn $name() {
             let filename: String = format!("tests/cases/a1/fail/{}.java", $case);
-            let src: String = read_src_file(&filename);
+            let src: String = juicyj::scanner::read_src_file(&filename);
 
             juicyj::scanner::tests::scan_and_assert(&filename, &src);
         }

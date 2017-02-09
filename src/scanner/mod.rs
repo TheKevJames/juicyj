@@ -1,5 +1,3 @@
-use std;
-
 mod common;
 
 mod ast;
@@ -7,13 +5,56 @@ mod lexer;
 mod parser;
 mod weeder;
 
+use std;
+use std::fs::File;
+use std::io::Read;
+
 use self::ast::AST;
 use self::lexer::Lexer;
 use self::parser::Parser;
 use self::weeder::Weeder;
 
-pub fn scan_or_exit(file: &str, src: &str) {
-    let lexer = Lexer::new(&file, &src);
+/// Convenience function for reading a file of a given name into a String.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// let filename = "Sample.java";
+/// let contents = juicyj::scanner::read_src_file(&filename.to_owned());
+/// ```
+pub fn read_src_file(file: &String) -> String {
+    let mut file = match File::open(&file) {
+        Ok(file) => file,
+        Err(_) => {
+            error!("could not open file: {}", file);
+            std::process::exit(1);
+        }
+    };
+
+    let mut src = String::new();
+    match file.read_to_string(&mut src) {
+        Ok(_) => {}
+        Err(_) => {
+            error!("could not read file to string");
+            std::process::exit(1);
+        }
+    };
+
+    src
+}
+
+/// Runs a file through the scanning stack (lexer, parser, weeder, AST) and
+/// exits with code 42 on a failure.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// let filename = "Sample.java";
+/// let contents = juicyj::scanner::read_src_file(&filename.to_owned());
+/// juicyj::scanner::scan_or_exit(&filename, &contents);
+/// ```
+pub fn scan_or_exit(filename: &str, contents: &str) {
+    let lexer = Lexer::new(&filename, &contents);
 
     let mut parser = Parser::new(lexer);
     let parse_tree = match parser.get_tree() {
@@ -24,7 +65,7 @@ pub fn scan_or_exit(file: &str, src: &str) {
         }
     };
 
-    let mut weeder = Weeder::new(&file, &parse_tree);
+    let mut weeder = Weeder::new(&filename, &parse_tree);
     match weeder.verify(None) {
         Ok(_) => (),
         Err(e) => {
@@ -44,6 +85,7 @@ pub fn scan_or_exit(file: &str, src: &str) {
 
 // TODO: this should be #[cfg(test)], but for some reason the test macros can't
 // find this module in that case.
+#[allow(missing_docs)]
 pub mod tests {
     use std;
 

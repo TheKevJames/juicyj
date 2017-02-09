@@ -11,6 +11,9 @@ include = ["src/**/*", "Cargo.toml"]
 name = "juicyj"
 doc = false
 
+[features]
+strict = []
+
 [dependencies]
 env_logger = "0.3.5"
 getopts = "0.2.14"
