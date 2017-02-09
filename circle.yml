@@ -12,6 +12,7 @@ dependencies:
         - "~/.cargo"
         - "~/.local"
         - "~/.multirust"
+        - "~/.rustup"
     pre:
         - |
           test -e $HOME/.cargo || {
