@@ -6,21 +6,19 @@ machine:
         # https://github.com/rust-lang/cargo/issues/2078#issuecomment-263027534
         - git config --global --unset url.ssh://git@github.com:.insteadof
 
+# TODO: figure out how to cache dependencies
 dependencies:
     cache_directories:
-        - target
-        - ~/.cargo
-        - ~/.local
-        - ~/.multirust
+        - "~/.cargo"
+        - "~/.local"
+        - "~/.multirust"
     pre:
         - |
-          if [[ ! -e $HOME/.cargo ]]; then
-            curl -sSf https://sh.rustup.rs |
-              sh -s -- --no-modify-path --default-toolchain "1.14.0" -y;
-            rustup default "1.14.0";
-          else
-            rustup default "1.14.0";
-          fi
+          test -e $HOME/.cargo || {
+              curl -sSf https://sh.rustup.rs |
+                sh -s -- --no-modify-path --default-toolchain "1.14.0" -y;
+          }
+        - rustup default "1.14.0"
         - rustc --version
 
         - test -e $HOME/.cargo/bin/cargo-fmt || cargo install --force rustfmt || true
