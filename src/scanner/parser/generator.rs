@@ -114,12 +114,12 @@ impl<T: Iterator<Item = Result<Token, LexerError>>> Parser<T> {
         Ok(())
     }
 
-    fn shift(&mut self, transition: Transition, ref token: Token) -> Result<(), ParserError> {
+    fn shift(&mut self, transition: Transition, token: Token) -> Result<(), ParserError> {
         self.states.push(transition.value);
         if transition.symbol.terminality == Terminality::Terminal {
             self.nodes.push(ParseNode {
                 children: Vec::new(),
-                token: token.clone(),
+                token: token,
             });
         }
 
