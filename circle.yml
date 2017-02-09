@@ -30,6 +30,3 @@ test:
         - cargo fmt -- --write-mode=diff
         - cargo build --features "strict"
         - cargo test --no-fail-fast
-        - cargo doc
-    post:
-        - mv target/doc $CIRCLE_ARTIFACTS/docs
