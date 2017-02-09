@@ -3,162 +3,21 @@ use std::io::BufRead;
 use std::io::BufReader;
 use std::io::Read;
 use std::fs::File;
-use std::str::FromStr;
 
 use error::ErrorMessage;
 use error::ParserError;
 use scanner::common::Token;
 use scanner::common::TokenKind;
-
-// TODO: move some of these to new module
-#[derive(Clone)]
-pub enum Function {
-    Reduce,
-    Shift,
-}
-
-impl std::fmt::Display for Function {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match *self {
-            Function::Reduce => write!(f, "reduce"),
-            Function::Shift => write!(f, "shift"),
-        }
-    }
-}
-
-impl FromStr for Function {
-    type Err = &'static str;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "reduce" => Ok(Function::Reduce),
-            "shift" => Ok(Function::Shift),
-            _ => Err("invalid grammar function"),
-        }
-    }
-}
-
-#[derive(Clone)]
-pub struct Rule {
-    pub lhs: Symbol, // NonTerminal
-    pub rhs: Vec<Symbol>,
-}
-
-impl std::fmt::Display for Rule {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let rhs = format!("[{}]",
-                          self.rhs
-                              .clone()
-                              .into_iter()
-                              .map(|s| format!("{}", s.token))
-                              .collect::<Vec<String>>()
-                              .join(", "));
-        write!(f, "{} -> {}", self.lhs.token, rhs)
-    }
-}
-
-pub struct State {
-    state: usize,
-    transitions: Vec<Transition>,
-}
-
-impl State {
-    fn new(s: usize) -> State {
-        State {
-            transitions: Vec::new(),
-            state: s,
-        }
-    }
-}
-
-impl std::fmt::Display for State {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        try!(write!(f, "{}", self.state));
-        for transition in &self.transitions {
-            try!(write!(f, "\n  {}", transition));
-        }
-        Ok(())
-    }
-}
-
-#[derive(Clone,PartialEq)]
-pub enum Terminality {
-    NonTerminal,
-    Terminal,
-}
-
-impl std::fmt::Display for Terminality {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match *self {
-            Terminality::NonTerminal => write!(f, "Non-Terminal"),
-            Terminality::Terminal => write!(f, "Terminal"),
-        }
-    }
-}
-
-#[derive(Clone)]
-pub struct Symbol {
-    pub terminality: Terminality,
-    pub token: Token,
-}
-
-impl Symbol {
-    pub fn new(terminality: Terminality, value: String) -> Result<Symbol, ParserError> {
-        match value.parse() {
-            Ok(kind) => {
-                Ok(Symbol {
-                    terminality: terminality,
-                    token: Token {
-                        kind: kind,
-                        lexeme: Some(value),
-                    },
-                })
-            }
-            Err(_) => return Err(ParserError::new(ErrorMessage::StringNotToken(value), None)),
-        }
-    }
-
-    fn new_from_terminals(ref kinds_terminal: &Vec<TokenKind>,
-                          value: String)
-                          -> Result<Symbol, ParserError> {
-        let kind = match value.parse() {
-            Ok(ref kind) if kinds_terminal.contains(kind) => Terminality::Terminal,
-            Ok(_) => Terminality::NonTerminal,
-            _ => return Err(ParserError::new(ErrorMessage::StringNotToken(value), None)),
-        };
-
-        Symbol::new(kind, value)
-    }
-}
-
-impl std::fmt::Display for Symbol {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{} [{}]", self.token, self.terminality)
-    }
-}
-
-#[derive(Clone)]
-pub struct Transition {
-    pub value: usize,
-    pub function: Function,
-    pub start_state: usize,
-    pub symbol: Symbol,
-}
-
-impl std::fmt::Display for Transition {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f,
-               "{}: {} {} {}",
-               self.start_state,
-               self.symbol,
-               self.function,
-               self.value)
-    }
-}
+use scanner::parser::common::Function;
+use scanner::parser::common::Rule;
+use scanner::parser::common::State;
+use scanner::parser::common::Symbol;
+use scanner::parser::common::Terminality;
+use scanner::parser::common::Transition;
 
 pub struct DFA {
-    pub non_terminals: Vec<Symbol>, // NonTerminal
-    pub terminals: Vec<Symbol>, // Terminal
+    pub non_terminals: Vec<Symbol>,
+    pub terminals: Vec<Symbol>,
     pub rules: Vec<Rule>,
     pub start: Symbol,
     pub states: Vec<State>,

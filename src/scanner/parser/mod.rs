@@ -1,3 +1,4 @@
+mod common;
 mod dfa;
 mod generator;
 mod tree;
