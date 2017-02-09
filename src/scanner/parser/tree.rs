@@ -14,7 +14,6 @@ pub struct ParseTree {
 }
 
 impl ParseNode {
-    // TODO: functional
     pub fn collect_child_kinds(&self, kinds: &Vec<&TokenKind>, collector: &mut Vec<Token>) {
         if kinds.contains(&&self.token.kind) {
             collector.push(self.token.clone());
@@ -25,7 +24,6 @@ impl ParseNode {
         }
     }
 
-    // TODO: functional
     pub fn collect_child_lexeme(&self, lexeme: &str, collector: &mut Vec<ParseNode>) {
         match self.token.lexeme {
             Some(ref l) if l == lexeme => collector.push(self.clone()),
@@ -37,7 +35,6 @@ impl ParseNode {
         }
     }
 
-    // TODO: functional
     pub fn has_child_kind(&self, kind: &TokenKind) -> bool {
         if &self.token.kind == kind {
             return true;

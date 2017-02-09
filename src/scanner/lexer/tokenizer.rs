@@ -323,12 +323,6 @@ impl<'file, 'src> Lexer<'file, 'src> {
             "true" => TokenKind::True,
             "null" => TokenKind::Null,
 
-            // NOTE <1>
-            // "Cloneable" => TokenKind::Cloneable,
-            // "Integer" => TokenKind::Integer,
-            // "Number" => TokenKind::Number,
-            // "Object" => TokenKind::Object,
-            // "String" => TokenKind::Str,
             "class" => TokenKind::Class,
             "delete" => TokenKind::Delete,
             "instanceof" => TokenKind::Instanceof,
@@ -370,17 +364,6 @@ impl<'file, 'src> Lexer<'file, 'src> {
             }
         };
 
-        // match kind {
-        //     // TODO: no reason these can't be variable names
-        //     TokenKind::Break => Err(self.error(ErrorMessage::InvalidToken)),
-        //     // etc
-        //     kind => {
-        //         Ok(Token {
-        //             kind: kind,
-        //             lexeme: None,
-        //         })
-        //     }
-        // }
         Ok(Token {
             kind: kind,
             lexeme: None,

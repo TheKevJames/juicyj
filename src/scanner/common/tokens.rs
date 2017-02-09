@@ -79,12 +79,6 @@ pub enum TokenKind {
     True,
     Null,
 
-    // NOTE <1>: need to treat these as identifiers
-    // Cloneable,
-    // Integer,
-    // Number,
-    // Object,
-    // Str,
     Class,
     Delete,
     Instanceof,
@@ -262,12 +256,6 @@ impl FromStr for TokenKind {
             "}" => Ok(TokenKind::RBrace),
             "~" => Ok(TokenKind::Complement),
 
-            // NOTE <1>
-            // "CLONEABLE" => Ok(TokenKind::Cloneable),
-            // "INTEGER" => Ok(TokenKind::Integer),
-            // "NUMBER" => Ok(TokenKind::Number),
-            // "OBJECT" => Ok(TokenKind::Object),
-            // "STRING" => Ok(TokenKind::Str),
             _ => Ok(TokenKind::NonTerminal),
         }
     }
