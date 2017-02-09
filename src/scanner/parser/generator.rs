@@ -24,15 +24,7 @@ pub struct Parser<T: Iterator<Item = Result<Token, LexerError>>> {
 // TODO: cleanup
 impl<T: Iterator<Item = Result<Token, LexerError>>> Parser<T> {
     pub fn new(it: T) -> Parser<T> {
-        let dfa = match DFA::new() {
-            Ok(dfa) => dfa,
-            Err(e) => {
-                // TODO: get this out of here
-                error!("could not create DFA");
-                error!("{}", e);
-                std::process::exit(1);
-            }
-        };
+        let dfa = DFA::new();
 
         Parser {
             dfa: dfa,

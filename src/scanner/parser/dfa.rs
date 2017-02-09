@@ -25,59 +25,66 @@ pub struct DFA {
 
 impl DFA {
     // TODO: cleanup
-    pub fn new() -> Result<DFA, ParserError> {
+    pub fn new() -> DFA {
         let filename = "grammar/joos.lr1";
         let mut file = match File::open(filename) {
             Ok(file) => BufReader::new(file),
             Err(_) => {
-                return Err(ParserError::new(ErrorMessage::CouldNotReadFile(filename.to_string()),
-                                            None));
+                let error = ParserError::new(ErrorMessage::CouldNotReadFile(filename.to_string()),
+                                             None);
+                println!("{}", error);
+                std::process::exit(1);
             }
         };
 
-        let mut non_terminals = Vec::<Symbol>::new();
-        let mut terminals = Vec::<Symbol>::new();
-        let mut rules = Vec::<Rule>::new();
-        let mut states = Vec::<State>::new();
-
-        let num_terminals: u32 = file.by_ref().lines().next().unwrap().unwrap().parse().unwrap();
-        for _ in 0..num_terminals {
+        let mut terminals = Vec::new();
+        for _ in 0..file.by_ref().lines().next().unwrap().unwrap().parse().unwrap() {
             let symbol = file.by_ref().lines().next().unwrap().unwrap();
             match Symbol::new(Terminality::Terminal, symbol) {
                 Ok(s) => terminals.push(s),
-                Err(e) => return Err(e),
+                Err(e) => {
+                    println!("{}", e);
+                    std::process::exit(1);
+                }
             }
         }
 
-        let num_non_terminals: u32 =
-            file.by_ref().lines().next().unwrap().unwrap().parse().unwrap();
-        for _ in 0..num_non_terminals {
+        let mut non_terminals = Vec::new();
+        for _ in 0..file.by_ref().lines().next().unwrap().unwrap().parse().unwrap() {
             let symbol = file.by_ref().lines().next().unwrap().unwrap();
             match Symbol::new(Terminality::NonTerminal, symbol) {
                 Ok(s) => non_terminals.push(s),
-                Err(e) => return Err(e),
+                Err(e) => {
+                    println!("{}", e);
+                    std::process::exit(1);
+                }
             }
         }
 
-        let kinds_terminal: Vec<TokenKind> =
-            terminals.clone().into_iter().map(|t| t.token.kind).collect::<Vec<TokenKind>>();
+        let kinds_terminal = terminals.clone().into_iter().map(|t| t.token.kind).collect();
 
         let start =
             match Symbol::new_from_terminals(&kinds_terminal,
                                              file.by_ref().lines().next().unwrap().unwrap()) {
                 Ok(s) => s,
-                Err(e) => return Err(e),
+                Err(e) => {
+                    println!("{}", e);
+                    std::process::exit(1);
+                }
             };
 
-        let num_rules: u32 = file.by_ref().lines().next().unwrap().unwrap().parse().unwrap();
-        for _ in 0..num_rules {
+        let mut rules = Vec::new();
+        for _ in 0..file.by_ref().lines().next().unwrap().unwrap().parse().unwrap() {
             let rule = file.by_ref().lines().next().unwrap().unwrap();
             let mut sides = rule.splitn(2, " ");
 
             let lhs = match Symbol::new(Terminality::NonTerminal,
                                         sides.next().unwrap().to_string()) {
                 Ok(s) => s,
-                Err(e) => return Err(e),
+                Err(e) => {
+                    println!("{}", e);
+                    std::process::exit(1);
+                }
             };
 
             let rhs = match sides.next() {
@@ -100,13 +107,12 @@ impl DFA {
             });
         }
 
-        let num_states: u32 = file.by_ref().lines().next().unwrap().unwrap().parse().unwrap();
-        for i in 0..num_states {
+        let mut states = Vec::new();
+        for i in 0..file.by_ref().lines().next().unwrap().unwrap().parse().unwrap() {
             states.push(State::new(i as usize));
         }
 
-        let num_transitions: u32 = file.by_ref().lines().next().unwrap().unwrap().parse().unwrap();
-        for _ in 0..num_transitions {
+        for _ in 0..file.by_ref().lines().next().unwrap().unwrap().parse().unwrap() {
             let transition = file.by_ref().lines().next().unwrap().unwrap();
             let mut tx = transition.split(" ");
 
@@ -121,18 +127,21 @@ impl DFA {
                 start_state: start_state,
                 symbol: match Symbol::new_from_terminals(&kinds_terminal, symbol.to_string()) {
                     Ok(s) => s,
-                    Err(e) => return Err(e),
+                    Err(e) => {
+                        println!("{}", e);
+                        std::process::exit(1);
+                    }
                 },
             });
         }
 
-        Ok(DFA {
+        DFA {
             non_terminals: non_terminals,
             rules: rules,
             start: start,
             states: states,
             terminals: terminals,
-        })
+        }
     }
 
     pub fn consume(&self, state: &usize, ref token: &Token) -> Result<Transition, ParserError> {
