@@ -85,7 +85,7 @@ impl<'file, 'src> Lexer<'file, 'src> {
 
     fn error(&self, message: ErrorMessage) -> LexerError {
         LexerError {
-            file: self.file.to_owned(),
+            filename: self.file.to_owned(),
             index: self.index_character,
             line: self.line.unwrap_or("").to_owned(),
             line_number: self.index_line,

@@ -1,7 +1,7 @@
 JuicyJ
 ======
 
-JuicyJ Unabashedly Is a Compiler for Your JOOS.
+JuicyJ Unabashedly Is a Compiler for Your JOOS. `JuicyJ Docs`_.
 
 FAQ
 ---
@@ -28,3 +28,4 @@ Running
     RUST_LOG=juicyj=debug cargo run  # args...
 
 .. _`Course Site`: https://www.student.cs.uwaterloo.ca/~cs444/
+.. _`JuicyJ Docs`: https://circleci.com/api/v1/project/TheKevJames/juicyj/latest/artifacts/0/$CIRCLE_ARTIFACTS/docs/juicyj/index.html?branch=master&filter=successful

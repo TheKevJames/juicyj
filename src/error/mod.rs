@@ -1,3 +1,5 @@
+//! An error module for juicyj. Contains individual error implementations for
+//! every layer of the compiler as well as a global enum for error messages.
 mod message;
 
 mod ast;

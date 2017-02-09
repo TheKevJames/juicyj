@@ -1,3 +1,6 @@
+//! The scanner module for juicyj. Includes the Lexer, Parser, Weeder, and AST
+//! generator. Roughly corresponds to assignment 1 of the original CS444
+//! project.
 mod common;
 
 mod ast;
