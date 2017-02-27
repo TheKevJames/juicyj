@@ -34,19 +34,20 @@ fn main() {
         return;
     }
 
-    let file = if matches.free.len() == 1 {
-        matches.free[0].clone()
-    } else {
+    if matches.free.len() == 0 {
         print_usage(&program, opts);
         return;
-    };
+    }
 
-    let src = juicyj::scanner::read_src_file(&file);
-    juicyj::scanner::scan_or_exit(&file, &src);
+    for i in 0..matches.free.len() {
+        let file = matches.free[i].clone();
+        let src = juicyj::scanner::read_src_file(&file);
+        juicyj::scanner::scan_or_exit(&file, &src);
+    }
 }
 
 fn print_usage(program: &str, opts: getopts::Options) {
-    let brief = format!("Usage: {} FILE [options]", program);
+    let brief = format!("Usage: {} [-hV] FILE...", program);
     print!("{}", opts.usage(&brief));
 }
 
