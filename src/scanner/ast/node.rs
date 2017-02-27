@@ -96,6 +96,29 @@ impl ASTNode {
                     Some(ref l) if node.children.len() == 3 && l == "PrimaryNoNewArray" => {
                         ASTNode::new(&node.children[1])
                     }
+                    Some(ref l) if node.children.len() == 3 && l == "QualifiedName" => {
+                        let mut children: Vec<ASTNode> = Vec::new();
+                        for child in &node.children {
+                            match ASTNode::new(&child) {
+                                Ok(child) => {
+                                    match child.token.lexeme {
+                                        Some(ref l) if l == "QualifiedName" || l == "Name" => {
+                                            for grandkid in child.children {
+                                                children.push(grandkid);
+                                            }
+                                        },
+                                        _ => children.push(child),
+                                    }
+                                },
+                                Err(e) => return Err(e),
+                            }
+                        }
+
+                        Ok(ASTNode {
+                            token: node.children[0].token.clone(),
+                            children: children,
+                        })
+                    }
                     Some(ref l) if node.children.len() == 2 && l == "UnaryExpression" => {
                         let mut children: Vec<ASTNode> = Vec::new();
                         children.push(ASTNode {
