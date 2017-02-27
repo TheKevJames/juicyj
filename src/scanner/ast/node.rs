@@ -106,10 +106,10 @@ impl ASTNode {
                                             for grandkid in child.children {
                                                 children.push(grandkid);
                                             }
-                                        },
+                                        }
                                         _ => children.push(child),
                                     }
-                                },
+                                }
                                 Err(e) => return Err(e),
                             }
                         }
