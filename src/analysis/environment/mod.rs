@@ -145,7 +145,7 @@ impl Environment {
                                         _ => (),
                                     }
                                     decls = decls.children[0].clone();
-                                // }
+                                }
                                 match decls.token.lexeme {
                                     Some(ref lex) if lex == "AbstractMethodDeclaration" => {
                                         match analyze_abstract_method_declaration(
