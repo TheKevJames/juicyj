@@ -7,8 +7,11 @@ use scanner::common::TokenKind;
 use scanner::parser::ParseNode;
 
 #[derive(Clone,Debug,PartialEq)]
+/// An individual node in the abstract syntax tree.
 pub struct ASTNode {
+    /// the associated token object for this node
     pub token: Token,
+    /// all children of this node, ordered left-to-right
     pub children: Vec<ASTNode>,
 }
 
@@ -21,6 +24,9 @@ pub struct ASTNodePackage {
 }
 
 impl ASTNode {
+    /// Transforms a ParseNode to an ASTNode by simplifying tree structure
+    /// wherever possible. Catches some syntax errors as the tree becomes simple
+    /// enough to operate on.
     // TODO: cleanup
     pub fn new(node: &ParseNode) -> Result<ASTNode, ASTError> {
         match node.token.kind {
@@ -214,6 +220,8 @@ impl ASTNode {
         }
     }
 
+    /// Convenience function for recursive ASTNode printing. Should be accessed
+    /// with the standard print command (ie. `fmt::Display`).
     pub fn print(&self, f: &mut fmt::Formatter, indent: usize) -> fmt::Result {
         match indent {
             0 => try!(write!(f, "{:width$}{}", "", self.token, width = indent)),

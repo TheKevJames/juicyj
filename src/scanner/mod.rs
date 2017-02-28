@@ -55,7 +55,7 @@ pub fn read_src_file(file: &String) -> String {
 /// ```rust,no_run
 /// let filename = "Sample.java";
 /// let contents = juicyj::scanner::read_src_file(&filename.to_owned());
-/// juicyj::scanner::scan_or_exit(&filename, &contents);
+/// let ast = juicyj::scanner::scan_or_exit(&filename, &contents);
 /// ```
 pub fn scan_or_exit(filename: &str, contents: &str) -> AST {
     let lexer = Lexer::new(&filename, &contents);

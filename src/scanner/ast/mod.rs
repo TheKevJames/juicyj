@@ -10,13 +10,21 @@ use self::node::ASTNodeImport;
 pub use self::node::ASTNode;
 use self::node::ASTNodePackage;
 
+/// An abstract syntax tree generated at the end of the scanning step.
 pub struct AST {
+    /// the (optional) package hierarchy for this file
     pub package: Option<ASTNodePackage>,
+    /// the list of import statements in this file
     pub imports: Vec<ASTNodeImport>,
+    /// pointer to the root node of the AST for this file
     pub root: Option<ASTNode>,
 }
 
 impl AST {
+    /// Transforms a ParseTree to an AST by through three operations: capturing
+    /// the package declaration as an ASTNodePackage, capturing the import
+    /// statements as ASTNodeImports, and performing a recursive build on the
+    /// remaining tree into ASTNodes.
     pub fn new(tree: &ParseTree) -> Result<AST, ASTError> {
         let mut imports = Vec::new();
         let mut package = None;
