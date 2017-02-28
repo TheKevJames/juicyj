@@ -4,6 +4,8 @@ use std::fmt;
 
 use error::ASTError;
 use error::ErrorMessage;
+use scanner::common::Token;
+use scanner::common::TokenKind;
 use scanner::parser::ParseTree;
 
 use self::node::ASTNodeImport;
@@ -14,8 +16,8 @@ use self::node::ASTNodePackage;
 pub struct AST {
     /// the file from which this AST was generated
     pub filename: String,
-    /// the (optional) package hierarchy for this file
-    pub package: Option<ASTNodePackage>,
+    /// the package hierarchy for this file -- defaults to "unnamed"
+    pub package: ASTNodePackage,
     /// the list of import statements in this file
     pub imports: Vec<ASTNodeImport>,
     /// pointer to the root node of the AST for this file
@@ -29,13 +31,18 @@ impl AST {
     /// remaining tree into ASTNodes.
     pub fn new(filename: &str, tree: &ParseTree) -> Result<AST, ASTError> {
         let mut imports = Vec::new();
-        let mut package = None;
+        let mut package = ASTNodePackage {
+            package: vec![Token {
+                              kind: TokenKind::Identifier,
+                              lexeme: Some("unnamed".to_owned()),
+                          }],
+        };
         let mut root = None;
         for child in &tree.root.children {
             match child.token.lexeme {
                 Some(ref l) if l == "PackageDeclaration" => {
                     package = match ASTNodePackage::new(&child) {
-                        Ok(i) => Some(i),
+                        Ok(i) => i,
                         Err(e) => return Err(e),
                     };
                 }
@@ -71,10 +78,7 @@ impl AST {
 
 impl fmt::Display for AST {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self.package {
-            Some(ref p) => try!(writeln!(f, "Package: {}", p)),
-            None => try!(writeln!(f, "[no package declaration]")),
-        }
+        try!(writeln!(f, "Package: {}", self.package));
 
         if !self.imports.is_empty() {
             try!(writeln!(f, "Imports:"));
