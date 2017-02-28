@@ -10,6 +10,7 @@ use self::class::analyze_class_declaration;
 use self::class::ClassEnvironment;
 use self::interface::analyze_interface_declaration;
 use self::interface::InterfaceEnvironment;
+use std::collections::HashMap;
 
 #[derive(Clone,Debug)]
 pub struct Environment {
@@ -28,18 +29,49 @@ impl Environment {
     pub fn annotate_asts(trees: &Vec<AST>) -> Result<(), String> {
         let mut env = Environment::new();
 
+        let mut dependencies = HashMap::new();
+
         for tree in trees {
-            println!("{}", tree);
+            let mut import_vec = Vec::new();
+            for import in &tree.imports {
+                let token = import.import.last().unwrap();
+                import_vec.push(token.clone().lexeme.unwrap_or("*".to_owned()));
+            }
+            dependencies.insert(tree.filename.clone(), import_vec);
         }
 
-        // TODO: check imports for ordering and circular dependencies
-        // for tree in trees {
-        //     for import in &tree.imports {
-        //     }
-        // }
+        let mut ordered_files = Vec::new();
+        while !dependencies.clone().is_empty() {
+            let mut acyclic = false;
+            for (node, edges) in dependencies.clone().iter() {
+                let mut delete = true;
+                for edge in edges {
+                    if dependencies.contains_key(edge) {
+                        delete = false;
+                        break;
+                    }
+                }
+                if delete {
+                    acyclic = true;
+                    dependencies.remove(node);
+                    ordered_files.push(node.clone());
+                }
+            }
+            if !acyclic {
+                return Err("Cyclic or invalid imports".to_owned());
+            }
+        }
 
-        // TODO: iterate in order specified above
-        for tree in trees {
+        let mut ordered_trees = Vec::new();
+        for filename in ordered_files {
+            for tree in trees {
+                if tree.filename == filename {
+                    ordered_trees.push(tree);
+                }
+            }
+        }
+
+        for tree in ordered_trees {
             let root = match tree.root {
                 Some(ref r) => r,
                 None => continue,
