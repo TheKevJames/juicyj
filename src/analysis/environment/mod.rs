@@ -145,7 +145,7 @@ impl Environment {
                                         _ => (),
                                     }
                                     decls = decls.children[0].clone();
-                                }
+                                // }
                                 match decls.token.lexeme {
                                     Some(ref lex) if lex == "AbstractMethodDeclaration" => {
                                         match analyze_abstract_method_declaration(
@@ -272,8 +272,6 @@ impl Environment {
                 }
                 _ => (),
             }
-
-            break; // TODO: short-circuit to avoid parseing non-passed-in
         }
 
         // println!("{:#?}", env);

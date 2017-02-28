@@ -16,7 +16,11 @@ pub fn analyze_constant_declaration(fields: &mut Vec<FieldEnvironment>,
     }
 
     let kind = declaration.children[1].clone();
-    let name = declaration.children[2].clone().children[0].clone();
+    let mut name = declaration.children[2].clone();
+    if name.token.lexeme == None {
+        // if `name` is an Assignment rather than a Name
+        name = name.children[0].clone();
+    }
 
     for field in fields.clone() {
         if field.name == name {
@@ -42,7 +46,11 @@ pub fn analyze_field_declaration(fields: &mut Vec<FieldEnvironment>,
     }
 
     let kind = declaration.children[1].clone();
-    let name = declaration.children[2].clone().children[0].clone();
+    let mut name = declaration.children[2].clone();
+    if name.token.lexeme == None {
+        // if `name` is an Assignment rather than a Name
+        name = name.children[0].clone();
+    }
 
     for field in fields.clone() {
         if field.name == name {
