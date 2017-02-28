@@ -34,14 +34,8 @@ impl Environment {
         for tree in trees {
             let mut import_vec = Vec::new();
             for import in &tree.imports {
-                let mut import_string = "".to_owned();
-                for token in &import.import {
-                    match &token.lexeme {
-                        &Some(ref l) => import_string += &l,
-                        &None => import_string += ".",
-                    }
-                }
-                import_vec.push(import_string);
+                let token = import.import.last().unwrap();
+                import_vec.push(token.clone().lexeme.unwrap_or("*".to_owned()));
             }
             dependencies.insert(tree.filename.clone(), import_vec);
         }
