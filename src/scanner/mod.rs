@@ -137,7 +137,7 @@ pub mod tests {
                 println!("AST Construction Error");
                 assert!(true);
                 return;
-            },
+            }
         };
 
         println!("No Error Found");

@@ -6,7 +6,7 @@ use scanner::common::Token;
 use scanner::common::TokenKind;
 use scanner::parser::ParseNode;
 
-#[derive(Clone,Debug)]
+#[derive(Clone,Debug,PartialEq)]
 pub struct ASTNode {
     pub token: Token,
     pub children: Vec<ASTNode>,

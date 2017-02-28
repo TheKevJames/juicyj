@@ -2,7 +2,7 @@
 use std::fmt;
 use std::str::FromStr;
 
-#[derive(Clone,Debug)]
+#[derive(Clone,Debug,PartialEq)]
 pub struct Token {
     pub kind: TokenKind,
     pub lexeme: Option<String>,

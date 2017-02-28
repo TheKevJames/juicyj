@@ -1,5 +1,18 @@
+mod constructor;
+mod field;
+mod method;
+
 use scanner::AST;
 use scanner::ASTNode;
+
+use self::constructor::analyze_constructor_declaration;
+use self::constructor::ConstructorEnvironment;
+use self::field::analyze_constant_declaration;
+use self::field::analyze_field_declaration;
+use self::field::FieldEnvironment;
+use self::method::analyze_abstract_method_declaration;
+use self::method::analyze_method_declaration;
+use self::method::MethodEnvironment;
 
 #[derive(Clone,Debug)]
 pub struct ClassEnvironment {
@@ -13,34 +26,12 @@ pub struct ClassEnvironment {
 }
 
 #[derive(Clone,Debug)]
-pub struct ConstructorEnvironment {
-    modifiers: Vec<ASTNode>,
-    name: ASTNode,
-    parameters: Vec<ASTNode>,
-}
-
-#[derive(Clone,Debug)]
 pub struct InterfaceEnvironment {
     modifiers: Vec<ASTNode>,
     name: ASTNode,
     extends: Vec<ASTNode>,
     fields: Vec<FieldEnvironment>,
     methods: Vec<MethodEnvironment>,
-}
-
-#[derive(Clone,Debug)]
-pub struct FieldEnvironment {
-    modifiers: Vec<ASTNode>,
-    kind: ASTNode,
-    name: ASTNode,
-}
-
-#[derive(Clone,Debug)]
-pub struct MethodEnvironment {
-    modifiers: Vec<ASTNode>,
-    return_type: ASTNode,
-    name: ASTNode,
-    parameters: Vec<ASTNode>,
 }
 
 #[derive(Clone,Debug)]
@@ -60,8 +51,10 @@ impl Environment {
     pub fn annotate_asts(trees: &Vec<AST>) -> Result<(), String> {
         let mut env = Environment::new();
 
+        println!("{}", trees[0]);
+
         // TODO: check imports for ordering and circular dependencies
-        // for tree in &trees {
+        // for tree in trees {
         //     for import in &tree.imports {
         //     }
         // }
@@ -95,6 +88,7 @@ impl Environment {
                         match child.token.lexeme {
                             Some(ref le) if le == "Implements" => {
                                 // TODO: classes can't implement classes
+                                // TODO: inheritance must not be circular
                                 // TODO: no repeats
                                 let mut grandkid = child.children[1].clone();
                                 while grandkid.clone().token.lexeme.unwrap_or("".to_owned()) !=
@@ -105,138 +99,83 @@ impl Environment {
                                 implements.push(grandkid.clone());
                             }
                             Some(ref le) if le == "ClassExtends" => {
+                                // TODO: classes extend Object is nothing else
                                 // TODO: classes can't extend interfaces
                                 // TODO: classes can't extend final classes
+                                // TODO: extension must not be circular
                                 extends.push(child.children[1].clone());
                             }
                             Some(ref le) if le == "ClassBody" && child.children.len() == 3 => {
-                                for decl in child.children[1].clone().children {
-                                    match decl.token.lexeme {
+                                let mut decls = child.children[1].clone();
+                                while decls.clone().token.lexeme.unwrap_or("".to_owned()) ==
+                                      "ClassBodyDeclarations" {
+                                    match decls.children[1].clone().token.lexeme {
                                         Some(ref lex) if lex == "AbstractMethodDeclaration" => {
-                                            // TODO: a class with an abstract method must be abstract itself
-                                            let header = decl.children[0].clone();
-
-                                            let mut local_modifiers = Vec::new();
-                                            for kid in header.children[0].clone().children {
-                                                local_modifiers.push(kid);
-                                            }
-
-                                            let local_type = header.children[1].clone();
-                                            let local_name = header.children[2].clone().children[0]
-                                                .clone();
-
-                                            let mut local_params = Vec::new();
-                                            if header.children[2].children.len() == 4 {
-                                                let mut local_param =
-                                                    header.children[2].clone().children[2].clone();
-                                                while local_param.clone()
-                                                    .token
-                                                    .lexeme
-                                                    .unwrap_or("".to_owned()) !=
-                                                      "Parameter" {
-                                                    local_params.push(local_param.children[2].clone());
-                                                    local_param = local_param.children[0].clone();
-                                                }
-                                                local_params.push(local_param.clone());
-                                            }
-
-                                            methods.push(MethodEnvironment {
-                                                modifiers: local_modifiers,
-                                                return_type: local_type,
-                                                name: local_name,
-                                                parameters: local_params,
-                                            });
+                                            match analyze_abstract_method_declaration(
+                                                    &mut methods,
+                                                    &decls.children[1].children[0]) {
+                                                Ok(_) => (),
+                                                Err(e) => return Err(e),
+                                            };
                                         }
                                         Some(ref lex) if lex == "ConstructorDeclaration" => {
-                                            // TODO: constructor signatures must be unique
-                                            let mut local_modifiers = Vec::new();
-                                            for kid in decl.children[0].clone().children {
-                                                local_modifiers.push(kid);
-                                            }
-
-                                            let local_name = decl.children[1].clone().children[0]
-                                                .clone();
-
-                                            let mut local_params = Vec::new();
-                                            if decl.children[1].children.len() == 4 {
-                                                let mut local_param =
-                                                    decl.children[1].clone().children[2].clone();
-                                                while local_param.clone()
-                                                    .token
-                                                    .lexeme
-                                                    .unwrap_or("".to_owned()) !=
-                                                      "Parameter" {
-                                                    local_params.push(local_param.children[2].clone());
-                                                    local_param = local_param.children[0].clone();
-                                                }
-                                                local_params.push(local_param.clone());
-                                            }
-
-                                            constructors.push(ConstructorEnvironment {
-                                                modifiers: local_modifiers,
-                                                name: local_name,
-                                                parameters: local_params,
-                                            });
+                                            match analyze_constructor_declaration(
+                                                    &mut constructors,
+                                                    &decls.children[1]) {
+                                                Ok(_) => (),
+                                                Err(e) => return Err(e),
+                                            };
                                         }
                                         Some(ref lex) if lex == "FieldDeclaration" => {
-                                            // TODO: fields names must be unique
-                                            let mut local_modifiers = Vec::new();
-                                            for kid in decl.children[0].clone().children {
-                                                local_modifiers.push(kid);
-                                            }
-
-                                            let local_type = decl.children[1].clone();
-                                            let local_name = decl.children[2].clone().children[0]
-                                                .clone();
-
-                                            fields.push(FieldEnvironment {
-                                                modifiers: local_modifiers,
-                                                kind: local_type,
-                                                name: local_name,
-                                            });
+                                            match analyze_field_declaration(&mut fields,
+                                                                            &decls.children[1]) {
+                                                Ok(_) => (),
+                                                Err(e) => return Err(e),
+                                            };
                                         }
                                         Some(ref lex) if lex == "MethodDeclaration" => {
-                                            // TODO: method signature must be unique
-                                            // TODO: method signatures must not vary only in return type
-                                            // TODO: if non-static, cannot override static
-                                            // TODO: cannot override method with different return type
-                                            // TODO: cannot override permissions with looser permissions
-                                            // TODO: cannot override final method
-                                            let header = decl.children[0].clone();
-
-                                            let mut local_modifiers = Vec::new();
-                                            for kid in header.children[0].clone().children {
-                                                local_modifiers.push(kid);
-                                            }
-
-                                            let local_type = header.children[1].clone();
-                                            let local_name = header.children[2].clone().children[0]
-                                                .clone();
-
-                                            let mut local_params = Vec::new();
-                                            if header.children[2].children.len() == 4 {
-                                                let mut local_param =
-                                                    header.children[2].clone().children[2].clone();
-                                                while local_param.clone()
-                                                    .token
-                                                    .lexeme
-                                                    .unwrap_or("".to_owned()) !=
-                                                      "Parameter" {
-                                                    local_params.push(local_param.children[2].clone());
-                                                    local_param = local_param.children[0].clone();
-                                                }
-                                                local_params.push(local_param.clone());
-                                            }
-
-                                            methods.push(MethodEnvironment {
-                                                modifiers: local_modifiers,
-                                                return_type: local_type,
-                                                name: local_name,
-                                                parameters: local_params,
-                                            });
+                                            match analyze_method_declaration(&mut methods,
+                                                                             &decls.children[1]
+                                                                                 .children
+                                                                                  [0]) {
+                                                Ok(_) => (),
+                                                Err(e) => return Err(e),
+                                            };
                                         }
                                         _ => (),
                                     }
+                                    decls = decls.children[0].clone();
+                                }
+                                match decls.token.lexeme {
+                                    Some(ref lex) if lex == "AbstractMethodDeclaration" => {
+                                        match analyze_abstract_method_declaration(
+                                                &mut methods,
+                                                &decls.children[0]) {
+                                            Ok(_) => (),
+                                            Err(e) => return Err(e),
+                                        };
+                                    }
+                                    Some(ref lex) if lex == "ConstructorDeclaration" => {
+                                        match analyze_constructor_declaration(&mut constructors,
+                                                                              &decls) {
+                                            Ok(_) => (),
+                                            Err(e) => return Err(e),
+                                        };
+                                    }
+                                    Some(ref lex) if lex == "FieldDeclaration" => {
+                                        match analyze_field_declaration(&mut fields, &decls) {
+                                            Ok(_) => (),
+                                            Err(e) => return Err(e),
+                                        };
+                                    }
+                                    Some(ref lex) if lex == "MethodDeclaration" => {
+                                        match analyze_method_declaration(&mut methods,
+                                                                         &decls.children[0]) {
+                                            Ok(_) => (),
+                                            Err(e) => return Err(e),
+                                        };
+                                    }
+                                    _ => (),
                                 }
                             }
                             _ => (),
@@ -267,7 +206,9 @@ impl Environment {
                     let mut methods = Vec::new();
                     match root.children[3].token.lexeme {
                         Some(ref l) if l == "InterfaceExtends" => {
+                            // TODO: interfaces extend Object is nothing else
                             // TODO: no repeats
+                            // TODO: extension must not be circular
                             let mut grandkid = root.children[3].children[1].clone();
                             while grandkid.clone().token.lexeme.unwrap_or("".to_owned()) != "Name" {
                                 extends.push(grandkid.children[2].clone());
@@ -277,60 +218,44 @@ impl Environment {
                         }
                         Some(ref le) if le == "InterfaceBody" &&
                                         root.children[3].children.len() == 3 => {
-                            for decl in root.children[3].children[1].clone().children {
-                                match decl.token.lexeme {
+                            let mut decls = root.children[3].clone().children[1].clone();
+                            while decls.clone().token.lexeme.unwrap_or("".to_owned()) ==
+                                  "InterfaceMemberDeclarations" {
+                                match decls.children[1].clone().token.lexeme {
                                     Some(ref lex) if lex == "AbstractMethodDeclaration" => {
-                                        let header = decl.children[0].clone();
-
-                                        let mut local_modifiers = Vec::new();
-                                        for kid in header.children[0].clone().children {
-                                            local_modifiers.push(kid);
-                                        }
-
-                                        let local_type = header.children[1].clone();
-                                        let local_name = header.children[2].clone().children[0]
-                                            .clone();
-
-                                        let mut local_params = Vec::new();
-                                        if header.children[2].children.len() == 4 {
-                                            let mut local_param =
-                                                header.children[2].clone().children[2].clone();
-                                            while local_param.clone()
-                                                .token
-                                                .lexeme
-                                                .unwrap_or("".to_owned()) !=
-                                                  "Parameter" {
-                                                local_params.push(local_param.children[2].clone());
-                                                local_param = local_param.children[0].clone();
-                                            }
-                                            local_params.push(local_param.clone());
-                                        }
-
-                                        methods.push(MethodEnvironment {
-                                            modifiers: local_modifiers,
-                                            return_type: local_type,
-                                            name: local_name,
-                                            parameters: local_params,
-                                        });
+                                        match analyze_abstract_method_declaration(
+                                                &mut methods,
+                                                &decls.children[1].children[0]) {
+                                            Ok(_) => (),
+                                            Err(e) => return Err(e),
+                                        };
                                     }
                                     Some(ref lex) if lex == "ConstantDeclaration" => {
-                                        let mut local_modifiers = Vec::new();
-                                        for kid in decl.children[0].clone().children {
-                                            local_modifiers.push(kid);
-                                        }
-
-                                        let local_type = decl.children[1].clone();
-                                        let local_name = decl.children[2].clone().children[0]
-                                            .clone();
-
-                                        fields.push(FieldEnvironment {
-                                            modifiers: local_modifiers,
-                                            kind: local_type,
-                                            name: local_name,
-                                        });
+                                        match analyze_constant_declaration(&mut fields,
+                                                                           &decls.children[1]) {
+                                            Ok(_) => (),
+                                            Err(e) => return Err(e),
+                                        };
                                     }
                                     _ => (),
                                 }
+                                decls = decls.children[0].clone();
+                            }
+                            match decls.token.lexeme {
+                                Some(ref lex) if lex == "AbstractMethodDeclaration" => {
+                                    match analyze_abstract_method_declaration(&mut methods,
+                                                                              &decls.children[0]) {
+                                        Ok(_) => (),
+                                        Err(e) => return Err(e),
+                                    };
+                                }
+                                Some(ref lex) if lex == "ConstantDeclaration" => {
+                                    match analyze_constant_declaration(&mut fields, &decls) {
+                                        Ok(_) => (),
+                                        Err(e) => return Err(e),
+                                    };
+                                }
+                                _ => (),
                             }
                         }
                         _ => (),
@@ -347,9 +272,11 @@ impl Environment {
                 }
                 _ => (),
             }
+
+            break; // TODO: short-circuit to avoid parseing non-passed-in
         }
 
-        println!("{:#?}", env);
+        // println!("{:#?}", env);
 
         Ok(())
     }
