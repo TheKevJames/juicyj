@@ -20,6 +20,8 @@ Rust Installation
     rustup default 1.14.0
     rustc --version  # should show "rustc 1.14.0 (e8a012324 2016-12-16)"
 
+    cargo install --force rustfmt  # to ensure you have an up-to-date formatter
+
 Documentation
 ~~~~~~~~~~~~~
 
