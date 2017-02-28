@@ -143,6 +143,18 @@ impl ASTNode {
                             children: children,
                         })
                     }
+                    Some(ref l) if node.children.len() == 2 && l == "AbstractMethodDeclaration" => {
+                        let mut children: Vec<ASTNode> = Vec::new();
+                        match ASTNode::new(&node.children[0]) {
+                            Ok(child) => children.push(child),
+                            Err(e) => return Err(e),
+                        }
+
+                        Ok(ASTNode {
+                            token: node.token.clone(),
+                            children: children,
+                        })
+                    }
                     Some(_) if node.children.len() == 2 &&
                                node.children[1].token.kind == TokenKind::Semicolon => {
                         ASTNode::new(&node.children[0])

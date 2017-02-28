@@ -60,7 +60,11 @@ pub fn analyze_interface_declaration(classes: &Vec<ClassEnvironment>,
                   "InterfaceMemberDeclarations" {
                 match decls.children[1].clone().token.lexeme {
                     Some(ref lex) if lex == "AbstractMethodDeclaration" => {
-                        match analyze_abstract_method_declaration(&mut methods,
+                        match analyze_abstract_method_declaration(classes,
+                                                                  &extends,
+                                                                  &interfaces,
+                                                                  &Vec::new(),
+                                                                  &mut methods,
                                                                   &decls.children[1].children[0]) {
                             Ok(_) => (),
                             Err(e) => return Err(e),
@@ -78,7 +82,12 @@ pub fn analyze_interface_declaration(classes: &Vec<ClassEnvironment>,
             }
             match decls.token.lexeme {
                 Some(ref lex) if lex == "AbstractMethodDeclaration" => {
-                    match analyze_abstract_method_declaration(&mut methods, &decls.children[0]) {
+                    match analyze_abstract_method_declaration(classes,
+                                                              &extends,
+                                                              &interfaces,
+                                                              &Vec::new(),
+                                                              &mut methods,
+                                                              &decls.children[0]) {
                         Ok(_) => (),
                         Err(e) => return Err(e),
                     };

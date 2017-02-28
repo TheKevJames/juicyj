@@ -106,7 +106,11 @@ pub fn analyze_class_declaration(classes: &mut Vec<ClassEnvironment>,
                       "ClassBodyDeclarations" {
                     match decls.children[1].clone().token.lexeme {
                         Some(ref lex) if lex == "AbstractMethodDeclaration" => {
-                            match analyze_abstract_method_declaration(&mut methods,
+                            match analyze_abstract_method_declaration(classes,
+                                                                      &extends,
+                                                                      &interfaces,
+                                                                      &implements,
+                                                                      &mut methods,
                                                                       &decls.children[1]
                                                                           .children
                                                                            [0]) {
@@ -128,7 +132,11 @@ pub fn analyze_class_declaration(classes: &mut Vec<ClassEnvironment>,
                             };
                         }
                         Some(ref lex) if lex == "MethodDeclaration" => {
-                            match analyze_method_declaration(&mut methods,
+                            match analyze_method_declaration(classes,
+                                                             &extends,
+                                                             &interfaces,
+                                                             &implements,
+                                                             &mut methods,
                                                              &decls.children[1].children[0]) {
                                 Ok(_) => (),
                                 Err(e) => return Err(e),
@@ -140,7 +148,11 @@ pub fn analyze_class_declaration(classes: &mut Vec<ClassEnvironment>,
                 }
                 match decls.token.lexeme {
                     Some(ref lex) if lex == "AbstractMethodDeclaration" => {
-                        match analyze_abstract_method_declaration(&mut methods,
+                        match analyze_abstract_method_declaration(classes,
+                                                                  &extends,
+                                                                  &interfaces,
+                                                                  &implements,
+                                                                  &mut methods,
                                                                   &decls.children[0]) {
                             Ok(_) => (),
                             Err(e) => return Err(e),
@@ -159,7 +171,12 @@ pub fn analyze_class_declaration(classes: &mut Vec<ClassEnvironment>,
                         };
                     }
                     Some(ref lex) if lex == "MethodDeclaration" => {
-                        match analyze_method_declaration(&mut methods, &decls.children[0]) {
+                        match analyze_method_declaration(classes,
+                                                         &extends,
+                                                         &interfaces,
+                                                         &implements,
+                                                         &mut methods,
+                                                         &decls.children[0]) {
                             Ok(_) => (),
                             Err(e) => return Err(e),
                         };
