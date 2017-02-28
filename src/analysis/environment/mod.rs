@@ -50,10 +50,10 @@ impl Environment {
         while !dependencies.clone().is_empty() {
             let mut acyclic = false;
             for (node, edges) in dependencies.clone().iter() {
-                let mut delete = false;
+                let mut delete = true;
                 for edge in edges {
                     if dependencies.contains_key(edge) {
-                        delete = true;
+                        delete = false;
                         break;
                     }
                 }
@@ -64,11 +64,20 @@ impl Environment {
                 }
             }
             if !acyclic {
-                return Err("Cyclic imports".to_owned());
+                return Err("Cyclic or invalid imports".to_owned());
             }
         }
 
-        for tree in trees {
+        let mut ordered_trees = Vec::new();
+        for filename in ordered_files {
+            for tree in trees {
+                if tree.filename == filename {
+                    ordered_trees.push(tree);
+                }
+            }
+        }
+
+        for tree in ordered_trees {
             let root = match tree.root {
                 Some(ref r) => r,
                 None => continue,
