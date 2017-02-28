@@ -13,8 +13,6 @@ pub fn analyze_abstract_method_declaration(methods: &mut Vec<MethodEnvironment>,
                                            -> Result<(), String> {
     // TODO: a class with an abstract method must be abstract itself
     //
-    // TODO: method signature must be unique
-    // TODO: method signatures must not vary only in return type
     // TODO: if non-static, cannot override static
     // TODO: cannot override method with different return type
     // TODO: cannot override permissions with looser permissions
@@ -35,6 +33,12 @@ pub fn analyze_abstract_method_declaration(methods: &mut Vec<MethodEnvironment>,
             param = param.children[0].clone();
         }
         parameters.push(param.clone());
+    }
+
+    for method in methods.clone() {
+        if method.name == name && method.parameters == parameters {
+            return Err("methods must have unique signatures".to_owned());
+        }
     }
 
     methods.push(MethodEnvironment {
@@ -50,8 +54,6 @@ pub fn analyze_abstract_method_declaration(methods: &mut Vec<MethodEnvironment>,
 pub fn analyze_method_declaration(methods: &mut Vec<MethodEnvironment>,
                                   header: &ASTNode)
                                   -> Result<(), String> {
-    // TODO: method signature must be unique
-    // TODO: method signatures must not vary only in return type
     // TODO: if non-static, cannot override static
     // TODO: cannot override method with different return type
     // TODO: cannot override permissions with looser permissions
@@ -72,6 +74,12 @@ pub fn analyze_method_declaration(methods: &mut Vec<MethodEnvironment>,
             param = param.children[0].clone();
         }
         parameters.push(param.clone());
+    }
+
+    for method in methods.clone() {
+        if method.name == name && method.parameters == parameters {
+            return Err("methods must have unique signatures".to_owned());
+        }
     }
 
     methods.push(MethodEnvironment {
