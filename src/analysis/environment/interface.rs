@@ -58,47 +58,41 @@ pub fn analyze_interface_declaration(classes: &Vec<ClassEnvironment>,
 
             while decls.clone().token.lexeme.unwrap_or("".to_owned()) ==
                   "InterfaceMemberDeclarations" {
-                match decls.children[1].clone().token.lexeme {
+                let result = match decls.children[1].clone().token.lexeme {
                     Some(ref lex) if lex == "AbstractMethodDeclaration" => {
-                        match analyze_abstract_method_declaration(classes,
-                                                                  &extends,
-                                                                  &interfaces,
-                                                                  &Vec::new(),
-                                                                  &mut methods,
-                                                                  &decls.children[1].children[0]) {
-                            Ok(_) => (),
-                            Err(e) => return Err(e),
-                        };
+                        analyze_abstract_method_declaration(classes,
+                                                            &extends,
+                                                            &interfaces,
+                                                            &Vec::new(),
+                                                            &mut methods,
+                                                            &decls.children[1].children[0])
                     }
                     Some(ref lex) if lex == "ConstantDeclaration" => {
-                        match analyze_constant_declaration(&mut fields, &decls.children[1]) {
-                            Ok(_) => (),
-                            Err(e) => return Err(e),
-                        };
+                        analyze_constant_declaration(&mut fields, &decls.children[1])
                     }
-                    _ => (),
+                    _ => Ok(()),
+                };
+                if result.is_err() {
+                    return result;
                 }
                 decls = decls.children[0].clone();
             }
-            match decls.token.lexeme {
+            let result = match decls.token.lexeme {
                 Some(ref lex) if lex == "AbstractMethodDeclaration" => {
-                    match analyze_abstract_method_declaration(classes,
-                                                              &extends,
-                                                              &interfaces,
-                                                              &Vec::new(),
-                                                              &mut methods,
-                                                              &decls.children[0]) {
-                        Ok(_) => (),
-                        Err(e) => return Err(e),
-                    };
+                    analyze_abstract_method_declaration(classes,
+                                                        &extends,
+                                                        &interfaces,
+                                                        &Vec::new(),
+                                                        &mut methods,
+                                                        &decls.children[0])
                 }
                 Some(ref lex) if lex == "ConstantDeclaration" => {
-                    match analyze_constant_declaration(&mut fields, &decls) {
-                        Ok(_) => (),
-                        Err(e) => return Err(e),
-                    };
+                    analyze_constant_declaration(&mut fields, &decls)
                 }
-                _ => (),
+                _ => Ok(()),
+            };
+            if result.is_err() {
+                return result;
             }
         }
         _ => (),

@@ -104,84 +104,63 @@ pub fn analyze_class_declaration(classes: &mut Vec<ClassEnvironment>,
 
                 while decls.clone().token.lexeme.unwrap_or("".to_owned()) ==
                       "ClassBodyDeclarations" {
-                    match decls.children[1].clone().token.lexeme {
+                    let result = match decls.children[1].clone().token.lexeme {
                         Some(ref lex) if lex == "AbstractMethodDeclaration" => {
-                            match analyze_abstract_method_declaration(classes,
-                                                                      &extends,
-                                                                      &interfaces,
-                                                                      &implements,
-                                                                      &mut methods,
-                                                                      &decls.children[1]
-                                                                          .children
-                                                                           [0]) {
-                                Ok(_) => (),
-                                Err(e) => return Err(e),
-                            };
+                            analyze_abstract_method_declaration(classes,
+                                                                &extends,
+                                                                &interfaces,
+                                                                &implements,
+                                                                &mut methods,
+                                                                &decls.children[1].children[0])
                         }
                         Some(ref lex) if lex == "ConstructorDeclaration" => {
-                            match analyze_constructor_declaration(&mut constructors,
-                                                                  &decls.children[1]) {
-                                Ok(_) => (),
-                                Err(e) => return Err(e),
-                            };
+                            analyze_constructor_declaration(&mut constructors, &decls.children[1])
                         }
                         Some(ref lex) if lex == "FieldDeclaration" => {
-                            match analyze_field_declaration(&mut fields, &decls.children[1]) {
-                                Ok(_) => (),
-                                Err(e) => return Err(e),
-                            };
+                            analyze_field_declaration(&mut fields, &decls.children[1])
                         }
                         Some(ref lex) if lex == "MethodDeclaration" => {
-                            match analyze_method_declaration(classes,
-                                                             &extends,
-                                                             &interfaces,
-                                                             &implements,
-                                                             &mut methods,
-                                                             &decls.children[1].children[0]) {
-                                Ok(_) => (),
-                                Err(e) => return Err(e),
-                            };
+                            analyze_method_declaration(classes,
+                                                       &extends,
+                                                       &interfaces,
+                                                       &implements,
+                                                       &mut methods,
+                                                       &decls.children[1].children[0])
                         }
-                        _ => (),
+                        _ => Ok(()),
+                    };
+                    if result.is_err() {
+                        return result;
                     }
                     decls = decls.children[0].clone();
                 }
-                match decls.token.lexeme {
+                let result = match decls.token.lexeme {
                     Some(ref lex) if lex == "AbstractMethodDeclaration" => {
-                        match analyze_abstract_method_declaration(classes,
-                                                                  &extends,
-                                                                  &interfaces,
-                                                                  &implements,
-                                                                  &mut methods,
-                                                                  &decls.children[0]) {
-                            Ok(_) => (),
-                            Err(e) => return Err(e),
-                        };
+                        analyze_abstract_method_declaration(classes,
+                                                            &extends,
+                                                            &interfaces,
+                                                            &implements,
+                                                            &mut methods,
+                                                            &decls.children[0])
                     }
                     Some(ref lex) if lex == "ConstructorDeclaration" => {
-                        match analyze_constructor_declaration(&mut constructors, &decls) {
-                            Ok(_) => (),
-                            Err(e) => return Err(e),
-                        };
+                        analyze_constructor_declaration(&mut constructors, &decls)
                     }
                     Some(ref lex) if lex == "FieldDeclaration" => {
-                        match analyze_field_declaration(&mut fields, &decls) {
-                            Ok(_) => (),
-                            Err(e) => return Err(e),
-                        };
+                        analyze_field_declaration(&mut fields, &decls)
                     }
                     Some(ref lex) if lex == "MethodDeclaration" => {
-                        match analyze_method_declaration(classes,
-                                                         &extends,
-                                                         &interfaces,
-                                                         &implements,
-                                                         &mut methods,
-                                                         &decls.children[0]) {
-                            Ok(_) => (),
-                            Err(e) => return Err(e),
-                        };
+                        analyze_method_declaration(classes,
+                                                   &extends,
+                                                   &interfaces,
+                                                   &implements,
+                                                   &mut methods,
+                                                   &decls.children[0])
                     }
-                    _ => (),
+                    _ => Ok(()),
+                };
+                if result.is_err() {
+                    return result;
                 }
             }
             _ => (),
