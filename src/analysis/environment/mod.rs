@@ -4,13 +4,14 @@ mod field;
 mod interface;
 mod method;
 
+use std::collections::HashMap;
+
 use scanner::AST;
 
 use self::class::analyze_class_declaration;
 use self::class::ClassEnvironment;
 use self::interface::analyze_interface_declaration;
 use self::interface::InterfaceEnvironment;
-use std::collections::HashMap;
 
 #[derive(Clone,Debug)]
 pub struct Environment {
@@ -30,11 +31,11 @@ impl Environment {
         let mut env = Environment::new();
 
         let mut dependencies = HashMap::new();
-
         for tree in trees {
             let mut import_vec = Vec::new();
             for import in &tree.imports {
                 let token = import.import.last().unwrap();
+                // TODO: "*" is probably wrong
                 import_vec.push(token.clone().lexeme.unwrap_or("*".to_owned()));
             }
             dependencies.insert(tree.filename.clone(), import_vec);
@@ -58,7 +59,7 @@ impl Environment {
                 }
             }
             if !acyclic {
-                return Err("Cyclic or invalid imports".to_owned());
+                return Err("cyclic or invalid imports".to_owned());
             }
         }
 
