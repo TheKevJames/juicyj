@@ -80,7 +80,7 @@ pub fn scan_or_exit(filename: &str, contents: &str) -> AST {
         }
     }
 
-    match AST::new(&parse_tree) {
+    match AST::new(&filename, &parse_tree) {
         Ok(ast) => ast,
         Err(e) => {
             println!("{}", e);
@@ -100,8 +100,8 @@ pub mod tests {
     use super::parser::Parser;
     use super::weeder::Weeder;
 
-    pub fn scan_and_assert(file: &str, src: &str) {
-        let lexer = Lexer::new(&file, &src);
+    pub fn scan_and_assert(filename: &str, src: &str) {
+        let lexer = Lexer::new(&filename, &src);
         for token in lexer.clone().collect::<Vec<Result<_, _>>>() {
             match token {
                 Ok(_) => (),
@@ -123,7 +123,7 @@ pub mod tests {
             }
         };
 
-        let mut weeder = Weeder::new(&file, &parse_tree);
+        let mut weeder = Weeder::new(&filename, &parse_tree);
         match weeder.verify(None) {
             Ok(_) => (),
             Err(_) => {
@@ -133,7 +133,7 @@ pub mod tests {
             }
         }
 
-        match AST::new(&parse_tree) {
+        match AST::new(&filename, &parse_tree) {
             Ok(_) => (),
             Err(_) => {
                 println!("AST Construction Error");
@@ -146,8 +146,8 @@ pub mod tests {
         assert!(false);
     }
 
-    pub fn scan_or_assert(file: &str, src: &str) -> AST {
-        let lexer = Lexer::new(&file, &src);
+    pub fn scan_or_assert(filename: &str, src: &str) -> AST {
+        let lexer = Lexer::new(&filename, &src);
         for token in lexer.clone().collect::<Vec<Result<_, _>>>() {
             match token {
                 Ok(_) => (),
@@ -171,7 +171,7 @@ pub mod tests {
             }
         };
 
-        let mut weeder = Weeder::new(&file, &parse_tree);
+        let mut weeder = Weeder::new(&filename, &parse_tree);
         match weeder.verify(None) {
             Ok(_) => (),
             Err(e) => {
@@ -182,7 +182,7 @@ pub mod tests {
             }
         }
 
-        match AST::new(&parse_tree) {
+        match AST::new(&filename, &parse_tree) {
             Ok(ast) => ast,
             Err(e) => {
                 println!("AST Construction Error");

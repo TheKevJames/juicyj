@@ -12,6 +12,8 @@ use self::node::ASTNodePackage;
 
 /// An abstract syntax tree generated at the end of the scanning step.
 pub struct AST {
+    /// the file from which this AST was generated
+    pub filename: String,
     /// the (optional) package hierarchy for this file
     pub package: Option<ASTNodePackage>,
     /// the list of import statements in this file
@@ -25,7 +27,7 @@ impl AST {
     /// the package declaration as an ASTNodePackage, capturing the import
     /// statements as ASTNodeImports, and performing a recursive build on the
     /// remaining tree into ASTNodes.
-    pub fn new(tree: &ParseTree) -> Result<AST, ASTError> {
+    pub fn new(filename: &str, tree: &ParseTree) -> Result<AST, ASTError> {
         let mut imports = Vec::new();
         let mut package = None;
         let mut root = None;
@@ -59,6 +61,7 @@ impl AST {
         }
 
         Ok(AST {
+            filename: filename.to_owned(),
             imports: imports,
             package: package,
             root: root,
