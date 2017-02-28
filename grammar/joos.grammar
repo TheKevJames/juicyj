@@ -151,7 +151,6 @@ MethodHeader:
 MethodDeclarator:
 	IDENTIFIER ( ParameterList )
 	IDENTIFIER ( )
-	MethodDeclarator Dim
 
 ParameterList:
 	Parameter
@@ -180,8 +179,11 @@ InterfaceDeclaration:
 	Modifiers INTERFACE IDENTIFIER InterfaceExtends InterfaceBody
 
 InterfaceExtends:
-	EXTENDS InterfaceType
-	InterfaceExtends COMMA InterfaceType
+	EXTENDS InterfaceExtendsList
+
+InterfaceExtendsList:
+	InterfaceType
+	InterfaceExtendsList COMMA InterfaceType
 
 InterfaceBody:
 	{ }

@@ -41,7 +41,7 @@ impl ASTNode {
                                 TokenKind::Identifier => (),
                                 TokenKind::NonTerminal => {
                                     if children[1].token.lexeme !=
-                                       Some("QualifiedName".to_string()) {
+                                       Some("Name".to_string()) {
                                         return Err(ASTError::new(ErrorMessage::InvalidCast,
                                                                  &children[1]));
                                     }
@@ -164,6 +164,31 @@ impl ASTNode {
                             }
                             Err(e) => Err(e),
                         }
+                    }
+                    Some(ref l) if node.children.len() == 1 && l == "Name" => {
+                        let mut children: Vec<ASTNode> = Vec::new();
+                        match ASTNode::new(&node.children[0]) {
+                            Ok(child) => children.push(child),
+                            Err(e) => return Err(e),
+                        }
+
+                        Ok(ASTNode {
+                            token: node.token.clone(),
+                            children: children,
+                        })
+                    }
+                    Some(ref l) if l == "Modifiers" => {
+                        let mut children: Vec<ASTNode> = Vec::new();
+                        for child in &node.children {
+                            match ASTNode::new(&child) {
+                                Ok(child) => children.push(child),
+                                Err(e) => return Err(e),
+                            }
+                        }
+                        Ok(ASTNode {
+                            token: node.token.clone(),
+                            children: children,
+                        })
                     }
                     Some(_) if node.children.len() == 1 => ASTNode::new(&node.children[0]),
                     _ => {
