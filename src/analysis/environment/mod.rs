@@ -10,6 +10,7 @@ use self::class::analyze_class_declaration;
 use self::class::ClassEnvironment;
 use self::interface::analyze_interface_declaration;
 use self::interface::InterfaceEnvironment;
+use std::collections::HashMap;
 
 #[derive(Clone,Debug)]
 pub struct Environment {
@@ -28,17 +29,45 @@ impl Environment {
     pub fn annotate_asts(trees: &Vec<AST>) -> Result<(), String> {
         let mut env = Environment::new();
 
+        let mut dependencies = HashMap::new();
+
         for tree in trees {
-            println!("{}", tree);
+            let mut import_vec = Vec::new();
+            for import in &tree.imports {
+                let mut import_string = "".to_owned();
+                for token in &import.import {
+                    match &token.lexeme {
+                        &Some(ref l) => import_string += &l,
+                        &None => import_string += ".",
+                    }
+                }
+                import_vec.push(import_string);
+            }
+            dependencies.insert(tree.filename.clone(), import_vec);
         }
 
-        // TODO: check imports for ordering and circular dependencies
-        // for tree in trees {
-        //     for import in &tree.imports {
-        //     }
-        // }
+        let mut ordered_files = Vec::new();
+        while !dependencies.clone().is_empty() {
+            let mut acyclic = false;
+            for (node, edges) in dependencies.clone().iter() {
+                let mut delete = false;
+                for edge in edges {
+                    if dependencies.contains_key(edge) {
+                        delete = true;
+                        break;
+                    }
+                }
+                if delete {
+                    acyclic = true;
+                    dependencies.remove(node);
+                    ordered_files.push(node.clone());
+                }
+            }
+            if !acyclic {
+                return Err("Cyclic imports".to_owned());
+            }
+        }
 
-        // TODO: iterate in order specified above
         for tree in trees {
             let root = match tree.root {
                 Some(ref r) => r,
