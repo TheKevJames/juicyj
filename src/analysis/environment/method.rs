@@ -45,95 +45,19 @@ pub fn analyze_abstract_method_declaration(classes: &Vec<ClassEnvironment>,
         }
     }
 
-    let fnode = ASTNode {
-        token: Token::new(TokenKind::Final, None),
-        children: Vec::new(),
-    };
-    let snode = ASTNode {
-        token: Token::new(TokenKind::Static, None),
-        children: Vec::new(),
-    };
-    let public = ASTNode {
-        token: Token::new(TokenKind::Public, None),
-        children: Vec::new(),
-    };
-    let protected = ASTNode {
-        token: Token::new(TokenKind::Protected, None),
-        children: Vec::new(),
-    };
-    let private = ASTNode {
-        token: Token::new(TokenKind::Private, None),
-        children: Vec::new(),
-    };
-
-    for class in classes {
-        if extends.contains(&class.name) {
-            for method in &class.methods {
-                if method.name == name && method.parameters == parameters {
-                    if method.return_type != return_type {
-                        return Err("cannot override method with different return type".to_owned());
-                    }
-
-                    if method.modifiers.contains(&fnode) {
-                        return Err("methods cannot override final methods".to_owned());
-                    }
-
-                    if method.modifiers.contains(&public) &&
-                       (modifiers.contains(&protected) || modifiers.contains(&private)) {
-                        return Err("methods cannot be overriden with weaker access controls"
-                            .to_owned());
-                    } else if method.modifiers.contains(&protected) &&
-                              modifiers.contains(&private) {
-                        return Err("methods cannot be overriden with weaker access controls"
-                            .to_owned());
-                    }
-
-                    if method.modifiers.contains(&snode) && !modifiers.contains(&snode) {
-                        return Err("cannot override static method with non-static method"
-                            .to_owned());
-                    }
-                }
-            }
-        }
-    }
-
-    for interface in interfaces {
-        if implements.contains(&interface.name) {
-            for method in &interface.methods {
-                if method.name == name && method.parameters == parameters {
-                    if method.return_type != return_type {
-                        return Err("cannot override method with different return type".to_owned());
-                    }
-
-                    if method.modifiers.contains(&fnode) {
-                        return Err("methods cannot override final methods".to_owned());
-                    }
-
-                    if method.modifiers.contains(&public) &&
-                       (modifiers.contains(&protected) || modifiers.contains(&private)) {
-                        return Err("methods cannot be overriden with weaker access controls"
-                            .to_owned());
-                    } else if method.modifiers.contains(&protected) &&
-                              modifiers.contains(&private) {
-                        return Err("methods cannot be overriden with weaker access controls"
-                            .to_owned());
-                    }
-
-                    if method.modifiers.contains(&snode) && !modifiers.contains(&snode) {
-                        return Err("cannot override static method with non-static method"
-                            .to_owned());
-                    }
-                }
-            }
-        }
-    }
-
-    methods.push(MethodEnvironment {
+    let new = MethodEnvironment {
         modifiers: modifiers,
         return_type: return_type,
         name: name,
         parameters: parameters,
-    });
+    };
+
+    match verify_override(classes, extends, interfaces, implements, &new) {
+        Ok(_) => (),
+        Err(e) => return Err(e),
+    }
+
+    methods.push(new);
 
     Ok(())
 }
@@ -145,10 +69,6 @@ pub fn analyze_method_declaration(classes: &Vec<ClassEnvironment>,
                                   methods: &mut Vec<MethodEnvironment>,
                                   header: &ASTNode)
                                   -> Result<(), String> {
-    // TODO: if non-static, cannot override static
-    // TODO: cannot override method with different return type
-    // TODO: cannot override permissions with looser permissions
-    // TODO: cannot override final method
     let mut modifiers = Vec::new();
     for child in header.children[0].clone().children {
         modifiers.push(child);
@@ -173,6 +93,29 @@ pub fn analyze_method_declaration(classes: &Vec<ClassEnvironment>,
         }
     }
 
+    let new = MethodEnvironment {
+        modifiers: modifiers,
+        return_type: return_type,
+        name: name,
+        parameters: parameters,
+    };
+
+    match verify_override(classes, extends, interfaces, implements, &new) {
+        Ok(_) => (),
+        Err(e) => return Err(e),
+    }
+
+    methods.push(new);
+
+    Ok(())
+}
+
+fn verify_override(classes: &Vec<ClassEnvironment>,
+                   extends: &Vec<ASTNode>,
+                   interfaces: &Vec<InterfaceEnvironment>,
+                   implements: &Vec<ASTNode>,
+                   new: &MethodEnvironment)
+                   -> Result<(), String> {
     let fnode = ASTNode {
         token: Token::new(TokenKind::Final, None),
         children: Vec::new(),
@@ -195,73 +138,68 @@ pub fn analyze_method_declaration(classes: &Vec<ClassEnvironment>,
     };
 
     for class in classes {
-        if extends.contains(&class.name) {
-            for method in &class.methods {
-                if method.name == name && method.parameters == parameters {
-                    if method.return_type != return_type {
-                        return Err("cannot override method with different return type".to_owned());
-                    }
+        if !extends.contains(&class.name) {
+            continue;
+        }
 
-                    if method.modifiers.contains(&fnode) {
-                        return Err("methods cannot override final methods".to_owned());
-                    }
+        for method in &class.methods {
+            if method.name == new.name && method.parameters == new.parameters {
+                if method.return_type != new.return_type {
+                    return Err("cannot override method with different return type".to_owned());
+                }
 
-                    if method.modifiers.contains(&public) &&
-                       (modifiers.contains(&protected) || modifiers.contains(&private)) {
-                        return Err("methods cannot be overriden with weaker access controls"
-                            .to_owned());
-                    } else if method.modifiers.contains(&protected) &&
-                              modifiers.contains(&private) {
-                        return Err("methods cannot be overriden with weaker access controls"
-                            .to_owned());
-                    }
+                if method.modifiers.contains(&fnode) {
+                    return Err("methods cannot override final methods".to_owned());
+                }
 
-                    if method.modifiers.contains(&snode) && !modifiers.contains(&snode) {
-                        return Err("cannot override static method with non-static method"
-                            .to_owned());
-                    }
+                if method.modifiers.contains(&public) &&
+                   (new.modifiers.contains(&protected) || new.modifiers.contains(&private)) {
+                    return Err("methods cannot be overriden with weaker access controls"
+                        .to_owned());
+                } else if method.modifiers.contains(&protected) &&
+                          new.modifiers.contains(&private) {
+                    return Err("methods cannot be overriden with weaker access controls"
+                        .to_owned());
+                }
+
+                if method.modifiers.contains(&snode) && !new.modifiers.contains(&snode) {
+                    return Err("cannot override static method with non-static method".to_owned());
                 }
             }
         }
     }
 
     for interface in interfaces {
-        if implements.contains(&interface.name) {
-            for method in &interface.methods {
-                if method.name == name && method.parameters == parameters {
-                    if method.return_type != return_type {
-                        return Err("cannot override method with different return type".to_owned());
-                    }
+        if !implements.contains(&interface.name) {
+            continue;
+        }
 
-                    if method.modifiers.contains(&fnode) {
-                        return Err("methods cannot override final methods".to_owned());
-                    }
+        for method in &interface.methods {
+            if method.name == new.name && method.parameters == new.parameters {
+                if method.return_type != new.return_type {
+                    return Err("cannot override method with different return type".to_owned());
+                }
 
-                    if method.modifiers.contains(&public) &&
-                       (modifiers.contains(&protected) || modifiers.contains(&private)) {
-                        return Err("methods cannot be overriden with weaker access controls"
-                            .to_owned());
-                    } else if method.modifiers.contains(&protected) &&
-                              modifiers.contains(&private) {
-                        return Err("methods cannot be overriden with weaker access controls"
-                            .to_owned());
-                    }
+                if method.modifiers.contains(&fnode) {
+                    return Err("methods cannot override final methods".to_owned());
+                }
 
-                    if method.modifiers.contains(&snode) && !modifiers.contains(&snode) {
-                        return Err("cannot override static method with non-static method"
-                            .to_owned());
-                    }
+                if method.modifiers.contains(&public) &&
+                   (new.modifiers.contains(&protected) || new.modifiers.contains(&private)) {
+                    return Err("methods cannot be overriden with weaker access controls"
+                        .to_owned());
+                } else if method.modifiers.contains(&protected) &&
+                          new.modifiers.contains(&private) {
+                    return Err("methods cannot be overriden with weaker access controls"
+                        .to_owned());
+                }
+
+                if method.modifiers.contains(&snode) && !new.modifiers.contains(&snode) {
+                    return Err("cannot override static method with non-static method".to_owned());
                 }
             }
         }
     }
-
-    methods.push(MethodEnvironment {
-        modifiers: modifiers,
-        return_type: return_type,
-        name: name,
-        parameters: parameters,
-    });
 
     Ok(())
 }
