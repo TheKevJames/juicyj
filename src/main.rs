@@ -39,11 +39,14 @@ fn main() {
         return;
     }
 
+    let mut asts = Vec::new();
     for i in 0..matches.free.len() {
         let file = matches.free[i].clone();
         let src = juicyj::scanner::read_src_file(&file);
-        juicyj::scanner::scan_or_exit(&file, &src);
+        asts.push(juicyj::scanner::scan_or_exit(&file, &src));
     }
+
+    juicyj::analysis::analyze_or_exit(asts);
 }
 
 fn print_usage(program: &str, opts: getopts::Options) {

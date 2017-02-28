@@ -6,7 +6,7 @@ use scanner::common::Token;
 use scanner::common::TokenKind;
 use scanner::parser::ParseNode;
 
-#[derive(Clone)]
+#[derive(Clone,Debug)]
 pub struct ASTNode {
     pub token: Token,
     pub children: Vec<ASTNode>,
@@ -40,8 +40,7 @@ impl ASTNode {
                                 TokenKind::Dot => (),
                                 TokenKind::Identifier => (),
                                 TokenKind::NonTerminal => {
-                                    if children[1].token.lexeme !=
-                                       Some("Name".to_string()) {
+                                    if children[1].token.lexeme != Some("Name".to_string()) {
                                         return Err(ASTError::new(ErrorMessage::InvalidCast,
                                                                  &children[1]));
                                     }

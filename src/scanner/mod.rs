@@ -12,7 +12,8 @@ use std;
 use std::fs::File;
 use std::io::Read;
 
-use self::ast::AST;
+pub use self::ast::AST;
+pub use self::ast::ASTNode;
 use self::lexer::Lexer;
 use self::parser::Parser;
 use self::weeder::Weeder;
@@ -56,7 +57,7 @@ pub fn read_src_file(file: &String) -> String {
 /// let contents = juicyj::scanner::read_src_file(&filename.to_owned());
 /// juicyj::scanner::scan_or_exit(&filename, &contents);
 /// ```
-pub fn scan_or_exit(filename: &str, contents: &str) {
+pub fn scan_or_exit(filename: &str, contents: &str) -> AST {
     let lexer = Lexer::new(&filename, &contents);
 
     let mut parser = Parser::new(lexer);
@@ -78,12 +79,12 @@ pub fn scan_or_exit(filename: &str, contents: &str) {
     }
 
     match AST::new(&parse_tree) {
-        Ok(ast) => println!("{}", ast),
+        Ok(ast) => ast,
         Err(e) => {
             println!("{}", e);
             std::process::exit(42);
         }
-    };
+    }
 }
 
 // TODO: this should be #[cfg(test)], but for some reason the test macros can't

@@ -4,5 +4,6 @@
 #[macro_use]
 extern crate log;
 
+pub mod analysis;
 pub mod error;
 pub mod scanner;

@@ -7,7 +7,7 @@ use error::ErrorMessage;
 use scanner::parser::ParseTree;
 
 use self::node::ASTNodeImport;
-use self::node::ASTNode;
+pub use self::node::ASTNode;
 use self::node::ASTNodePackage;
 
 pub struct AST {
