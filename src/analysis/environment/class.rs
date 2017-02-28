@@ -100,18 +100,35 @@ pub fn analyze_class_declaration(classes: &mut Vec<ClassEnvironment>,
                 // TODO: no dups, non-circular
             }
             Some(ref le) if le == "ClassBody" && child.children.len() == 3 => {
-                let mut decls = child.children[1].clone();
+                let anode = ASTNode {
+                    token: Token::new(TokenKind::Abstract, None),
+                    children: Vec::new(),
+                };
 
+                let mut decls = child.children[1].clone();
                 while decls.clone().token.lexeme.unwrap_or("".to_owned()) ==
                       "ClassBodyDeclarations" {
                     let result = match decls.children[1].clone().token.lexeme {
                         Some(ref lex) if lex == "AbstractMethodDeclaration" => {
-                            analyze_abstract_method_declaration(classes,
-                                                                &extends,
-                                                                &interfaces,
-                                                                &implements,
-                                                                &mut methods,
-                                                                &decls.children[1].children[0])
+                            match analyze_abstract_method_declaration(classes,
+                                                                      &extends,
+                                                                      &interfaces,
+                                                                      &implements,
+                                                                      &mut methods,
+                                                                      &decls.children[1].children
+                                                                           [0]) {
+                                Ok(_) => (),
+                                Err(e) => return Err(e),
+                            }
+
+                            match methods.last() {
+                                Some(m) if m.modifiers.contains(&anode) &&
+                                           !modifiers.contains(&anode) => {
+                                    Err("a class with an abstract method must be abstract"
+                                        .to_owned())
+                                }
+                                _ => Ok(()),
+                            }
                         }
                         Some(ref lex) if lex == "ConstructorDeclaration" => {
                             analyze_constructor_declaration(&mut constructors, &decls.children[1])
@@ -136,12 +153,23 @@ pub fn analyze_class_declaration(classes: &mut Vec<ClassEnvironment>,
                 }
                 let result = match decls.token.lexeme {
                     Some(ref lex) if lex == "AbstractMethodDeclaration" => {
-                        analyze_abstract_method_declaration(classes,
-                                                            &extends,
-                                                            &interfaces,
-                                                            &implements,
-                                                            &mut methods,
-                                                            &decls.children[0])
+                        match analyze_abstract_method_declaration(classes,
+                                                                  &extends,
+                                                                  &interfaces,
+                                                                  &implements,
+                                                                  &mut methods,
+                                                                  &decls.children[0]) {
+                            Ok(_) => (),
+                            Err(e) => return Err(e),
+                        }
+
+                        match methods.last() {
+                            Some(m) if m.modifiers.contains(&anode) &&
+                                       !modifiers.contains(&anode) => {
+                                Err("a class with an abstract method must be abstract".to_owned())
+                            }
+                            _ => Ok(()),
+                        }
                     }
                     Some(ref lex) if lex == "ConstructorDeclaration" => {
                         analyze_constructor_declaration(&mut constructors, &decls)
@@ -167,12 +195,14 @@ pub fn analyze_class_declaration(classes: &mut Vec<ClassEnvironment>,
         }
     }
 
+    // TODO: qualified path matters here
     for class in classes.clone() {
         if class.name == name {
             return Err("class/interface names must be unique".to_owned());
         }
     }
 
+    // TODO: qualified path matters here
     for interface in interfaces {
         if interface.name == name {
             return Err("class/interface names must be unique".to_owned());

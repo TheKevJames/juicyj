@@ -55,7 +55,6 @@ pub fn analyze_interface_declaration(classes: &Vec<ClassEnvironment>,
         }
         Some(ref l) if l == "InterfaceBody" && node.children[3].children.len() == 3 => {
             let mut decls = node.children[3].clone().children[1].clone();
-
             while decls.clone().token.lexeme.unwrap_or("".to_owned()) ==
                   "InterfaceMemberDeclarations" {
                 let result = match decls.children[1].clone().token.lexeme {
@@ -98,12 +97,14 @@ pub fn analyze_interface_declaration(classes: &Vec<ClassEnvironment>,
         _ => (),
     }
 
+    // TODO: qualified path matters here
     for class in classes {
         if class.name == name {
             return Err("class/interface names must be unique".to_owned());
         }
     }
 
+    // TODO: qualified path matters here
     for interface in interfaces.clone() {
         if interface.name == name {
             return Err("class/interface names must be unique".to_owned());
