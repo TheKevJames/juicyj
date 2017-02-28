@@ -20,7 +20,6 @@ pub fn analyze_abstract_method_declaration(classes: &Vec<ClassEnvironment>,
                                            methods: &mut Vec<MethodEnvironment>,
                                            header: &ASTNode)
                                            -> Result<(), String> {
-    // TODO: a class with an abstract method must be abstract itself
     let mut modifiers = Vec::new();
     for child in header.children[0].clone().children {
         modifiers.push(child);
