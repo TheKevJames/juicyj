@@ -27,6 +27,12 @@ pub fn analyze_constructor_declaration(constructors: &mut Vec<ConstructorEnviron
         parameters.push(param.clone());
     }
 
+    for constructor in constructors.clone() {
+        if constructor.parameters == parameters {
+            return Err("constructors must have unique signatures".to_owned());
+        }
+    }
+
     constructors.push(ConstructorEnvironment {
         modifiers: modifiers,
         name: name,
