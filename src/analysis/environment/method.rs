@@ -104,6 +104,8 @@ pub fn analyze_method_declaration(classes: &Vec<ClassEnvironment>,
         Err(e) => return Err(e),
     }
 
+    // TODO: LocalVariableDeclaration
+
     methods.push(new);
 
     Ok(())
