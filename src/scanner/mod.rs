@@ -132,15 +132,19 @@ pub mod tests {
         }
 
         match AST::new(&parse_tree) {
-            Ok(_) => {
-                println!("No Error Found");
-                assert!(false);
-            }
-            Err(_) => assert!(true),
+            Ok(_) => (),
+            Err(_) => {
+                println!("AST Construction Error");
+                assert!(true);
+                return;
+            },
         };
+
+        println!("No Error Found");
+        assert!(false);
     }
 
-    pub fn scan_or_assert(file: &str, src: &str) {
+    pub fn scan_or_assert(file: &str, src: &str) -> AST {
         let lexer = Lexer::new(&file, &src);
         for token in lexer.clone().collect::<Vec<Result<_, _>>>() {
             match token {
@@ -177,13 +181,13 @@ pub mod tests {
         }
 
         match AST::new(&parse_tree) {
-            Ok(_) => assert!(true),
+            Ok(ast) => ast,
             Err(e) => {
                 println!("AST Construction Error");
                 println!("{}", e);
                 assert!(false);
                 std::process::exit(1);
             }
-        };
+        }
     }
 }

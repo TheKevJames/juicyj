@@ -46,7 +46,7 @@ fn main() {
         asts.push(juicyj::scanner::scan_or_exit(&file, &src));
     }
 
-    juicyj::analysis::analyze_or_exit(asts);
+    juicyj::analysis::analyze_or_exit(&asts);
 }
 
 fn print_usage(program: &str, opts: getopts::Options) {

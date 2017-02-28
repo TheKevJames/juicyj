@@ -57,7 +57,7 @@ impl Environment {
         }
     }
 
-    pub fn annotate_asts(trees: Vec<AST>) -> Result<Vec<AST>, String> {
+    pub fn annotate_asts(trees: &Vec<AST>) -> Result<(), String> {
         let mut env = Environment::new();
 
         // TODO: check imports for ordering and circular dependencies
@@ -67,7 +67,7 @@ impl Environment {
         // }
 
         // TODO: iterate in order specified above
-        for tree in &trees {
+        for tree in trees {
             let root = match tree.root {
                 Some(ref r) => r,
                 None => continue,
@@ -351,6 +351,6 @@ impl Environment {
 
         println!("{:#?}", env);
 
-        Ok(trees)
+        Ok(())
     }
 }
