@@ -6,7 +6,7 @@ use scanner::common::Token;
 use scanner::common::TokenKind;
 use scanner::parser::ParseNode;
 
-#[derive(Clone,Debug,PartialEq)]
+#[derive(Clone,Debug)]
 /// An individual node in the abstract syntax tree.
 pub struct ASTNode {
     /// the associated token object for this node
@@ -249,6 +249,14 @@ impl ASTNodePackage {
         node.children[1].collect_child_kinds(&vec![&TokenKind::Identifier], &mut names);
 
         Ok(ASTNodePackage { package: names })
+    }
+}
+
+impl PartialEq for ASTNode {
+    fn eq(&self, other: &ASTNode) -> bool {
+        (self.token == other.token && self.children == other.children) ||
+        (self.children.len() == 1 && &self.children[0] == other) ||
+        (other.children.len() == 1 && &other.children[0] == self)
     }
 }
 

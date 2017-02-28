@@ -8,6 +8,18 @@ pub struct Token {
     pub lexeme: Option<String>,
 }
 
+impl Token {
+    pub fn new(kind: TokenKind, lexeme: Option<&'static str>) -> Token {
+        Token {
+            kind: kind,
+            lexeme: match lexeme {
+                Some(l) => Some(l.to_owned()),
+                _ => None,
+            },
+        }
+    }
+}
+
 impl fmt::Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.lexeme {
