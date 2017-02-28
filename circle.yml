@@ -28,4 +28,4 @@ test:
     override:
         - cargo fmt -- --write-mode=diff
         - cargo build --features "strict"
-        - cargo test --no-fail-fast
+        - cargo test --no-fail-fast --color=never -- --color=never
