@@ -54,7 +54,8 @@ pub fn analyze_class_declaration(canonical: &Vec<Token>,
                 for mut greatgrandkid in grandkid.children {
                     if greatgrandkid.token.kind == TokenKind::Identifier {
                         implements.push(vec![greatgrandkid.clone().token]);
-                    } else if greatgrandkid.clone().token.lexeme.unwrap_or("".to_owned()) == "Name" {
+                    } else if greatgrandkid.clone().token.lexeme.unwrap_or("".to_owned()) ==
+                              "Name" {
                         let mut children = Vec::new();
                         for child in greatgrandkid.flatten().clone().children {
                             children.push(child.token);
