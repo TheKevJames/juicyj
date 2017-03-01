@@ -3,11 +3,13 @@ use std::fmt;
 use std::str::FromStr;
 
 #[derive(Clone,Debug,PartialEq)]
+#[allow(missing_docs)]
 pub struct Token {
     pub kind: TokenKind,
     pub lexeme: Option<String>,
 }
 
+#[allow(missing_docs)]
 impl Token {
     pub fn new(kind: TokenKind, lexeme: Option<&'static str>) -> Token {
         Token {
@@ -35,6 +37,7 @@ impl fmt::Display for Token {
 }
 
 #[derive(Debug,Clone,PartialEq)]
+#[allow(missing_docs)]
 pub enum TokenKind {
     Assignment,
     Equality,
