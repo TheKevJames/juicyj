@@ -21,22 +21,26 @@ pub fn analyze_abstract_method_declaration(classes: &Vec<ClassEnvironment>,
                                            methods: &mut Vec<MethodEnvironment>,
                                            header: &ASTNode)
                                            -> Result<(), String> {
+    let declarator = header.children[2].clone();
+
     let mut modifiers = Vec::new();
     for child in header.children[0].clone().children {
         modifiers.push(child);
     }
 
     let return_type = header.children[1].clone();
-    let name = header.children[2].clone().children[0].clone();
+    let name = declarator.children[0].clone();
 
     let mut parameters = Vec::new();
-    if header.children[2].children.len() == 4 {
-        let mut param = header.children[2].clone().children[2].clone();
-        while param.clone().token.lexeme.unwrap_or("".to_owned()) != "Parameter" {
-            parameters.push(param.children[2].clone());
-            param = param.children[0].clone();
+    if declarator.children.len() == 4 {
+        let mut params = declarator.children[2].clone();
+        let params = match params.clone().token.lexeme {
+            Some(ref l) if l == "ParameterList" => params.flatten().clone(),
+            _ => params,
+        };
+        for param in &params.children {
+            parameters.push(param.clone());
         }
-        parameters.push(param.clone());
     }
 
     for method in methods.clone() {
@@ -70,22 +74,26 @@ pub fn analyze_method_declaration(classes: &Vec<ClassEnvironment>,
                                   header: &ASTNode,
                                   body: &ASTNode)
                                   -> Result<(), String> {
+    let declarator = header.children[2].clone();
+
     let mut modifiers = Vec::new();
     for child in header.children[0].clone().children {
         modifiers.push(child);
     }
 
     let return_type = header.children[1].clone();
-    let name = header.children[2].clone().children[0].clone();
+    let name = declarator.children[0].clone();
 
     let mut parameters = Vec::new();
-    if header.children[2].children.len() == 4 {
-        let mut param = header.children[2].clone().children[2].clone();
-        while param.clone().token.lexeme.unwrap_or("".to_owned()) != "Parameter" {
-            parameters.push(param.children[2].clone());
-            param = param.children[0].clone();
+    if declarator.children.len() == 4 {
+        let mut params = declarator.children[2].clone();
+        let params = match params.clone().token.lexeme {
+            Some(ref l) if l == "ParameterList" => params.flatten().clone(),
+            _ => params,
+        };
+        for param in &params.children {
+            parameters.push(param.clone());
         }
-        parameters.push(param.clone());
     }
 
     for method in methods.clone() {

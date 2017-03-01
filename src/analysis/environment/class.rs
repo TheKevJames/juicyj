@@ -54,6 +54,7 @@ pub fn analyze_class_declaration(classes: &mut Vec<ClassEnvironment>,
 
         match child.token.lexeme {
             Some(ref le) if le == "Implements" => {
+                // TODO: only flatten InterfaceTypeList?
                 let grandkid = child.children[1].clone().flatten().clone();
                 for mut greatgrandkid in grandkid.children {
                     if greatgrandkid.token.kind != TokenKind::Comma {
@@ -106,17 +107,19 @@ pub fn analyze_class_declaration(classes: &mut Vec<ClassEnvironment>,
                 };
 
                 let mut decls = child.children[1].clone();
-                while decls.clone().token.lexeme.unwrap_or("".to_owned()) ==
-                      "ClassBodyDeclarations" {
-                    let result = match decls.children[1].clone().token.lexeme {
+                let decls = match decls.clone().token.lexeme {
+                    Some(ref l) if l == "ClassBodyDeclarations" => decls.flatten().clone(),
+                    _ => decls,
+                };
+                for decl in &decls.children {
+                    let result = match decl.token.lexeme {
                         Some(ref lex) if lex == "AbstractMethodDeclaration" => {
                             match analyze_abstract_method_declaration(classes,
                                                                       &extends,
                                                                       &interfaces,
                                                                       &implements,
                                                                       &mut methods,
-                                                                      &decls.children[1].children
-                                                                           [0]) {
+                                                                      &decl.children[0]) {
                                 Ok(_) => (),
                                 Err(e) => return Err(e),
                             }
@@ -131,13 +134,13 @@ pub fn analyze_class_declaration(classes: &mut Vec<ClassEnvironment>,
                             }
                         }
                         Some(ref lex) if lex == "ConstructorDeclaration" => {
-                            // TODO: wtf???
                             analyze_constructor_declaration(&mut constructors,
-                                                            &decls.children[1],
-                                                            &decls.children[1])
+                                                            &decl.children[0],
+                                                            &decl.children[1],
+                                                            &decl.children[2])
                         }
                         Some(ref lex) if lex == "FieldDeclaration" => {
-                            analyze_field_declaration(&mut fields, &decls.children[1])
+                            analyze_field_declaration(&mut fields, &decl)
                         }
                         Some(ref lex) if lex == "MethodDeclaration" => {
                             analyze_method_declaration(classes,
@@ -145,58 +148,14 @@ pub fn analyze_class_declaration(classes: &mut Vec<ClassEnvironment>,
                                                        &interfaces,
                                                        &implements,
                                                        &mut methods,
-                                                       &decls.children[1].children[0],
-                                                       &decls.children[1].children[1])
+                                                       &decl.children[0],
+                                                       &decl.children[1])
                         }
                         _ => Ok(()),
                     };
                     if result.is_err() {
                         return result;
                     }
-                    decls = decls.children[0].clone();
-                }
-                let result = match decls.token.lexeme {
-                    Some(ref lex) if lex == "AbstractMethodDeclaration" => {
-                        match analyze_abstract_method_declaration(classes,
-                                                                  &extends,
-                                                                  &interfaces,
-                                                                  &implements,
-                                                                  &mut methods,
-                                                                  &decls.children[0]) {
-                            Ok(_) => (),
-                            Err(e) => return Err(e),
-                        }
-
-                        match methods.last() {
-                            Some(m) if m.modifiers.contains(&anode) &&
-                                       !modifiers.contains(&anode) => {
-                                Err("a class with an abstract method must be abstract".to_owned())
-                            }
-                            _ => Ok(()),
-                        }
-                    }
-                    Some(ref lex) if lex == "ConstructorDeclaration" => {
-                        // TODO: wtf are these references?
-                        analyze_constructor_declaration(&mut constructors,
-                                                        &decls,
-                                                        &decls)
-                    }
-                    Some(ref lex) if lex == "FieldDeclaration" => {
-                        analyze_field_declaration(&mut fields, &decls)
-                    }
-                    Some(ref lex) if lex == "MethodDeclaration" => {
-                        analyze_method_declaration(classes,
-                                                   &extends,
-                                                   &interfaces,
-                                                   &implements,
-                                                   &mut methods,
-                                                   &decls.children[0],
-                                                   &decls.children[1])
-                    }
-                    _ => Ok(()),
-                };
-                if result.is_err() {
-                    return result;
                 }
             }
             _ => (),

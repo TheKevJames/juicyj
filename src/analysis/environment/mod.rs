@@ -79,20 +79,17 @@ impl Environment {
                 None => continue,
             };
 
-            match root.token.lexeme {
+            let result = match root.token.lexeme {
                 Some(ref l) if l == "ClassDeclaration" => {
-                    match analyze_class_declaration(&mut env.classes, &env.interfaces, &root) {
-                        Ok(_) => (),
-                        Err(e) => return Err(e),
-                    };
+                    analyze_class_declaration(&mut env.classes, &env.interfaces, &root)
                 }
                 Some(ref l) if l == "InterfaceDeclaration" => {
-                    match analyze_interface_declaration(&env.classes, &mut env.interfaces, &root) {
-                        Ok(_) => (),
-                        Err(e) => return Err(e),
-                    };
+                    analyze_interface_declaration(&env.classes, &mut env.interfaces, &root)
                 }
-                _ => (),
+                _ => Ok(()),
+            };
+            if result.is_err() {
+                return result;
             }
         }
 

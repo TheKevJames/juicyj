@@ -45,53 +45,39 @@ pub fn analyze_interface_declaration(classes: &Vec<ClassEnvironment>,
             // remove implicit Object inheritance
             extends = Vec::new();
 
-            let mut grandkid = node.children[3].children[1].clone();
-            while grandkid.clone().token.lexeme.unwrap_or("".to_owned()) != "Name" {
-                extends.push(grandkid.children[2].clone());
-                grandkid = grandkid.children[0].clone();
+            // TODO: only flatten InterfaceExtendsList?
+            let grandkid = node.children[3].children[1].clone().flatten().clone();
+            for mut greatgrandkid in grandkid.children {
+                if greatgrandkid.token.kind != TokenKind::Comma {
+                    extends.push(greatgrandkid.flatten().clone());
+                }
             }
-            extends.push(grandkid.clone());
             // TODO: no dups, non-circular
         }
         Some(ref l) if l == "InterfaceBody" && node.children[3].children.len() == 3 => {
             let mut decls = node.children[3].clone().children[1].clone();
-            while decls.clone().token.lexeme.unwrap_or("".to_owned()) ==
-                  "InterfaceMemberDeclarations" {
-                let result = match decls.children[1].clone().token.lexeme {
+            let decls = match decls.clone().token.lexeme {
+                Some(ref l) if l == "InterfaceMemberDeclarations" => decls.flatten().clone(),
+                _ => decls,
+            };
+            for decl in &decls.children {
+                let result = match decl.token.lexeme {
                     Some(ref lex) if lex == "AbstractMethodDeclaration" => {
                         analyze_abstract_method_declaration(classes,
                                                             &extends,
                                                             &interfaces,
                                                             &Vec::new(),
                                                             &mut methods,
-                                                            &decls.children[1].children[0])
+                                                            &decl.children[0])
                     }
                     Some(ref lex) if lex == "ConstantDeclaration" => {
-                        analyze_constant_declaration(&mut fields, &decls.children[1])
+                        analyze_constant_declaration(&mut fields, &decl)
                     }
                     _ => Ok(()),
                 };
                 if result.is_err() {
                     return result;
                 }
-                decls = decls.children[0].clone();
-            }
-            let result = match decls.token.lexeme {
-                Some(ref lex) if lex == "AbstractMethodDeclaration" => {
-                    analyze_abstract_method_declaration(classes,
-                                                        &extends,
-                                                        &interfaces,
-                                                        &Vec::new(),
-                                                        &mut methods,
-                                                        &decls.children[0])
-                }
-                Some(ref lex) if lex == "ConstantDeclaration" => {
-                    analyze_constant_declaration(&mut fields, &decls)
-                }
-                _ => Ok(()),
-            };
-            if result.is_err() {
-                return result;
             }
         }
         _ => (),
