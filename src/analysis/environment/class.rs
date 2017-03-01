@@ -54,12 +54,12 @@ pub fn analyze_class_declaration(classes: &mut Vec<ClassEnvironment>,
 
         match child.token.lexeme {
             Some(ref le) if le == "Implements" => {
-                let mut grandkid = child.children[1].clone();
-                while grandkid.clone().token.lexeme.unwrap_or("".to_owned()) != "Name" {
-                    implements.push(grandkid.children[2].clone());
-                    grandkid = grandkid.children[0].clone();
+                let grandkid = child.children[1].clone().flatten().clone();
+                for mut greatgrandkid in grandkid.children {
+                    if greatgrandkid.token.kind != TokenKind::Comma {
+                        implements.push(greatgrandkid.flatten().clone());
+                    }
                 }
-                implements.push(grandkid.clone());
 
                 for class in classes.clone() {
                     for implemented in &implements {

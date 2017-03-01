@@ -232,6 +232,35 @@ impl ASTNode {
         }
     }
 
+    /// Attempt to flatten the current node and children into a simpler tree.
+    /// Useful for flattening any NonTerminal which can contain itself.
+    pub fn flatten(&mut self) -> &ASTNode {
+        if self.token.kind != TokenKind::NonTerminal {
+            return &*self;
+        }
+
+        let flattenable = match self.token.lexeme {
+            Some(ref l) => l.clone(),
+            _ => return &*self,
+        };
+
+        self.children = self.get_flattened_children(&flattenable);
+        &*self
+    }
+
+    fn get_flattened_children(&self, flattenable: &String) -> Vec<ASTNode> {
+        let mut children = Vec::new();
+        for child in &self.children {
+            if &child.clone().token.lexeme.unwrap_or("".to_owned()) == flattenable {
+                children.extend(child.get_flattened_children(&flattenable));
+            } else {
+                children.push(child.clone());
+            }
+        }
+
+        children
+    }
+
     /// Convenience function for recursive ASTNode printing. Should be accessed
     /// with the standard print command (ie. `fmt::Display`).
     pub fn print(&self, f: &mut fmt::Formatter, indent: usize) -> fmt::Result {
