@@ -54,10 +54,25 @@ pub fn analyze_class_declaration(classes: &mut Vec<ClassEnvironment>,
 
         match child.token.lexeme {
             Some(ref le) if le == "Implements" => {
-                let grandkid = child.children[1].clone().flatten().clone();
-                for mut greatgrandkid in grandkid.children {
-                    if greatgrandkid.token.kind != TokenKind::Comma {
-                        implements.push(greatgrandkid.flatten().clone());
+                let mut grandkid = child.children[1].clone();
+                &grandkid.flatten();
+
+                if grandkid.token.lexeme.as_ref().unwrap_or(&"None".to_owned()) != "InterfaceTypeList" {
+                    if implements.contains(&grandkid.clone()) {
+                        return Err("Duplicate implements".to_owned());
+                    }
+                    implements.push(grandkid.clone());
+                }          
+                else { //An InterfaceTypeList
+                    &grandkid.children[0].flatten();
+                    //flattened to a list with Name children
+                    for greatgrandkid in grandkid.children {
+                        if greatgrandkid.token.kind != TokenKind::Comma {
+                            if implements.contains(&greatgrandkid.clone()) {
+                                return Err("Duplicate implements".to_owned());
+                            }
+                            implements.push(greatgrandkid.clone());
+                        }
                     }
                 }
 
@@ -68,12 +83,24 @@ pub fn analyze_class_declaration(classes: &mut Vec<ClassEnvironment>,
                         }
                     }
                 }
-                // TODO: no dups, non-circular
+                
+                for implemented in &implements {
+                    let mut found = false;
+                    for interface in interfaces.clone() {
+                        if &interface.name == implemented {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if !found {
+                        return Err("Class tried to implement an unknown interface".to_owned());
+                    }
+                }
             }
             Some(ref le) if le == "ClassExtends" => {
                 // remove implicit Object inheritance
                 extends = Vec::new();
-                extends.push(child.children[1].clone());
+                extends.push(child.children[1].clone().flatten().clone());
 
                 let fnode = ASTNode {
                     token: Token::new(TokenKind::Final, None),
@@ -97,7 +124,34 @@ pub fn analyze_class_declaration(classes: &mut Vec<ClassEnvironment>,
                         }
                     }
                 }
-                // TODO: no dups, non-circular
+
+                fn acyclic_extends(value: & ASTNode,
+                                 extension_list: &mut Vec<ASTNode>) 
+                                 -> bool {
+                    if extension_list.contains(value) {
+                        return false;
+                    }
+                    extension_list.push(value);
+                    let mut class = classes.iter().find(value);
+                    if class.extends.len() == 0 {
+                        return true;
+                    }
+                    for extended in class.extends {
+                        if !acyclic_extends(extended, extension_list) {
+                            return false;
+                        }
+                    }
+                    true
+                }
+
+                let mut extending = Vec::new();
+                for extended in &extends {
+                    extending.push(&name); //Don't allow self extension
+                    if !acyclic_extends(&extended, &mut extending) {
+                        return Err("cyclical extends".to_owned());
+                    }
+                    extending.clear();
+                }
             }
             Some(ref le) if le == "ClassBody" && child.children.len() == 3 => {
                 let anode = ASTNode {
