@@ -8,6 +8,7 @@ mod variable;
 use std::collections::HashMap;
 
 use scanner::AST;
+use scanner::Token;
 use scanner::TokenKind;
 
 use self::class::analyze_class_declaration;
@@ -36,6 +37,16 @@ impl Environment {
         for tree in trees {
             let mut imports = Vec::new();
             for import in &tree.imports {
+                if tree.canonical ==
+                   vec![Token::new(TokenKind::Identifier, Some("java")),
+                        Token::new(TokenKind::Identifier, Some("io")),
+                        Token::new(TokenKind::Identifier, Some("PrintStream"))] ||
+                   tree.canonical ==
+                   vec![Token::new(TokenKind::Identifier, Some("java")),
+                        Token::new(TokenKind::Identifier, Some("util")),
+                        Token::new(TokenKind::Identifier, Some("Arrays"))] {
+                    break;
+                }
                 imports.push(import.import.clone());
             }
 
