@@ -54,8 +54,11 @@ pub fn analyze_class_declaration(classes: &mut Vec<ClassEnvironment>,
 
         match child.token.lexeme {
             Some(ref le) if le == "Implements" => {
-                // TODO: only flatten InterfaceTypeList?
-                let grandkid = child.children[1].clone().flatten().clone();
+                let mut grandkid = child.children[1].clone();
+                let grandkid = match grandkid.clone().token.lexeme {
+                    Some(ref l) if l == "InterfaceTypeList" => grandkid.flatten().clone(),
+                    _ => grandkid,
+                };
                 for mut greatgrandkid in grandkid.children {
                     if greatgrandkid.token.kind != TokenKind::Comma {
                         implements.push(greatgrandkid.flatten().clone());

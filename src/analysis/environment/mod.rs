@@ -93,8 +93,6 @@ impl Environment {
             }
         }
 
-        // println!("{:#?}", env);
-
         Ok(())
     }
 }

@@ -45,8 +45,11 @@ pub fn analyze_interface_declaration(classes: &Vec<ClassEnvironment>,
             // remove implicit Object inheritance
             extends = Vec::new();
 
-            // TODO: only flatten InterfaceExtendsList?
-            let grandkid = node.children[3].children[1].clone().flatten().clone();
+            let mut grandkid = node.children[3].children[1].clone();
+            let grandkid = match grandkid.clone().token.lexeme {
+                Some(ref l) if l == "InterfaceExtendsList" => grandkid.flatten().clone(),
+                _ => grandkid,
+            };
             for mut greatgrandkid in grandkid.children {
                 if greatgrandkid.token.kind != TokenKind::Comma {
                     extends.push(greatgrandkid.flatten().clone());
