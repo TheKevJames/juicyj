@@ -84,14 +84,12 @@ pub fn analyze_interface_declaration(canonical: &Vec<Token>,
         _ => (),
     }
 
-    // TODO: qualified path matters here
     for class in classes {
         if class.name == name {
             return Err("class/interface names must be unique".to_owned());
         }
     }
 
-    // TODO: qualified path matters here
     for interface in interfaces.clone() {
         if interface.name == name {
             return Err("class/interface names must be unique".to_owned());
