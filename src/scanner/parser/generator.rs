@@ -21,7 +21,6 @@ pub struct Parser<T: Iterator<Item = Result<Token, LexerError>>> {
     tokens: Peekable<T>,
 }
 
-// TODO: cleanup
 impl<T: Iterator<Item = Result<Token, LexerError>>> Parser<T> {
     pub fn new(it: T) -> Parser<T> {
         let dfa = DFA::new();

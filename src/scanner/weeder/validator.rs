@@ -23,7 +23,6 @@ impl<'filename, 'tree> Weeder<'filename, 'tree> {
         Err(WeederError::new(self.filename.to_owned(), message, &node))
     }
 
-    // TODO: cleanup
     pub fn verify(&mut self, node: Option<ParseNode>) -> Result<(), WeederError> {
         let node = match node {
             Some(n) => n,

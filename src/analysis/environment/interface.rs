@@ -51,7 +51,12 @@ pub fn analyze_interface_declaration(canonical: &Vec<Token>,
                         children.push(child.token);
                     }
                     extends.push(children);
-                } // TODO: else if TokenKind::Comma good else bad
+                } else if greatgrandkid.token.kind == TokenKind::Comma {
+                    continue;
+                } else {
+                    return Err(format!("got invalid InterfaceExtendsList child {}",
+                                       greatgrandkid.token));
+                }
             }
 
             for class in classes.clone() {

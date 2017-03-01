@@ -70,7 +70,12 @@ pub fn analyze_class_declaration(canonical: &Vec<Token>,
                                 .to_owned());
                         }
                         implements.push(children);
-                    } // TODO: else if TokenKind::Comma good else bad
+                    } else if greatgrandkid.token.kind == TokenKind::Comma {
+                        continue;
+                    } else {
+                        return Err(format!("got invalid InterfaceTypeList child {}",
+                                           greatgrandkid.token));
+                    }
                 }
 
                 for class in classes.clone() {
@@ -95,7 +100,10 @@ pub fn analyze_class_declaration(canonical: &Vec<Token>,
                         children.push(child.token);
                     }
                     extends.push(children);
-                } // TODO: else bad
+                } else {
+                    return Err(format!("got invalid ClassExtends child {}",
+                                       child.children[1].token));
+                }
 
                 let fnode = ASTNode {
                     token: Token::new(TokenKind::Final, None),

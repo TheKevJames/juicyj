@@ -29,7 +29,6 @@ impl ASTNode {
     /// Transforms a ParseNode to an ASTNode by simplifying tree structure
     /// wherever possible. Catches some syntax errors as the tree becomes simple
     /// enough to operate on.
-    // TODO: cleanup
     pub fn new(node: &ParseNode) -> Result<ASTNode, ASTError> {
         match node.token.kind {
             TokenKind::NonTerminal => {

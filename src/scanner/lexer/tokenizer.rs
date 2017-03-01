@@ -22,7 +22,6 @@ pub struct Lexer<'file, 'src> {
     lines: Peekable<Split<'src, char>>,
 }
 
-// TODO: cleanup
 impl<'file, 'src> Lexer<'file, 'src> {
     pub fn new(file: &'file str, src: &'src str) -> Lexer<'file, 'src> {
         let mut lines = src.split('\n').peekable();
