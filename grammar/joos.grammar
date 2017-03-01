@@ -164,15 +164,11 @@ MethodBody:
 	Block
 
 ConstructorDeclaration:
-	Modifiers ConstructorDeclarator ConstructorBody
+	Modifiers ConstructorDeclarator MethodBody
 
 ConstructorDeclarator:
 	SimpleName ( ParameterList )
 	SimpleName ( )
-
-ConstructorBody:
-	{ }
-	{ BlockStatements }
 
 InterfaceDeclaration:
 	Modifiers INTERFACE IDENTIFIER InterfaceBody
