@@ -22,6 +22,11 @@ pub struct AST {
     pub imports: Vec<ASTNodeImport>,
     /// pointer to the root node of the AST for this file
     pub root: Option<ASTNode>,
+    /// name of the definied class or interface in this tree
+    pub name: Option<Token>,
+    /// canonical name of the definied class or interface in this tree --
+    /// effectively "package + name"
+    pub canonical: Vec<Token>,
 }
 
 impl AST {
@@ -31,13 +36,9 @@ impl AST {
     /// remaining tree into ASTNodes.
     pub fn new(filename: &str, tree: &ParseTree) -> Result<AST, ASTError> {
         let mut imports = Vec::new();
-        let mut package = ASTNodePackage {
-            package: vec![Token {
-                              kind: TokenKind::Identifier,
-                              lexeme: Some("unnamed".to_owned()),
-                          }],
-        };
+        let mut package = ASTNodePackage { package: Vec::new() };
         let mut root = None;
+        let mut name = None;
         for child in &tree.root.children {
             match child.token.lexeme {
                 Some(ref l) if l == "PackageDeclaration" => {
@@ -51,15 +52,23 @@ impl AST {
                     child.collect_child_lexeme("ImportDeclaration", &mut statements);
 
                     for child in statements {
-                        imports.push(match ASTNodeImport::new(&child) {
-                            Ok(i) => i,
+                        match ASTNodeImport::new(&child) {
+                            Ok(i) => {
+                                if !imports.contains(&i) {
+                                    imports.push(i);
+                                }
+                            }
                             Err(e) => return Err(e),
-                        });
+                        }
                     }
                 }
-                Some(ref l) if l == "TypeDeclarations" => {
+                Some(ref l) if l == "TypeDeclaration" => {
                     root = match ASTNode::new(&child) {
-                        Ok(i) => Some(i),
+                        Ok(i) => {
+                            // TODO: check for semicolons? range check?
+                            name = Some(i.children[2].clone().token);
+                            Some(i)
+                        }
                         Err(e) => return Err(e),
                     };
                 }
@@ -67,18 +76,37 @@ impl AST {
             }
         }
 
+        if package.package !=
+           vec![Token::new(TokenKind::Identifier, Some("java")),
+                Token::new(TokenKind::Identifier, Some("lang"))] {
+            imports.push(ASTNodeImport {
+                import: vec![Token::new(TokenKind::Identifier, Some("java")),
+                             Token::new(TokenKind::Identifier, Some("lang")),
+                             Token::new(TokenKind::Star, None)],
+            });
+        }
+
+        let mut canonical = package.package.clone();
+        let cname = match name {
+            Some(ref n) => n.clone(),
+            _ => return Err(ASTError::new(ErrorMessage::MissingName, &root.unwrap())),
+        };
+        canonical.push(cname);
+
         Ok(AST {
             filename: filename.to_owned(),
             imports: imports,
             package: package,
             root: root,
+            name: name,
+            canonical: canonical,
         })
     }
 }
 
 impl fmt::Display for AST {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        try!(writeln!(f, "Package: {}", self.package));
+        try!(writeln!(f, "Package: <{}>", self.package));
 
         if !self.imports.is_empty() {
             try!(writeln!(f, "Imports:"));

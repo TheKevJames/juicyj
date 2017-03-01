@@ -37,10 +37,12 @@ pub enum ErrorMessage {
     InvalidOctal,
     /// Parse tree is only valid if it can be reduced to a single start symbol.
     InvalidParseTree,
-    /// Root `ParseNode`s must be `package`, `import`, or `TypeDeclarations`
+    /// Root `ParseNode`s must be `package`, `import`, or `TypeDeclaration`
     InvalidRootChild,
     /// Catch-all for un-scannable tokens.
     InvalidToken,
+    /// An AST must have a single canonical name identifier.
+    MissingName,
     /// A single file may only contain one class.
     MultipleClasses,
     /// Native methods may not have a body.
@@ -84,6 +86,7 @@ impl fmt::Display for ErrorMessage {
             ErrorMessage::InvalidParseTree => write!(f, "parse tree could not be entirely reduced"),
             ErrorMessage::InvalidRootChild => write!(f, "invalid child of root token"),
             ErrorMessage::InvalidToken => write!(f, "invalid token"),
+            ErrorMessage::MissingName => write!(f, "missing ast name"),
             ErrorMessage::MultipleClasses => write!(f, "multiple classes"),
             ErrorMessage::NativeBody => write!(f, "native method has body"),
             ErrorMessage::NonStaticNative => write!(f, "non-static method is native"),

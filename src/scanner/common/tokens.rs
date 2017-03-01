@@ -2,7 +2,7 @@
 use std::fmt;
 use std::str::FromStr;
 
-#[derive(Clone,Debug,PartialEq)]
+#[derive(Clone,Debug,Eq,Hash,PartialEq)]
 #[allow(missing_docs)]
 pub struct Token {
     pub kind: TokenKind,
@@ -36,7 +36,7 @@ impl fmt::Display for Token {
     }
 }
 
-#[derive(Debug,Clone,PartialEq)]
+#[derive(Clone,Debug,Eq,Hash,PartialEq)]
 #[allow(missing_docs)]
 pub enum TokenKind {
     Assignment,

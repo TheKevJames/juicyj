@@ -8,6 +8,7 @@ mod variable;
 use std::collections::HashMap;
 
 use scanner::AST;
+use scanner::TokenKind;
 
 use self::class::analyze_class_declaration;
 use self::class::ClassEnvironment;
@@ -33,30 +34,41 @@ impl Environment {
 
         let mut dependencies = HashMap::new();
         for tree in trees {
-            let mut import_vec = Vec::new();
+            let mut imports = Vec::new();
             for import in &tree.imports {
-                let token = import.import.last().unwrap();
-                // TODO: "*" is probably wrong
-                import_vec.push(token.clone().lexeme.unwrap_or("*".to_owned()));
+                imports.push(import.import.clone());
             }
-            dependencies.insert(tree.filename.clone(), import_vec);
+
+            dependencies.insert(tree.canonical.clone(), imports);
         }
 
-        let mut ordered_files = Vec::new();
+        let mut ordered_canonicals = Vec::new();
         while !dependencies.clone().is_empty() {
             let mut acyclic = false;
-            for (node, edges) in dependencies.clone().iter() {
+            for (canonical, edges) in dependencies.clone().iter() {
                 let mut delete = true;
                 for edge in edges {
                     if dependencies.contains_key(edge) {
                         delete = false;
                         break;
+                    } else if edge.last().unwrap().kind == TokenKind::Star {
+                        let mut dpackages = Vec::new();
+                        for dependency in dependencies.keys() {
+                            dpackages.push(dependency[0..dependency.len() - 1].to_vec());
+                        }
+
+                        let epackage = &edge[0..edge.len() - 1].to_vec();
+
+                        if dpackages.contains(epackage) {
+                            delete = false;
+                            break;
+                        }
                     }
                 }
                 if delete {
                     acyclic = true;
-                    dependencies.remove(node);
-                    ordered_files.push(node.clone());
+                    dependencies.remove(canonical);
+                    ordered_canonicals.push(canonical.clone());
                 }
             }
             if !acyclic {
@@ -65,9 +77,9 @@ impl Environment {
         }
 
         let mut ordered_trees = Vec::new();
-        for filename in ordered_files {
+        for canonical in ordered_canonicals {
             for tree in trees {
-                if tree.filename == filename {
+                if tree.canonical == canonical {
                     ordered_trees.push(tree);
                 }
             }

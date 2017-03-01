@@ -52,13 +52,13 @@ QualifiedName:
 
 S:
 	\epsilon
-	TypeDeclarations
+	TypeDeclaration
 	ImportDeclarations
-	ImportDeclarations TypeDeclarations
+	ImportDeclarations TypeDeclaration
 	PackageDeclaration
-	PackageDeclaration TypeDeclarations
+	PackageDeclaration TypeDeclaration
 	PackageDeclaration ImportDeclarations
-	PackageDeclaration ImportDeclarations TypeDeclarations
+	PackageDeclaration ImportDeclarations TypeDeclaration
 
 PackageDeclaration:
 	PACKAGE Name SEMICOLON
@@ -76,10 +76,6 @@ SingleImportDeclaration:
 
 StarredImportDeclaration:
 	IMPORT Name DOT *
-
-TypeDeclarations:
-	TypeDeclaration
-	TypeDeclarations TypeDeclaration
 
 TypeDeclaration:
 	ClassDeclaration

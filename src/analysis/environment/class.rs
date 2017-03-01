@@ -31,6 +31,7 @@ pub fn analyze_class_declaration(classes: &mut Vec<ClassEnvironment>,
         modifiers.push(child);
     }
 
+    // TODO: make this canonical
     let name = node.children[2].clone();
 
     let object = ASTNode {

@@ -15,10 +15,12 @@ pub struct ASTNode {
     pub children: Vec<ASTNode>,
 }
 
+#[derive(PartialEq)]
 pub struct ASTNodeImport {
     pub import: Vec<Token>,
 }
 
+#[derive(PartialEq)]
 pub struct ASTNodePackage {
     pub package: Vec<Token>,
 }
