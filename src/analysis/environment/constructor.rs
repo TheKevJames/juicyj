@@ -33,6 +33,8 @@ pub fn analyze_constructor_declaration(constructors: &mut Vec<ConstructorEnviron
         }
     }
 
+    // TODO: variable
+
     constructors.push(ConstructorEnvironment {
         modifiers: modifiers,
         name: name,

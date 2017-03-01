@@ -4,6 +4,7 @@ use scanner::TokenKind;
 
 use analysis::environment::class::ClassEnvironment;
 use analysis::environment::interface::InterfaceEnvironment;
+use analysis::environment::variable::analyze_block;
 
 #[derive(Clone,Debug)]
 pub struct MethodEnvironment {
@@ -66,7 +67,8 @@ pub fn analyze_method_declaration(classes: &Vec<ClassEnvironment>,
                                   interfaces: &Vec<InterfaceEnvironment>,
                                   implements: &Vec<ASTNode>,
                                   methods: &mut Vec<MethodEnvironment>,
-                                  header: &ASTNode)
+                                  header: &ASTNode,
+                                  body: &ASTNode)
                                   -> Result<(), String> {
     let mut modifiers = Vec::new();
     for child in header.children[0].clone().children {
@@ -104,7 +106,17 @@ pub fn analyze_method_declaration(classes: &Vec<ClassEnvironment>,
         Err(e) => return Err(e),
     }
 
-    // TODO: LocalVariableDeclaration
+    if body.children.len() == 3 {
+        // TODO: eventually, this should need fields, etc, but since they can be
+        // shadowed... meh.
+        let globals = Vec::new();
+
+        let mut child = body.children[1].clone();
+        match analyze_block(&globals, &mut child) {
+            Ok(_) => (),
+            Err(e) => return Err(e),
+        }
+    }
 
     methods.push(new);
 

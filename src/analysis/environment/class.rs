@@ -142,7 +142,8 @@ pub fn analyze_class_declaration(classes: &mut Vec<ClassEnvironment>,
                                                        &interfaces,
                                                        &implements,
                                                        &mut methods,
-                                                       &decls.children[1].children[0])
+                                                       &decls.children[1].children[0],
+                                                       &decls.children[1].children[1])
                         }
                         _ => Ok(()),
                     };
@@ -183,7 +184,8 @@ pub fn analyze_class_declaration(classes: &mut Vec<ClassEnvironment>,
                                                    &interfaces,
                                                    &implements,
                                                    &mut methods,
-                                                   &decls.children[0])
+                                                   &decls.children[0],
+                                                   &decls.children[1])
                     }
                     _ => Ok(()),
                 };
