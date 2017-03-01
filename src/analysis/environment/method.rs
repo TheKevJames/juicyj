@@ -131,6 +131,8 @@ pub fn analyze_method_declaration(classes: &Vec<ClassEnvironment>,
     Ok(())
 }
 
+// TODO: verify classes do not contain duplicate method signatures solely
+// through extending
 fn verify_override(classes: &Vec<ClassEnvironment>,
                    extends: &Vec<Vec<Token>>,
                    interfaces: &Vec<InterfaceEnvironment>,

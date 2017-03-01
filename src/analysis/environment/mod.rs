@@ -83,7 +83,7 @@ impl Environment {
                 }
             }
             if !acyclic {
-                return Err("cyclic or invalid imports".to_owned());
+                return Err("cyclic hierarchy detected".to_owned());
             }
         }
 

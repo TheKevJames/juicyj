@@ -53,6 +53,15 @@ pub fn analyze_interface_declaration(canonical: &Vec<Token>,
                     extends.push(children);
                 } // TODO: else if TokenKind::Comma good else bad
             }
+
+            for class in classes.clone() {
+                for extended in &extends {
+                    // TODO: name lookup
+                    if &class.name == extended {
+                        return Err("interfaces cannot extend classes".to_owned());
+                    }
+                }
+            }
             // TODO: no dups, non-circular
         }
         Some(ref l) if l == "InterfaceBody" && node.children[3].children.len() == 3 => {

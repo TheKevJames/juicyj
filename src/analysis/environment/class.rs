@@ -53,12 +53,21 @@ pub fn analyze_class_declaration(canonical: &Vec<Token>,
                 };
                 for mut greatgrandkid in grandkid.children {
                     if greatgrandkid.token.kind == TokenKind::Identifier {
-                        implements.push(vec![greatgrandkid.clone().token]);
+                        let interface = vec![greatgrandkid.clone().token];
+                        if implements.contains(&interface) {
+                            return Err("interfaces must not be repeated in implements clauses"
+                                .to_owned());
+                        }
+                        implements.push(interface);
                     } else if greatgrandkid.clone().token.lexeme.unwrap_or("".to_owned()) ==
                               "Name" {
                         let mut children = Vec::new();
                         for child in greatgrandkid.flatten().clone().children {
                             children.push(child.token);
+                        }
+                        if implements.contains(&children) {
+                            return Err("interfaces must not be repeated in implements clauses"
+                                .to_owned());
                         }
                         implements.push(children);
                     } // TODO: else if TokenKind::Comma good else bad
@@ -66,12 +75,13 @@ pub fn analyze_class_declaration(canonical: &Vec<Token>,
 
                 for class in classes.clone() {
                     for implemented in &implements {
+                        // TODO: name lookup
                         if &class.name == implemented {
                             return Err("classes cannot implement classes".to_owned());
                         }
                     }
                 }
-                // TODO: no dups, non-circular
+                // TODO: no dups
             }
             Some(ref le) if le == "ClassExtends" => {
                 // remove implicit Object inheritance
@@ -93,6 +103,7 @@ pub fn analyze_class_declaration(canonical: &Vec<Token>,
                 };
                 for class in classes.clone() {
                     for extended in &extends {
+                        // TODO: name lookup
                         if &class.name == extended {
                             if class.modifiers.contains(&fnode) {
                                 return Err("classes cannot extend final classes".to_owned());
@@ -104,6 +115,7 @@ pub fn analyze_class_declaration(canonical: &Vec<Token>,
 
                 for interface in interfaces.clone() {
                     for extended in &extends {
+                        // TODO: name lookup
                         if &interface.name == extended {
                             return Err("classes cannot extend interfaces".to_owned());
                         }
@@ -135,6 +147,8 @@ pub fn analyze_class_declaration(canonical: &Vec<Token>,
                                 Err(e) => return Err(e),
                             }
 
+                            // TODO: ensure non-abstract class does not contain
+                            // un-overriden abstract methods
                             match methods.last() {
                                 Some(m) if m.modifiers.contains(&anode) &&
                                            !modifiers.contains(&anode) => {
