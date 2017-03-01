@@ -10,16 +10,18 @@ pub struct VariableEnvironment {
 pub fn analyze_block(globals: &Vec<VariableEnvironment>, node: &mut ASTNode) -> Result<(), String> {
     let mut locals = Vec::new();
 
-    let mut child = node.clone();
-    while child.clone().token.lexeme.unwrap_or("".to_owned()) == "BlockStatements" {
-        match analyze_statement(globals, &mut locals, &mut child.children[0].clone()) {
+    let node = match node.clone().token.lexeme {
+        Some(ref l) if l == "BlockStatements" => node.flatten(),
+        _ => node,
+    };
+    for child in &node.children {
+        match analyze_statement(globals, &mut locals, &mut child.clone()) {
             Ok(_) => (),
             Err(e) => return Err(e),
         }
-
-        child = child.children[1].clone();
     }
-    analyze_statement(globals, &mut locals, &mut child)
+
+    Ok(())
 }
 
 pub fn analyze_statement(globals: &Vec<VariableEnvironment>,
