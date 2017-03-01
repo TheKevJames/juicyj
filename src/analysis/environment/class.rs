@@ -125,21 +125,27 @@ pub fn analyze_class_declaration(classes: &mut Vec<ClassEnvironment>,
                     }
                 }
 
-                fn acyclic_extends(value: & ASTNode,
-                                 extension_list: &mut Vec<ASTNode>) 
-                                 -> bool {
-                    if extension_list.contains(value) {
+                fn acyclic_extends<'a>(value: &'a ASTNode,
+                                   extension_list: &mut Vec<&'a ASTNode>,
+                                   classes: &Vec<ClassEnvironment>) 
+                                   -> bool {
+                    if extension_list.contains(&value) {
                         return false;
                     }
-                    extension_list.push(value);
-                    let mut class = classes.iter().find(value);
-                    if class.extends.len() == 0 {
-                        return true;
-                    }
-                    for extended in class.extends {
-                        if !acyclic_extends(extended, extension_list) {
-                            return false;
+                    extension_list.push(&value);
+                    for class_env in classes {
+                        if &class_env.name != value {
+                            continue;
                         }
+                        if class_env.extends.len() == 0 {
+                            return true;
+                        }
+                        for extended in &class_env.extends {
+                            if !acyclic_extends(extended, &mut extension_list.clone(), classes) {
+                                return false;
+                            }
+                        }
+                        break;            
                     }
                     true
                 }
@@ -147,7 +153,7 @@ pub fn analyze_class_declaration(classes: &mut Vec<ClassEnvironment>,
                 let mut extending = Vec::new();
                 for extended in &extends {
                     extending.push(&name); //Don't allow self extension
-                    if !acyclic_extends(&extended, &mut extending) {
+                    if !acyclic_extends(&extended, &mut extending.clone(), classes) {
                         return Err("cyclical extends".to_owned());
                     }
                     extending.clear();
