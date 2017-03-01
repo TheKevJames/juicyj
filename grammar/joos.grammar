@@ -209,7 +209,7 @@ Block:
 
 BlockStatements:
 	BlockStatement
-	BlockStatements BlockStatement
+	BlockStatement BlockStatements
 
 BlockStatement:
 	LocalVariableDeclarationStatement
