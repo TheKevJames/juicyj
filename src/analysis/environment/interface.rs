@@ -11,13 +11,14 @@ use analysis::environment::method::MethodEnvironment;
 #[derive(Clone,Debug)]
 pub struct InterfaceEnvironment {
     pub modifiers: Vec<ASTNode>,
-    pub name: ASTNode,
-    pub extends: Vec<ASTNode>,
+    pub name: Vec<Token>,
+    pub extends: Vec<Vec<Token>>,
     pub fields: Vec<FieldEnvironment>,
     pub methods: Vec<MethodEnvironment>,
 }
 
-pub fn analyze_interface_declaration(classes: &Vec<ClassEnvironment>,
+pub fn analyze_interface_declaration(canonical: &Vec<Token>,
+                                     classes: &Vec<ClassEnvironment>,
                                      interfaces: &mut Vec<InterfaceEnvironment>,
                                      node: &ASTNode)
                                      -> Result<(), String> {
@@ -26,19 +27,9 @@ pub fn analyze_interface_declaration(classes: &Vec<ClassEnvironment>,
         modifiers.push(child);
     }
 
-    // TODO: make this canonical
-    let name = node.children[2].clone();
+    let name = canonical.clone();
 
-    let object = ASTNode {
-        token: Token::new(TokenKind::Identifier, Some("Object")),
-        children: Vec::new(),
-    };
-    let object_name = ASTNode {
-        token: Token::new(TokenKind::NonTerminal, Some("Name")),
-        children: vec![object],
-    };
-    let mut extends = vec![object_name];
-
+    let mut extends = vec![vec![Token::new(TokenKind::Identifier, Some("Object"))]];
     let mut fields = Vec::new();
     let mut methods = Vec::new();
     match node.children[3].token.lexeme {
@@ -52,9 +43,15 @@ pub fn analyze_interface_declaration(classes: &Vec<ClassEnvironment>,
                 _ => grandkid,
             };
             for mut greatgrandkid in grandkid.children {
-                if greatgrandkid.token.kind != TokenKind::Comma {
-                    extends.push(greatgrandkid.flatten().clone());
-                }
+                if greatgrandkid.token.kind == TokenKind::Identifier {
+                    extends.push(vec![greatgrandkid.clone().token]);
+                } else if greatgrandkid.clone().token.lexeme.unwrap_or("".to_owned()) == "Name" {
+                    let mut children = Vec::new();
+                    for child in greatgrandkid.flatten().clone().children {
+                        children.push(child.token);
+                    }
+                    extends.push(children);
+                } // TODO: else if TokenKind::Comma good else bad
             }
             // TODO: no dups, non-circular
         }

@@ -104,10 +104,16 @@ impl Environment {
 
             let result = match root.token.lexeme {
                 Some(ref l) if l == "ClassDeclaration" => {
-                    analyze_class_declaration(&mut env.classes, &env.interfaces, &root)
+                    analyze_class_declaration(&tree.canonical,
+                                              &mut env.classes,
+                                              &env.interfaces,
+                                              &root)
                 }
                 Some(ref l) if l == "InterfaceDeclaration" => {
-                    analyze_interface_declaration(&env.classes, &mut env.interfaces, &root)
+                    analyze_interface_declaration(&tree.canonical,
+                                                  &env.classes,
+                                                  &mut env.interfaces,
+                                                  &root)
                 }
                 _ => Ok(()),
             };

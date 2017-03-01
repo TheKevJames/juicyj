@@ -15,9 +15,9 @@ pub struct MethodEnvironment {
 }
 
 pub fn analyze_abstract_method_declaration(classes: &Vec<ClassEnvironment>,
-                                           extends: &Vec<ASTNode>,
+                                           extends: &Vec<Vec<Token>>,
                                            interfaces: &Vec<InterfaceEnvironment>,
-                                           implements: &Vec<ASTNode>,
+                                           implements: &Vec<Vec<Token>>,
                                            methods: &mut Vec<MethodEnvironment>,
                                            header: &ASTNode)
                                            -> Result<(), String> {
@@ -67,9 +67,9 @@ pub fn analyze_abstract_method_declaration(classes: &Vec<ClassEnvironment>,
 }
 
 pub fn analyze_method_declaration(classes: &Vec<ClassEnvironment>,
-                                  extends: &Vec<ASTNode>,
+                                  extends: &Vec<Vec<Token>>,
                                   interfaces: &Vec<InterfaceEnvironment>,
-                                  implements: &Vec<ASTNode>,
+                                  implements: &Vec<Vec<Token>>,
                                   methods: &mut Vec<MethodEnvironment>,
                                   header: &ASTNode,
                                   body: &ASTNode)
@@ -132,9 +132,9 @@ pub fn analyze_method_declaration(classes: &Vec<ClassEnvironment>,
 }
 
 fn verify_override(classes: &Vec<ClassEnvironment>,
-                   extends: &Vec<ASTNode>,
+                   extends: &Vec<Vec<Token>>,
                    interfaces: &Vec<InterfaceEnvironment>,
-                   implements: &Vec<ASTNode>,
+                   implements: &Vec<Vec<Token>>,
                    new: &MethodEnvironment)
                    -> Result<(), String> {
     let fnode = ASTNode {

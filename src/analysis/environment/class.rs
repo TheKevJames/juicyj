@@ -14,15 +14,16 @@ use analysis::environment::method::MethodEnvironment;
 #[derive(Clone,Debug)]
 pub struct ClassEnvironment {
     pub modifiers: Vec<ASTNode>,
-    pub name: ASTNode,
-    pub extends: Vec<ASTNode>,
-    pub implements: Vec<ASTNode>,
+    pub name: Vec<Token>,
+    pub extends: Vec<Vec<Token>>,
+    pub implements: Vec<Vec<Token>>,
     pub constructors: Vec<ConstructorEnvironment>,
     pub fields: Vec<FieldEnvironment>,
     pub methods: Vec<MethodEnvironment>,
 }
 
-pub fn analyze_class_declaration(classes: &mut Vec<ClassEnvironment>,
+pub fn analyze_class_declaration(canonical: &Vec<Token>,
+                                 classes: &mut Vec<ClassEnvironment>,
                                  interfaces: &Vec<InterfaceEnvironment>,
                                  node: &ASTNode)
                                  -> Result<(), String> {
@@ -31,19 +32,9 @@ pub fn analyze_class_declaration(classes: &mut Vec<ClassEnvironment>,
         modifiers.push(child);
     }
 
-    // TODO: make this canonical
-    let name = node.children[2].clone();
+    let name = canonical.clone();
 
-    let object = ASTNode {
-        token: Token::new(TokenKind::Identifier, Some("Object")),
-        children: Vec::new(),
-    };
-    let object_name = ASTNode {
-        token: Token::new(TokenKind::NonTerminal, Some("Name")),
-        children: vec![object],
-    };
-    let mut extends = vec![object_name];
-
+    let mut extends = vec![vec![Token::new(TokenKind::Identifier, Some("Object"))]];
     let mut implements = Vec::new();
     let mut constructors = Vec::new();
     let mut fields = Vec::new();
@@ -61,9 +52,15 @@ pub fn analyze_class_declaration(classes: &mut Vec<ClassEnvironment>,
                     _ => grandkid,
                 };
                 for mut greatgrandkid in grandkid.children {
-                    if greatgrandkid.token.kind != TokenKind::Comma {
-                        implements.push(greatgrandkid.flatten().clone());
-                    }
+                    if greatgrandkid.token.kind == TokenKind::Identifier {
+                        implements.push(vec![greatgrandkid.clone().token]);
+                    } else if greatgrandkid.clone().token.lexeme.unwrap_or("".to_owned()) == "Name" {
+                        let mut children = Vec::new();
+                        for child in greatgrandkid.flatten().clone().children {
+                            children.push(child.token);
+                        }
+                        implements.push(children);
+                    } // TODO: else if TokenKind::Comma good else bad
                 }
 
                 for class in classes.clone() {
@@ -78,7 +75,16 @@ pub fn analyze_class_declaration(classes: &mut Vec<ClassEnvironment>,
             Some(ref le) if le == "ClassExtends" => {
                 // remove implicit Object inheritance
                 extends = Vec::new();
-                extends.push(child.children[1].clone());
+                if child.children[1].token.kind == TokenKind::Identifier {
+                    extends.push(vec![child.children[1].clone().token]);
+                } else if child.children[1].clone().token.lexeme.unwrap_or("".to_owned()) ==
+                          "Name" {
+                    let mut children = Vec::new();
+                    for child in child.children[1].clone().flatten().clone().children {
+                        children.push(child.token);
+                    }
+                    extends.push(children);
+                } // TODO: else bad
 
                 let fnode = ASTNode {
                     token: Token::new(TokenKind::Final, None),
