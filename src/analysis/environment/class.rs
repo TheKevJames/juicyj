@@ -131,7 +131,10 @@ pub fn analyze_class_declaration(classes: &mut Vec<ClassEnvironment>,
                             }
                         }
                         Some(ref lex) if lex == "ConstructorDeclaration" => {
-                            analyze_constructor_declaration(&mut constructors, &decls.children[1])
+                            // TODO: wtf???
+                            analyze_constructor_declaration(&mut constructors,
+                                                            &decls.children[1],
+                                                            &decls.children[1])
                         }
                         Some(ref lex) if lex == "FieldDeclaration" => {
                             analyze_field_declaration(&mut fields, &decls.children[1])
@@ -173,7 +176,10 @@ pub fn analyze_class_declaration(classes: &mut Vec<ClassEnvironment>,
                         }
                     }
                     Some(ref lex) if lex == "ConstructorDeclaration" => {
-                        analyze_constructor_declaration(&mut constructors, &decls)
+                        // TODO: wtf are these references?
+                        analyze_constructor_declaration(&mut constructors,
+                                                        &decls,
+                                                        &decls)
                     }
                     Some(ref lex) if lex == "FieldDeclaration" => {
                         analyze_field_declaration(&mut fields, &decls)
