@@ -129,11 +129,36 @@ fn lookup(name: &ASTNode,
     }
 }
 
+pub fn verify_inheritance(env: &Environment,
+                          current: &ClassOrInterfaceEnvironment,
+                          visited: &mut Vec<ASTNode>)
+                          -> Result<(), String> {
+    if visited.contains(&current.name) {
+        return Err("cyclic class hierarchy detected".to_owned());
+    }
+    visited.push(current.name.clone());
+
+    for extended in &current.extends {
+        let found = match lookup(&extended, &current, &env.kinds, &current.imports) {
+            Ok(f) => f,
+            Err(e) => return Err(e),
+        };
+
+        let result = verify_inheritance(env, &found, visited);
+        if result.is_err() {
+            return result;
+        }
+    }
+
+    Ok(())
+}
+
 pub fn verify(env: &Environment) -> Result<(), String> {
     let modifier_final = ASTNode {
         token: Token::new(TokenKind::Final, None),
         children: Vec::new(),
     };
+
 
     for current in &env.kinds {
         if current.kind == ClassOrInterface::CLASS {
@@ -173,6 +198,11 @@ pub fn verify(env: &Environment) -> Result<(), String> {
                     return Err(format!("interface {} cannot extend class {}", current, found));
                 }
             }
+        }
+
+        let result = verify_inheritance(env, &current, &mut Vec::new());
+        if result.is_err() {
+            return result;
         }
 
         for constructor in &current.constructors {

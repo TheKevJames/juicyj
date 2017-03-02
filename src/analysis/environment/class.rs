@@ -84,8 +84,7 @@ pub fn analyze_class_declaration(canonical: &ASTNode,
                 for decl in &decls.children {
                     let result = match decl.token.lexeme {
                         Some(ref lex) if lex == "AbstractMethodDeclaration" => {
-                            analyze_abstract_method_declaration(&mut current,
-                                                                &decl.children[0])
+                            analyze_abstract_method_declaration(&mut current, &decl.children[0])
                         }
                         Some(ref lex) if lex == "ConstructorDeclaration" => {
                             analyze_constructor_declaration(&mut current,
