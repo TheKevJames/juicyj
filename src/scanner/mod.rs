@@ -14,6 +14,7 @@ use std::io::Read;
 
 pub use self::ast::AST;
 pub use self::ast::ASTNode;
+pub use self::ast::ASTNodeImport;
 pub use self::common::Token;
 pub use self::common::TokenKind;
 use self::lexer::Lexer;

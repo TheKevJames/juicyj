@@ -1,6 +1,7 @@
-use scanner::ASTNode;
-
+use analysis::environment::classorinterface::ClassOrInterfaceEnvironment;
 use analysis::environment::variable::analyze_block;
+use scanner::ASTNode;
+use scanner::ASTNodeImport;
 
 #[derive(Clone,Debug)]
 pub struct ConstructorEnvironment {
@@ -9,7 +10,9 @@ pub struct ConstructorEnvironment {
     pub parameters: Vec<ASTNode>,
 }
 
-pub fn analyze_constructor_declaration(constructors: &mut Vec<ConstructorEnvironment>,
+pub fn analyze_constructor_declaration(kinds: &Vec<ClassOrInterfaceEnvironment>,
+                                       imports: &Vec<ASTNodeImport>,
+                                       current: &mut ClassOrInterfaceEnvironment,
                                        modifiers: &ASTNode,
                                        declarator: &ASTNode,
                                        body: &ASTNode)
@@ -33,7 +36,7 @@ pub fn analyze_constructor_declaration(constructors: &mut Vec<ConstructorEnviron
         }
     }
 
-    for constructor in constructors.clone() {
+    for constructor in current.constructors.clone() {
         if constructor.parameters == parameters {
             return Err("constructors must have unique signatures".to_owned());
         }
@@ -45,13 +48,13 @@ pub fn analyze_constructor_declaration(constructors: &mut Vec<ConstructorEnviron
         let globals = Vec::new();
 
         let mut child = body.children[1].clone();
-        match analyze_block(&globals, &mut child) {
+        match analyze_block(kinds, imports, current, &globals, &mut child) {
             Ok(_) => (),
             Err(e) => return Err(e),
         }
     }
 
-    constructors.push(ConstructorEnvironment {
+    current.constructors.push(ConstructorEnvironment {
         modifiers: mods,
         name: name,
         parameters: parameters,

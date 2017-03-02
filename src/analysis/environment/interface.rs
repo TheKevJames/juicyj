@@ -1,41 +1,42 @@
+use analysis::environment::classorinterface::ClassOrInterface;
+use analysis::environment::classorinterface::ClassOrInterfaceEnvironment;
+use analysis::environment::field::analyze_constant_declaration;
+use analysis::environment::method::analyze_abstract_method_declaration;
 use scanner::ASTNode;
+use scanner::ASTNodeImport;
 use scanner::Token;
 use scanner::TokenKind;
 
-use analysis::environment::class::ClassEnvironment;
-use analysis::environment::field::analyze_constant_declaration;
-use analysis::environment::field::FieldEnvironment;
-use analysis::environment::method::analyze_abstract_method_declaration;
-use analysis::environment::method::MethodEnvironment;
-
-#[derive(Clone,Debug)]
-pub struct InterfaceEnvironment {
-    pub modifiers: Vec<ASTNode>,
-    pub name: Vec<Token>,
-    pub extends: Vec<Vec<Token>>,
-    pub fields: Vec<FieldEnvironment>,
-    pub methods: Vec<MethodEnvironment>,
-}
-
 pub fn analyze_interface_declaration(canonical: &Vec<Token>,
-                                     classes: &Vec<ClassEnvironment>,
-                                     interfaces: &mut Vec<InterfaceEnvironment>,
+                                     kinds: &mut Vec<ClassOrInterfaceEnvironment>,
+                                     imports: &Vec<ASTNodeImport>,
                                      node: &ASTNode)
                                      -> Result<(), String> {
-    let mut modifiers = Vec::new();
-    for child in node.children[0].clone().children {
-        modifiers.push(child);
+    let mut current = ClassOrInterfaceEnvironment {
+        constructors: Vec::new(),
+        extends: vec![vec![Token::new(TokenKind::Identifier, Some("Object"))]],
+        fields: Vec::new(),
+        implements: Vec::new(),
+        kind: ClassOrInterface::INTERFACE,
+        methods: Vec::new(),
+        modifiers: Vec::new(),
+        name: canonical.clone(),
+    };
+
+    for class_or_interface in kinds.clone() {
+        if class_or_interface.name == current.name {
+            return Err("class/interface names must be unique".to_owned());
+        }
     }
 
-    let name = canonical.clone();
+    for child in node.children[0].clone().children {
+        current.modifiers.push(child);
+    }
 
-    let mut extends = vec![vec![Token::new(TokenKind::Identifier, Some("Object"))]];
-    let mut fields = Vec::new();
-    let mut methods = Vec::new();
     match node.children[3].token.lexeme {
         Some(ref l) if l == "InterfaceExtends" => {
             // remove implicit Object inheritance
-            extends = Vec::new();
+            current.extends = Vec::new();
 
             let mut grandkid = node.children[3].children[1].clone();
             let grandkid = match grandkid.clone().token.lexeme {
@@ -44,13 +45,13 @@ pub fn analyze_interface_declaration(canonical: &Vec<Token>,
             };
             for mut greatgrandkid in grandkid.children {
                 if greatgrandkid.token.kind == TokenKind::Identifier {
-                    extends.push(vec![greatgrandkid.clone().token]);
+                    current.extends.push(vec![greatgrandkid.clone().token]);
                 } else if greatgrandkid.clone().token.lexeme.unwrap_or("".to_owned()) == "Name" {
                     let mut children = Vec::new();
                     for child in greatgrandkid.flatten().clone().children {
                         children.push(child.token);
                     }
-                    extends.push(children);
+                    current.extends.push(children);
                 } else if greatgrandkid.token.kind == TokenKind::Comma {
                     continue;
                 } else {
@@ -59,10 +60,11 @@ pub fn analyze_interface_declaration(canonical: &Vec<Token>,
                 }
             }
 
-            for class in classes.clone() {
-                for extended in &extends {
+            for extended in &current.extends {
+                for class_or_interface in kinds.clone() {
                     // TODO: name lookup
-                    if &class.name == extended {
+                    if class_or_interface.kind == ClassOrInterface::CLASS &&
+                       &class_or_interface.name == extended {
                         return Err("interfaces cannot extend classes".to_owned());
                     }
                 }
@@ -78,15 +80,10 @@ pub fn analyze_interface_declaration(canonical: &Vec<Token>,
             for decl in &decls.children {
                 let result = match decl.token.lexeme {
                     Some(ref lex) if lex == "AbstractMethodDeclaration" => {
-                        analyze_abstract_method_declaration(classes,
-                                                            &extends,
-                                                            &interfaces,
-                                                            &Vec::new(),
-                                                            &mut methods,
-                                                            &decl.children[0])
+                        analyze_abstract_method_declaration(kinds, &mut current, &decl.children[0])
                     }
                     Some(ref lex) if lex == "ConstantDeclaration" => {
-                        analyze_constant_declaration(&mut fields, &decl)
+                        analyze_constant_declaration(&mut current.fields, &decl)
                     }
                     _ => Ok(()),
                 };
@@ -98,25 +95,6 @@ pub fn analyze_interface_declaration(canonical: &Vec<Token>,
         _ => (),
     }
 
-    for class in classes {
-        if class.name == name {
-            return Err("class/interface names must be unique".to_owned());
-        }
-    }
-
-    for interface in interfaces.clone() {
-        if interface.name == name {
-            return Err("class/interface names must be unique".to_owned());
-        }
-    }
-
-    interfaces.push(InterfaceEnvironment {
-        modifiers: modifiers,
-        name: name,
-        extends: extends,
-        fields: fields,
-        methods: methods,
-    });
-
+    kinds.push(current);
     Ok(())
 }

@@ -1,4 +1,5 @@
 mod class;
+mod classorinterface;
 mod constructor;
 mod field;
 mod interface;
@@ -11,23 +12,19 @@ use scanner::AST;
 use scanner::Token;
 use scanner::TokenKind;
 
+// TODO: create common trait for Class/Interface Envs
 use self::class::analyze_class_declaration;
-use self::class::ClassEnvironment;
+pub use self::classorinterface::ClassOrInterfaceEnvironment;
 use self::interface::analyze_interface_declaration;
-use self::interface::InterfaceEnvironment;
 
 #[derive(Clone,Debug)]
 pub struct Environment {
-    classes: Vec<ClassEnvironment>,
-    interfaces: Vec<InterfaceEnvironment>,
+    kinds: Vec<ClassOrInterfaceEnvironment>,
 }
 
 impl Environment {
     pub fn new() -> Environment {
-        Environment {
-            classes: Vec::new(),
-            interfaces: Vec::new(),
-        }
+        Environment { kinds: Vec::new() }
     }
 
     pub fn annotate_asts(trees: &Vec<AST>) -> Result<(), String> {
@@ -104,15 +101,12 @@ impl Environment {
 
             let result = match root.token.lexeme {
                 Some(ref l) if l == "ClassDeclaration" => {
-                    analyze_class_declaration(&tree.canonical,
-                                              &mut env.classes,
-                                              &env.interfaces,
-                                              &root)
+                    analyze_class_declaration(&tree.canonical, &mut env.kinds, &tree.imports, &root)
                 }
                 Some(ref l) if l == "InterfaceDeclaration" => {
                     analyze_interface_declaration(&tree.canonical,
-                                                  &env.classes,
-                                                  &mut env.interfaces,
+                                                  &mut env.kinds,
+                                                  &tree.imports,
                                                   &root)
                 }
                 _ => Ok(()),

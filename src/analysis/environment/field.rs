@@ -15,6 +15,7 @@ pub fn analyze_constant_declaration(fields: &mut Vec<FieldEnvironment>,
         modifiers.push(kid);
     }
 
+    // TODO: lookup
     let kind = declaration.children[1].clone();
     let mut name = declaration.children[2].clone();
     if name.token.lexeme == None {
@@ -45,6 +46,7 @@ pub fn analyze_field_declaration(fields: &mut Vec<FieldEnvironment>,
         modifiers.push(child);
     }
 
+    // TODO: lookup
     let kind = declaration.children[1].clone();
     let mut name = declaration.children[2].clone();
     if name.token.lexeme == None {

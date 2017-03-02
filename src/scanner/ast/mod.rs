@@ -8,7 +8,7 @@ use scanner::common::Token;
 use scanner::common::TokenKind;
 use scanner::parser::ParseTree;
 
-use self::node::ASTNodeImport;
+pub use self::node::ASTNodeImport;
 pub use self::node::ASTNode;
 use self::node::ASTNodePackage;
 

@@ -1,10 +1,9 @@
+use analysis::environment::classorinterface::ClassOrInterfaceEnvironment;
+use analysis::environment::variable::analyze_block;
 use scanner::ASTNode;
+use scanner::ASTNodeImport;
 use scanner::Token;
 use scanner::TokenKind;
-
-use analysis::environment::class::ClassEnvironment;
-use analysis::environment::interface::InterfaceEnvironment;
-use analysis::environment::variable::analyze_block;
 
 #[derive(Clone,Debug)]
 pub struct MethodEnvironment {
@@ -14,11 +13,8 @@ pub struct MethodEnvironment {
     pub parameters: Vec<ASTNode>,
 }
 
-pub fn analyze_abstract_method_declaration(classes: &Vec<ClassEnvironment>,
-                                           extends: &Vec<Vec<Token>>,
-                                           interfaces: &Vec<InterfaceEnvironment>,
-                                           implements: &Vec<Vec<Token>>,
-                                           methods: &mut Vec<MethodEnvironment>,
+pub fn analyze_abstract_method_declaration(kinds: &Vec<ClassOrInterfaceEnvironment>,
+                                           current: &mut ClassOrInterfaceEnvironment,
                                            header: &ASTNode)
                                            -> Result<(), String> {
     let declarator = header.children[2].clone();
@@ -28,6 +24,7 @@ pub fn analyze_abstract_method_declaration(classes: &Vec<ClassEnvironment>,
         modifiers.push(child);
     }
 
+    // TODO: analyze
     let return_type = header.children[1].clone();
     let name = declarator.children[0].clone();
 
@@ -43,7 +40,7 @@ pub fn analyze_abstract_method_declaration(classes: &Vec<ClassEnvironment>,
         }
     }
 
-    for method in methods.clone() {
+    for method in current.methods.clone() {
         if method.name == name && method.parameters == parameters {
             return Err("methods must have unique signatures".to_owned());
         }
@@ -56,21 +53,18 @@ pub fn analyze_abstract_method_declaration(classes: &Vec<ClassEnvironment>,
         parameters: parameters,
     };
 
-    match verify_override(classes, extends, interfaces, implements, &new) {
+    match verify_override(kinds, current, &new) {
         Ok(_) => (),
         Err(e) => return Err(e),
     }
 
-    methods.push(new);
-
+    current.methods.push(new);
     Ok(())
 }
 
-pub fn analyze_method_declaration(classes: &Vec<ClassEnvironment>,
-                                  extends: &Vec<Vec<Token>>,
-                                  interfaces: &Vec<InterfaceEnvironment>,
-                                  implements: &Vec<Vec<Token>>,
-                                  methods: &mut Vec<MethodEnvironment>,
+pub fn analyze_method_declaration(kinds: &Vec<ClassOrInterfaceEnvironment>,
+                                  imports: &Vec<ASTNodeImport>,
+                                  current: &mut ClassOrInterfaceEnvironment,
                                   header: &ASTNode,
                                   body: &ASTNode)
                                   -> Result<(), String> {
@@ -81,6 +75,7 @@ pub fn analyze_method_declaration(classes: &Vec<ClassEnvironment>,
         modifiers.push(child);
     }
 
+    // TODO: lookup
     let return_type = header.children[1].clone();
     let name = declarator.children[0].clone();
 
@@ -96,7 +91,7 @@ pub fn analyze_method_declaration(classes: &Vec<ClassEnvironment>,
         }
     }
 
-    for method in methods.clone() {
+    for method in current.methods.clone() {
         if method.name == name && method.parameters == parameters {
             return Err("methods must have unique signatures".to_owned());
         }
@@ -109,7 +104,7 @@ pub fn analyze_method_declaration(classes: &Vec<ClassEnvironment>,
         parameters: parameters,
     };
 
-    match verify_override(classes, extends, interfaces, implements, &new) {
+    match verify_override(kinds, current, &new) {
         Ok(_) => (),
         Err(e) => return Err(e),
     }
@@ -120,23 +115,20 @@ pub fn analyze_method_declaration(classes: &Vec<ClassEnvironment>,
         let globals = Vec::new();
 
         let mut child = body.children[1].clone();
-        match analyze_block(&globals, &mut child) {
+        match analyze_block(kinds, imports, current, &globals, &mut child) {
             Ok(_) => (),
             Err(e) => return Err(e),
         }
     }
 
-    methods.push(new);
-
+    current.methods.push(new);
     Ok(())
 }
 
 // TODO: verify classes do not contain duplicate method signatures solely
 // through extending
-fn verify_override(classes: &Vec<ClassEnvironment>,
-                   extends: &Vec<Vec<Token>>,
-                   interfaces: &Vec<InterfaceEnvironment>,
-                   implements: &Vec<Vec<Token>>,
+fn verify_override(kinds: &Vec<ClassOrInterfaceEnvironment>,
+                   current: &ClassOrInterfaceEnvironment,
                    new: &MethodEnvironment)
                    -> Result<(), String> {
     let fnode = ASTNode {
@@ -160,44 +152,12 @@ fn verify_override(classes: &Vec<ClassEnvironment>,
         children: Vec::new(),
     };
 
-    for class in classes {
-        if !extends.contains(&class.name) {
+    for class_or_interface in kinds {
+        if !current.extends.contains(&class_or_interface.name) {
             continue;
         }
 
-        for method in &class.methods {
-            if method.name == new.name && method.parameters == new.parameters {
-                if method.return_type != new.return_type {
-                    return Err("cannot override method with different return type".to_owned());
-                }
-
-                if method.modifiers.contains(&fnode) {
-                    return Err("methods cannot override final methods".to_owned());
-                }
-
-                if method.modifiers.contains(&public) &&
-                   (new.modifiers.contains(&protected) || new.modifiers.contains(&private)) {
-                    return Err("methods cannot be overriden with weaker access controls"
-                        .to_owned());
-                } else if method.modifiers.contains(&protected) &&
-                          new.modifiers.contains(&private) {
-                    return Err("methods cannot be overriden with weaker access controls"
-                        .to_owned());
-                }
-
-                if method.modifiers.contains(&snode) && !new.modifiers.contains(&snode) {
-                    return Err("cannot override static method with non-static method".to_owned());
-                }
-            }
-        }
-    }
-
-    for interface in interfaces {
-        if !implements.contains(&interface.name) {
-            continue;
-        }
-
-        for method in &interface.methods {
+        for method in &class_or_interface.methods {
             if method.name == new.name && method.parameters == new.parameters {
                 if method.return_type != new.return_type {
                     return Err("cannot override method with different return type".to_owned());

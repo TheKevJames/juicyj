@@ -1,44 +1,40 @@
+use analysis::environment::classorinterface::ClassOrInterface;
+use analysis::environment::classorinterface::ClassOrInterfaceEnvironment;
+use analysis::environment::constructor::analyze_constructor_declaration;
+use analysis::environment::field::analyze_field_declaration;
+use analysis::environment::method::analyze_abstract_method_declaration;
+use analysis::environment::method::analyze_method_declaration;
 use scanner::ASTNode;
+use scanner::ASTNodeImport;
 use scanner::Token;
 use scanner::TokenKind;
 
-use analysis::environment::constructor::analyze_constructor_declaration;
-use analysis::environment::constructor::ConstructorEnvironment;
-use analysis::environment::field::analyze_field_declaration;
-use analysis::environment::field::FieldEnvironment;
-use analysis::environment::interface::InterfaceEnvironment;
-use analysis::environment::method::analyze_abstract_method_declaration;
-use analysis::environment::method::analyze_method_declaration;
-use analysis::environment::method::MethodEnvironment;
-
-#[derive(Clone,Debug)]
-pub struct ClassEnvironment {
-    pub modifiers: Vec<ASTNode>,
-    pub name: Vec<Token>,
-    pub extends: Vec<Vec<Token>>,
-    pub implements: Vec<Vec<Token>>,
-    pub constructors: Vec<ConstructorEnvironment>,
-    pub fields: Vec<FieldEnvironment>,
-    pub methods: Vec<MethodEnvironment>,
-}
-
 pub fn analyze_class_declaration(canonical: &Vec<Token>,
-                                 classes: &mut Vec<ClassEnvironment>,
-                                 interfaces: &Vec<InterfaceEnvironment>,
+                                 kinds: &mut Vec<ClassOrInterfaceEnvironment>,
+                                 imports: &Vec<ASTNodeImport>,
                                  node: &ASTNode)
                                  -> Result<(), String> {
-    let mut modifiers = Vec::new();
-    for child in node.children[0].clone().children {
-        modifiers.push(child);
+    let mut current = ClassOrInterfaceEnvironment {
+        constructors: Vec::new(),
+        extends: vec![vec![Token::new(TokenKind::Identifier, Some("Object"))]],
+        fields: Vec::new(),
+        implements: Vec::new(),
+        kind: ClassOrInterface::CLASS,
+        methods: Vec::new(),
+        modifiers: Vec::new(),
+        name: canonical.clone(),
+    };
+
+    for class_or_interface in kinds.clone() {
+        if class_or_interface.name == current.name {
+            return Err("class/interface names must be unique".to_owned());
+        }
     }
 
-    let name = canonical.clone();
+    for child in node.children[0].clone().children {
+        current.modifiers.push(child);
+    }
 
-    let mut extends = vec![vec![Token::new(TokenKind::Identifier, Some("Object"))]];
-    let mut implements = Vec::new();
-    let mut constructors = Vec::new();
-    let mut fields = Vec::new();
-    let mut methods = Vec::new();
     for (idx, child) in node.children.iter().enumerate() {
         if idx < 3 {
             continue;
@@ -54,22 +50,22 @@ pub fn analyze_class_declaration(canonical: &Vec<Token>,
                 for mut greatgrandkid in grandkid.children {
                     if greatgrandkid.token.kind == TokenKind::Identifier {
                         let interface = vec![greatgrandkid.clone().token];
-                        if implements.contains(&interface) {
+                        if current.implements.contains(&interface) {
                             return Err("interfaces must not be repeated in implements clauses"
                                 .to_owned());
                         }
-                        implements.push(interface);
+                        current.implements.push(interface);
                     } else if greatgrandkid.clone().token.lexeme.unwrap_or("".to_owned()) ==
                               "Name" {
                         let mut children = Vec::new();
                         for child in greatgrandkid.flatten().clone().children {
                             children.push(child.token);
                         }
-                        if implements.contains(&children) {
+                        if current.implements.contains(&children) {
                             return Err("interfaces must not be repeated in implements clauses"
                                 .to_owned());
                         }
-                        implements.push(children);
+                        current.implements.push(children);
                     } else if greatgrandkid.token.kind == TokenKind::Comma {
                         continue;
                     } else {
@@ -78,10 +74,11 @@ pub fn analyze_class_declaration(canonical: &Vec<Token>,
                     }
                 }
 
-                for class in classes.clone() {
-                    for implemented in &implements {
+                for implemented in &current.implements {
+                    for class_or_interface in kinds.clone() {
                         // TODO: name lookup
-                        if &class.name == implemented {
+                        if class_or_interface.kind == ClassOrInterface::CLASS &&
+                           &class_or_interface.name == implemented {
                             return Err("classes cannot implement classes".to_owned());
                         }
                     }
@@ -90,16 +87,16 @@ pub fn analyze_class_declaration(canonical: &Vec<Token>,
             }
             Some(ref le) if le == "ClassExtends" => {
                 // remove implicit Object inheritance
-                extends = Vec::new();
+                current.extends = Vec::new();
                 if child.children[1].token.kind == TokenKind::Identifier {
-                    extends.push(vec![child.children[1].clone().token]);
+                    current.extends.push(vec![child.children[1].clone().token]);
                 } else if child.children[1].clone().token.lexeme.unwrap_or("".to_owned()) ==
                           "Name" {
                     let mut children = Vec::new();
                     for child in child.children[1].clone().flatten().clone().children {
                         children.push(child.token);
                     }
-                    extends.push(children);
+                    current.extends.push(children);
                 } else {
                     return Err(format!("got invalid ClassExtends child {}",
                                        child.children[1].token));
@@ -109,11 +106,12 @@ pub fn analyze_class_declaration(canonical: &Vec<Token>,
                     token: Token::new(TokenKind::Final, None),
                     children: Vec::new(),
                 };
-                for class in classes.clone() {
-                    for extended in &extends {
+                for extended in &current.extends {
+                    for class_or_interface in kinds.clone() {
                         // TODO: name lookup
-                        if &class.name == extended {
-                            if class.modifiers.contains(&fnode) {
+                        if class_or_interface.kind == ClassOrInterface::CLASS &&
+                           &class_or_interface.name == extended {
+                            if class_or_interface.modifiers.contains(&fnode) {
                                 return Err("classes cannot extend final classes".to_owned());
                             }
                             break;
@@ -121,10 +119,11 @@ pub fn analyze_class_declaration(canonical: &Vec<Token>,
                     }
                 }
 
-                for interface in interfaces.clone() {
-                    for extended in &extends {
+                for extended in &current.extends {
+                    for class_or_interface in kinds.clone() {
                         // TODO: name lookup
-                        if &interface.name == extended {
+                        if class_or_interface.kind == ClassOrInterface::INTERFACE &&
+                           &class_or_interface.name == extended {
                             return Err("classes cannot extend interfaces".to_owned());
                         }
                     }
@@ -145,11 +144,8 @@ pub fn analyze_class_declaration(canonical: &Vec<Token>,
                 for decl in &decls.children {
                     let result = match decl.token.lexeme {
                         Some(ref lex) if lex == "AbstractMethodDeclaration" => {
-                            match analyze_abstract_method_declaration(classes,
-                                                                      &extends,
-                                                                      &interfaces,
-                                                                      &implements,
-                                                                      &mut methods,
+                            match analyze_abstract_method_declaration(kinds,
+                                                                      &mut current,
                                                                       &decl.children[0]) {
                                 Ok(_) => (),
                                 Err(e) => return Err(e),
@@ -157,9 +153,9 @@ pub fn analyze_class_declaration(canonical: &Vec<Token>,
 
                             // TODO: ensure non-abstract class does not contain
                             // un-overriden abstract methods
-                            match methods.last() {
+                            match current.methods.last() {
                                 Some(m) if m.modifiers.contains(&anode) &&
-                                           !modifiers.contains(&anode) => {
+                                           !current.modifiers.contains(&anode) => {
                                     Err("a class with an abstract method must be abstract"
                                         .to_owned())
                                 }
@@ -167,20 +163,20 @@ pub fn analyze_class_declaration(canonical: &Vec<Token>,
                             }
                         }
                         Some(ref lex) if lex == "ConstructorDeclaration" => {
-                            analyze_constructor_declaration(&mut constructors,
+                            analyze_constructor_declaration(kinds,
+                                                            imports,
+                                                            &mut current,
                                                             &decl.children[0],
                                                             &decl.children[1],
                                                             &decl.children[2])
                         }
                         Some(ref lex) if lex == "FieldDeclaration" => {
-                            analyze_field_declaration(&mut fields, &decl)
+                            analyze_field_declaration(&mut current.fields, &decl)
                         }
                         Some(ref lex) if lex == "MethodDeclaration" => {
-                            analyze_method_declaration(classes,
-                                                       &extends,
-                                                       &interfaces,
-                                                       &implements,
-                                                       &mut methods,
+                            analyze_method_declaration(kinds,
+                                                       imports,
+                                                       &mut current,
                                                        &decl.children[0],
                                                        &decl.children[1])
                         }
@@ -195,27 +191,6 @@ pub fn analyze_class_declaration(canonical: &Vec<Token>,
         }
     }
 
-    for class in classes.clone() {
-        if class.name == name {
-            return Err("class/interface names must be unique".to_owned());
-        }
-    }
-
-    for interface in interfaces {
-        if interface.name == name {
-            return Err("class/interface names must be unique".to_owned());
-        }
-    }
-
-    classes.push(ClassEnvironment {
-        modifiers: modifiers,
-        name: name,
-        extends: extends,
-        implements: implements,
-        constructors: constructors,
-        fields: fields,
-        methods: methods,
-    });
-
+    kinds.push(current);
     Ok(())
 }
