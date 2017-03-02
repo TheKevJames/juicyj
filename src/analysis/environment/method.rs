@@ -1,7 +1,5 @@
 use analysis::environment::classorinterface::ClassOrInterfaceEnvironment;
-use analysis::environment::variable::analyze_block;
 use scanner::ASTNode;
-use scanner::ASTNodeImport;
 use scanner::Token;
 use scanner::TokenKind;
 
@@ -26,8 +24,7 @@ impl MethodEnvironment {
     }
 }
 
-pub fn analyze_abstract_method_declaration(kinds: &Vec<ClassOrInterfaceEnvironment>,
-                                           current: &mut ClassOrInterfaceEnvironment,
+pub fn analyze_abstract_method_declaration(current: &mut ClassOrInterfaceEnvironment,
                                            header: &ASTNode)
                                            -> Result<(), String> {
     let declarator = header.children[2].clone();
@@ -60,9 +57,7 @@ pub fn analyze_abstract_method_declaration(kinds: &Vec<ClassOrInterfaceEnvironme
     Ok(())
 }
 
-pub fn analyze_method_declaration(kinds: &Vec<ClassOrInterfaceEnvironment>,
-                                  imports: &Vec<ASTNodeImport>,
-                                  current: &mut ClassOrInterfaceEnvironment,
+pub fn analyze_method_declaration(current: &mut ClassOrInterfaceEnvironment,
                                   header: &ASTNode,
                                   body: &ASTNode)
                                   -> Result<(), String> {

@@ -1,6 +1,5 @@
 use analysis::environment::classorinterface::ClassOrInterfaceEnvironment;
 use scanner::ASTNode;
-use scanner::ASTNodeImport;
 
 #[derive(Clone,Debug)]
 pub struct ConstructorEnvironment {
@@ -21,9 +20,7 @@ impl ConstructorEnvironment {
     }
 }
 
-pub fn analyze_constructor_declaration(kinds: &Vec<ClassOrInterfaceEnvironment>,
-                                       imports: &Vec<ASTNodeImport>,
-                                       current: &mut ClassOrInterfaceEnvironment,
+pub fn analyze_constructor_declaration(current: &mut ClassOrInterfaceEnvironment,
                                        modifiers: &ASTNode,
                                        declarator: &ASTNode,
                                        body: &ASTNode)

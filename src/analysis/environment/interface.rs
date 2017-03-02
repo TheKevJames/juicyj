@@ -4,7 +4,6 @@ use analysis::environment::field::analyze_constant_declaration;
 use analysis::environment::method::analyze_abstract_method_declaration;
 use scanner::ASTNode;
 use scanner::ASTNodeImport;
-use scanner::Token;
 use scanner::TokenKind;
 
 pub fn analyze_interface_declaration(canonical: &ASTNode,
@@ -42,7 +41,7 @@ pub fn analyze_interface_declaration(canonical: &ASTNode,
                     }
                     current.extends.push(cls);
                 } else if greatgrandkid.clone().token.lexeme.unwrap_or("".to_owned()) == "Name" {
-                    let mut cls = greatgrandkid.flatten().clone();
+                    let cls = greatgrandkid.flatten().clone();
                     if current.extends.contains(&cls) {
                         return Err("objects must not be repeated in extends clauses".to_owned());
                     }
@@ -64,7 +63,7 @@ pub fn analyze_interface_declaration(canonical: &ASTNode,
             for decl in &decls.children {
                 let result = match decl.token.lexeme {
                     Some(ref lex) if lex == "AbstractMethodDeclaration" => {
-                        analyze_abstract_method_declaration(kinds, &mut current, &decl.children[0])
+                        analyze_abstract_method_declaration(&mut current, &decl.children[0])
                     }
                     Some(ref lex) if lex == "ConstantDeclaration" => {
                         analyze_constant_declaration(&mut current.fields, &decl)

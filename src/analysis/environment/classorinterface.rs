@@ -5,7 +5,6 @@ use analysis::environment::field::FieldEnvironment;
 use analysis::environment::method::MethodEnvironment;
 use scanner::ASTNode;
 use scanner::ASTNodeImport;
-use scanner::Token;
 
 #[derive(Clone,Debug,PartialEq)]
 pub enum ClassOrInterface {
