@@ -80,10 +80,6 @@ pub fn analyze_interface_declaration(canonical: &ASTNode,
                         Some(ref lex) if lex == "AbstractMethodDeclaration" => {
                             analyze_abstract_method_declaration(&mut current, &decl.children[0])
                         }
-                        // TODO: figure out why this gets pulled out of AbstractMethodDeclaration
-                        Some(ref lex) if lex == "MethodHeader" => {
-                            analyze_abstract_method_declaration(&mut current, &decl)
-                        }
                         Some(ref lex) if lex == "ConstantDeclaration" => {
                             analyze_constant_declaration(&mut current.fields, &decl)
                         }
