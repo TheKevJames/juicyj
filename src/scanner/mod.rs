@@ -29,11 +29,11 @@ use self::weeder::Weeder;
 /// let filename = "Sample.java";
 /// let contents = juicyj::scanner::read_src_file(&filename.to_owned());
 /// ```
-pub fn read_src_file(file: &String) -> String {
-    let mut file = match File::open(&file) {
-        Ok(file) => file,
+pub fn read_src_file(filename: &String) -> String {
+    let mut file = match File::open(&filename) {
+        Ok(f) => f,
         Err(_) => {
-            error!("could not open file: {}", file);
+            error!("could not open file: {}", filename);
             std::process::exit(1);
         }
     };
@@ -42,7 +42,7 @@ pub fn read_src_file(file: &String) -> String {
     match file.read_to_string(&mut src) {
         Ok(_) => {}
         Err(_) => {
-            error!("could not read file to string");
+            error!("could not read file {} to string", filename);
             std::process::exit(1);
         }
     };
