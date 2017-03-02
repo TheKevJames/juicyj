@@ -130,15 +130,9 @@ pub fn analyze_variable_declaration(kinds: &Vec<ClassOrInterfaceEnvironment>,
              TokenKind::Short,
              TokenKind::Void]
         .contains(&kind.token.kind) {
-        println!("Variable has kind: {}", kind);
         match lookup(&kind, current, kinds, imports) {
-            Ok(val) => {
-                println!("Success! Found {:?}", val.name);
-            }
-            Err(e) => {
-                println!("Error");
-                println!("{}", e);
-            }
+            Ok(c) => (),  // TODO: do something with this kind
+            Err(e) => return Err(e),
         }
     }
     let name = match node.children[1].clone().token.kind {
