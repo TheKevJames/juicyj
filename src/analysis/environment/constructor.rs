@@ -1,5 +1,4 @@
 use analysis::environment::classorinterface::ClassOrInterfaceEnvironment;
-use analysis::environment::variable::analyze_block;
 use scanner::ASTNode;
 use scanner::ASTNodeImport;
 
@@ -8,6 +7,18 @@ pub struct ConstructorEnvironment {
     pub modifiers: Vec<ASTNode>,
     pub name: ASTNode,
     pub parameters: Vec<ASTNode>,
+    pub body: ASTNode,
+}
+
+impl ConstructorEnvironment {
+    pub fn new(name: ASTNode, body: ASTNode) -> ConstructorEnvironment {
+        ConstructorEnvironment {
+            modifiers: Vec::new(),
+            name: name,
+            parameters: Vec::new(),
+            body: body,
+        }
+    }
 }
 
 pub fn analyze_constructor_declaration(kinds: &Vec<ClassOrInterfaceEnvironment>,
@@ -17,14 +28,12 @@ pub fn analyze_constructor_declaration(kinds: &Vec<ClassOrInterfaceEnvironment>,
                                        declarator: &ASTNode,
                                        body: &ASTNode)
                                        -> Result<(), String> {
-    let mut mods = Vec::new();
+    let mut new = ConstructorEnvironment::new(declarator.children[0].clone(), body.clone());
+
     for child in modifiers.clone().children {
-        mods.push(child);
+        new.modifiers.push(child);
     }
 
-    let name = declarator.children[0].clone();
-
-    let mut parameters = Vec::new();
     if declarator.children.len() == 4 {
         let mut params = declarator.children[2].clone();
         let params = match params.clone().token.lexeme {
@@ -32,33 +41,16 @@ pub fn analyze_constructor_declaration(kinds: &Vec<ClassOrInterfaceEnvironment>,
             _ => params,
         };
         for param in &params.children {
-            parameters.push(param.clone());
+            new.parameters.push(param.clone());
         }
     }
 
-    for constructor in current.constructors.clone() {
-        if constructor.parameters == parameters {
+    for constructor in &current.constructors {
+        if constructor.parameters == new.parameters {
             return Err("constructors must have unique signatures".to_owned());
         }
     }
 
-    if body.children.len() == 3 {
-        // TODO: eventually, this should need fields, etc, but since they can be
-        // shadowed... meh.
-        let globals = Vec::new();
-
-        let mut child = body.children[1].clone();
-        match analyze_block(kinds, imports, current, &globals, &mut child) {
-            Ok(_) => (),
-            Err(e) => return Err(e),
-        }
-    }
-
-    current.constructors.push(ConstructorEnvironment {
-        modifiers: mods,
-        name: name,
-        parameters: parameters,
-    });
-
+    current.constructors.push(new);
     Ok(())
 }

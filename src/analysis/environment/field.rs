@@ -7,64 +7,62 @@ pub struct FieldEnvironment {
     pub name: ASTNode,
 }
 
+impl FieldEnvironment {
+    pub fn new(name: ASTNode, kind: ASTNode) -> FieldEnvironment {
+        FieldEnvironment {
+            modifiers: Vec::new(),
+            kind: kind,
+            name: name,
+        }
+    }
+}
+
 pub fn analyze_constant_declaration(fields: &mut Vec<FieldEnvironment>,
                                     declaration: &ASTNode)
                                     -> Result<(), String> {
-    let mut modifiers = Vec::new();
-    for kid in declaration.children[0].clone().children {
-        modifiers.push(kid);
+    let mut new = FieldEnvironment::new(declaration.children[2].clone(),
+                                        declaration.children[1].clone());
+
+    for child in declaration.children[0].clone().children {
+        new.modifiers.push(child);
     }
 
-    // TODO: lookup
-    let kind = declaration.children[1].clone();
-    let mut name = declaration.children[2].clone();
-    if name.token.lexeme == None {
+    if new.name.token.lexeme == None {
         // if `name` is an Assignment rather than a Name
-        name = name.children[0].clone();
+        new.name = new.name.children[0].clone();
     }
 
     for field in fields.clone() {
-        if field.name == name {
+        if field.name == new.name {
             return Err("field names must be unique".to_owned());
         }
     }
 
-    fields.push(FieldEnvironment {
-        modifiers: modifiers,
-        kind: kind,
-        name: name,
-    });
-
+    fields.push(new);
     Ok(())
 }
 
 pub fn analyze_field_declaration(fields: &mut Vec<FieldEnvironment>,
                                  declaration: &ASTNode)
                                  -> Result<(), String> {
-    let mut modifiers = Vec::new();
+    let mut new = FieldEnvironment::new(declaration.children[2].clone(),
+                                        declaration.children[1].clone());
+
     for child in declaration.children[0].clone().children {
-        modifiers.push(child);
+        new.modifiers.push(child);
     }
 
-    // TODO: lookup
-    let kind = declaration.children[1].clone();
-    let mut name = declaration.children[2].clone();
-    if name.token.lexeme == None {
+    if new.name.token.lexeme == None {
         // if `name` is an Assignment rather than a Name
-        name = name.children[0].clone();
+        new.name = new.name.children[0].clone();
     }
 
     for field in fields.clone() {
-        if field.name == name {
+        if field.name == new.name {
             return Err("field names must be unique".to_owned());
         }
     }
 
-    fields.push(FieldEnvironment {
-        modifiers: modifiers,
-        kind: kind,
-        name: name,
-    });
-
+    fields.push(new);
     Ok(())
 }

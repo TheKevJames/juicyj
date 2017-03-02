@@ -11,6 +11,19 @@ pub struct MethodEnvironment {
     pub return_type: ASTNode,
     pub name: ASTNode,
     pub parameters: Vec<ASTNode>,
+    pub body: Option<ASTNode>,
+}
+
+impl MethodEnvironment {
+    pub fn new(name: ASTNode, return_type: ASTNode) -> MethodEnvironment {
+        MethodEnvironment {
+            modifiers: Vec::new(),
+            return_type: return_type,
+            name: name,
+            parameters: Vec::new(),
+            body: None,
+        }
+    }
 }
 
 pub fn analyze_abstract_method_declaration(kinds: &Vec<ClassOrInterfaceEnvironment>,
@@ -19,16 +32,13 @@ pub fn analyze_abstract_method_declaration(kinds: &Vec<ClassOrInterfaceEnvironme
                                            -> Result<(), String> {
     let declarator = header.children[2].clone();
 
-    let mut modifiers = Vec::new();
+    let mut new = MethodEnvironment::new(declarator.children[0].clone(),
+                                         header.children[1].clone());
+
     for child in header.children[0].clone().children {
-        modifiers.push(child);
+        new.modifiers.push(child);
     }
 
-    // TODO: analyze
-    let return_type = header.children[1].clone();
-    let name = declarator.children[0].clone();
-
-    let mut parameters = Vec::new();
     if declarator.children.len() == 4 {
         let mut params = declarator.children[2].clone();
         let params = match params.clone().token.lexeme {
@@ -36,26 +46,14 @@ pub fn analyze_abstract_method_declaration(kinds: &Vec<ClassOrInterfaceEnvironme
             _ => params,
         };
         for param in &params.children {
-            parameters.push(param.clone());
+            new.parameters.push(param.clone());
         }
     }
 
     for method in current.methods.clone() {
-        if method.name == name && method.parameters == parameters {
+        if method.name == new.name && method.parameters == new.parameters {
             return Err("methods must have unique signatures".to_owned());
         }
-    }
-
-    let new = MethodEnvironment {
-        modifiers: modifiers,
-        return_type: return_type,
-        name: name,
-        parameters: parameters,
-    };
-
-    match verify_override(kinds, current, &new) {
-        Ok(_) => (),
-        Err(e) => return Err(e),
     }
 
     current.methods.push(new);
@@ -70,16 +68,13 @@ pub fn analyze_method_declaration(kinds: &Vec<ClassOrInterfaceEnvironment>,
                                   -> Result<(), String> {
     let declarator = header.children[2].clone();
 
-    let mut modifiers = Vec::new();
+    let mut new = MethodEnvironment::new(declarator.children[0].clone(),
+                                         header.children[1].clone());
+
     for child in header.children[0].clone().children {
-        modifiers.push(child);
+        new.modifiers.push(child);
     }
 
-    // TODO: lookup
-    let return_type = header.children[1].clone();
-    let name = declarator.children[0].clone();
-
-    let mut parameters = Vec::new();
     if declarator.children.len() == 4 {
         let mut params = declarator.children[2].clone();
         let params = match params.clone().token.lexeme {
@@ -87,37 +82,15 @@ pub fn analyze_method_declaration(kinds: &Vec<ClassOrInterfaceEnvironment>,
             _ => params,
         };
         for param in &params.children {
-            parameters.push(param.clone());
+            new.parameters.push(param.clone());
         }
     }
+
+    new.body = Some(body.clone());
 
     for method in current.methods.clone() {
-        if method.name == name && method.parameters == parameters {
+        if method.name == new.name && method.parameters == new.parameters {
             return Err("methods must have unique signatures".to_owned());
-        }
-    }
-
-    let new = MethodEnvironment {
-        modifiers: modifiers,
-        return_type: return_type,
-        name: name,
-        parameters: parameters,
-    };
-
-    match verify_override(kinds, current, &new) {
-        Ok(_) => (),
-        Err(e) => return Err(e),
-    }
-
-    if body.children.len() == 3 {
-        // TODO: eventually, this should need fields, etc, but since they can be
-        // shadowed... meh.
-        let globals = Vec::new();
-
-        let mut child = body.children[1].clone();
-        match analyze_block(kinds, imports, current, &globals, &mut child) {
-            Ok(_) => (),
-            Err(e) => return Err(e),
         }
     }
 

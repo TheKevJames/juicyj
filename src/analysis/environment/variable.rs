@@ -1,5 +1,4 @@
 use analysis::environment::classorinterface::ClassOrInterfaceEnvironment;
-use analysis::types::lookup;
 use scanner::ASTNode;
 use scanner::ASTNodeImport;
 use scanner::TokenKind;
@@ -117,24 +116,9 @@ pub fn analyze_variable_declaration(kinds: &Vec<ClassOrInterfaceEnvironment>,
                                     locals: &mut Vec<VariableEnvironment>,
                                     node: &ASTNode)
                                     -> Result<(), String> {
-    let mut kind = node.children[0].clone();
-    if let Some(l) = kind.clone().token.lexeme {
-        if l == "ArrayType" {
-            kind = kind.children[0].clone();
-        }
-    }
-    if !vec![TokenKind::Boolean,
-             TokenKind::Byte,
-             TokenKind::Char,
-             TokenKind::Int,
-             TokenKind::Short,
-             TokenKind::Void]
-        .contains(&kind.token.kind) {
-        match lookup(&kind, current, kinds, imports) {
-            Ok(c) => (),  // TODO: do something with this kind
-            Err(e) => return Err(e),
-        }
-    }
+    // TODO: lookup
+    let kind = node.children[0].clone();
+
     let name = match node.children[1].clone().token.kind {
         TokenKind::Assignment => node.children[1].clone().children[0].clone(),
         _ => node.children[1].clone(),

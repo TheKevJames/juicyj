@@ -1,87 +1,218 @@
+use analysis::environment::ClassOrInterface;
 use analysis::environment::ClassOrInterfaceEnvironment;
+use analysis::environment::Environment;
 use scanner::ASTNode;
 use scanner::ASTNodeImport;
 use scanner::Token;
 use scanner::TokenKind;
 
-// TODO: ensure steps are unambiguous, error otherwise
-pub fn lookup(name: &ASTNode,
-              current: &ClassOrInterfaceEnvironment,
-              kinds: &Vec<ClassOrInterfaceEnvironment>,
-              imports: &Vec<ASTNodeImport>)
-              -> Result<ClassOrInterfaceEnvironment, String> {
-    let tokens: Vec<Token> = match name.token.kind {
-        TokenKind::NonTerminal => {
-            let mut tokens = Vec::new();
-            for child in &name.children {
-                tokens.push(child.token.clone());
-            }
-            tokens
-        }
-        _ => vec![name.token.clone()],
+// if let Some(l) = declared_kind_astnode.clone().token.lexeme {
+//     if l == "ArrayType" {
+//         kind = kind.children[0].clone();
+//     }
+// }
+// if !vec![TokenKind::Boolean,
+//          TokenKind::Byte,
+//          TokenKind::Char,
+//          TokenKind::Int,
+//          TokenKind::Short,
+//          TokenKind::Void]
+//     .contains(&kind.token.kind) {
+//     match lookup(&kind.flatten(), current, kinds, imports) {
+//         Ok(c) => (),  // TODO: do something with this kind
+//         Err(e) => return Err(e),
+//     }
+// }
+fn lookup(name: &ASTNode,
+          current: &ClassOrInterfaceEnvironment,
+          kinds: &Vec<ClassOrInterfaceEnvironment>,
+          imports: &Vec<ASTNodeImport>)
+          -> Result<ClassOrInterfaceEnvironment, String> {
+    let name = name.clone();
+    let node_star = ASTNode {
+        token: Token::new(TokenKind::Star, None),
+        children: Vec::new(),
     };
 
+    // 0. lookup canonical path
+    for kind in kinds {
+        if name == kind.name {
+            return Ok(kind.clone());
+        }
+    }
+
     // 1. try the enclosing class or interface
-    if let Some((class_name, _)) = current.name.split_last() {
-        if &tokens == &vec![class_name.clone()] || &tokens == &current.name {
+    if let Some(class_name) = current.name.children.last() {
+        if name == class_name.clone() {
             return Ok(current.clone());
         }
     }
 
+    let mut found = None;
+
     // 2. try any single-type-import (A.B.C.D)
     for import in imports {
-        if let Some((import_name, _)) = import.import.split_last() {
-            if import_name == &Token::new(TokenKind::Star, None) {
+        if let Some(import_name) = import.import.children.last() {
+            if import_name == &node_star {
                 continue;
             }
 
-            if &tokens == &import.import || &tokens == &vec![import_name.clone()] {
-                for cls_or_intfc in kinds {
-                    if let Some((cls_or_intfc_name, _)) = cls_or_intfc.name.split_last() {
-                        if &tokens == &vec![cls_or_intfc_name.clone()] ||
-                           &tokens == &cls_or_intfc.name {
-                            return Ok(cls_or_intfc.clone());
+            // find the right import
+            if &name == import_name {
+                for kind in kinds {
+                    // find the associated kind
+                    if kind.name == import.import {
+                        match found {
+                            Some(_) => {
+                                return Err(format!("ambiguous type lookup for import {:?}",
+                                                   import.import))
+                            }
+                            None => found = Some(kind.clone()),
                         }
                     }
                 }
 
-                return Err(format!("could not find kind for imported lookup {:?}",
+                return Err(format!("could not find type for imported lookup {:?}",
                                    import.import));
             }
         }
     }
+    if let Some(f) = found {
+        return Ok(f);
+    }
 
     // 3. try the same package
-    for cls_or_intfc in kinds {
-        if let Some((cls_or_intfc_name, cls_or_intfc_package)) = cls_or_intfc.name.split_last() {
-            if let Some((_, package)) = current.name.split_last() {
-                if package == cls_or_intfc_package &&
-                   (&tokens == &vec![cls_or_intfc_name.clone()] || &tokens == &cls_or_intfc.name) {
-                    return Ok(cls_or_intfc.clone());
+    for kind in kinds {
+        if let Some((kind_name, kind_package)) = kind.name.children.split_last() {
+            if let Some((_, package)) = current.name.children.split_last() {
+                if package == kind_package && &name == kind_name {
+                    match found {
+                        Some(_) => {
+                            return Err(format!("ambiguous type lookup in package {:?}", package))
+                        }
+                        None => found = Some(kind.clone()),
+                    }
                 }
             }
         }
     }
+    if let Some(f) = found {
+        return Ok(f);
+    }
 
     // 4. try any import-on-demand package (A.B.C.*) including java.lang.*
     for import in imports {
-        if let Some((import_name, import_package)) = import.import.split_last() {
-            if import_name != &Token::new(TokenKind::Star, None) {
+        if let Some((import_name, import_package)) = import.import.children.split_last() {
+            if import_name != &node_star {
                 continue;
             }
 
-            for cls_or_intfc in kinds {
-                if let Some((cls_or_intfc_name, cls_or_intfc_package)) =
-                    cls_or_intfc.name.split_last() {
-                    if import_package == cls_or_intfc_package &&
-                       (&tokens == &vec![cls_or_intfc_name.clone()] ||
-                        &tokens == &cls_or_intfc.name) {
-                        return Ok(cls_or_intfc.clone());
+            for kind in kinds {
+                if let Some((kind_name, kind_package)) = kind.name.children.split_last() {
+                    if import_package == kind_package && &name == kind_name {
+                        match found {
+                            Some(_) => {
+                                return Err(format!("ambiguous type lookup on-demand for {:?}",
+                                                   kind_package))
+                            }
+                            None => found = Some(kind.clone()),
+                        }
                     }
                 }
             }
         }
     }
 
-    return Err("could not lookup kind".to_owned());
+    match found {
+        Some(f) => Ok(f),
+        None => Err(format!("could not lookup kind {:?}", name)),
+    }
+}
+
+pub fn verify(env: &Environment) -> Result<(), String> {
+    let modifier_final = ASTNode {
+        token: Token::new(TokenKind::Final, None),
+        children: Vec::new(),
+    };
+
+    for current in &env.kinds {
+        if current.kind == ClassOrInterface::CLASS {
+            for extended in &current.extends {
+                // TODO: non-circular
+
+                let found = match lookup(&extended, &current, &env.kinds, &current.imports) {
+                    Ok(f) => f,
+                    Err(e) => return Err(e),
+                };
+                if found.kind == ClassOrInterface::CLASS &&
+                   found.modifiers.contains(&modifier_final) {
+                    return Err(format!("class {} cannot extend final class {}", current, found));
+                } else if found.kind == ClassOrInterface::INTERFACE {
+                    return Err(format!("class {} cannot extend interface {}", current, found));
+                }
+            }
+
+            for implemented in &current.implements {
+                let found = match lookup(&implemented, &current, &env.kinds, &current.imports) {
+                    Ok(f) => f,
+                    Err(e) => return Err(e),
+                };
+                if found.kind == ClassOrInterface::CLASS {
+                    return Err(format!("class {} cannot implement class {}", current, found));
+                }
+            }
+        } else if current.kind == ClassOrInterface::INTERFACE {
+            for extended in &current.extends {
+                // TODO: non-circular
+
+                let found = match lookup(&extended, &current, &env.kinds, &current.imports) {
+                    Ok(f) => f,
+                    Err(e) => return Err(e),
+                };
+                if found.kind == ClassOrInterface::CLASS {
+                    return Err(format!("interface {} cannot extend class {}", current, found));
+                }
+            }
+        }
+
+        for constructor in &current.constructors {
+            // TODO: lookup each constructor.parameters
+
+            // TODO: analyze constructor.body:
+            // if body.children.len() == 3 {
+            //     // TODO: eventually, this should need fields, etc, but since they can be
+            //     // shadowed... meh.
+            //     let globals = Vec::new();
+
+            //     match analyze_block(kinds, imports, current, &globals, &mut child) {
+            //     let mut child = body.children[1].clone();
+            //         Ok(_) => (),
+            //         Err(e) => return Err(e),
+            //     }
+            // }
+        }
+
+        for field in &current.fields {
+            // TODO: lookup field.kind
+        }
+
+        for method in &current.methods {
+            // TODO: lookup each method.parameters
+            // TODO: lookup method.return_type
+            // TODO: if body, analyze method.body
+
+            // TODO: analyze override:
+            // match verify_override(env.kinds, current, &method) {
+            //     Ok(_) => (),
+            //     Err(e) => return Err(e),
+            // }
+        }
+    }
+
+    // TODO: ensure non-abstract class does not contain un-overriden abstract
+    // methods or define new ones
+
+    // TODO: check type of parameter lists
+
+    Ok(())
 }

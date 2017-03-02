@@ -15,14 +15,14 @@ pub struct ASTNode {
     pub children: Vec<ASTNode>,
 }
 
-#[derive(PartialEq)]
+#[derive(Clone,Debug,PartialEq)]
 pub struct ASTNodeImport {
-    pub import: Vec<Token>,
+    pub import: ASTNode,
 }
 
 #[derive(PartialEq)]
 pub struct ASTNodePackage {
-    pub package: Vec<Token>,
+    pub package: ASTNode,
 }
 
 impl ASTNode {
@@ -279,18 +279,42 @@ impl ASTNode {
 impl ASTNodeImport {
     pub fn new(node: &ParseNode) -> Result<ASTNodeImport, ASTError> {
         let mut names: Vec<Token> = Vec::new();
-        node.collect_child_kinds(&vec![&TokenKind::Identifier, &TokenKind::Star], &mut names);
+        node.collect_child_kinds(&vec![&TokenKind::Dot, &TokenKind::Identifier, &TokenKind::Star],
+                                 &mut names);
 
-        Ok(ASTNodeImport { import: names })
+        let mut import = ASTNode {
+            token: Token::new(TokenKind::NonTerminal, Some("Name")),
+            children: Vec::new(),
+        };
+        for token in &names {
+            import.children.push(ASTNode {
+                token: token.clone(),
+                children: Vec::new(),
+            });
+        }
+
+        Ok(ASTNodeImport { import: import })
     }
 }
 
 impl ASTNodePackage {
     pub fn new(node: &ParseNode) -> Result<ASTNodePackage, ASTError> {
         let mut names: Vec<Token> = Vec::new();
-        node.children[1].collect_child_kinds(&vec![&TokenKind::Identifier], &mut names);
+        node.children[1]
+            .collect_child_kinds(&vec![&TokenKind::Dot, &TokenKind::Identifier], &mut names);
 
-        Ok(ASTNodePackage { package: names })
+        let mut package = ASTNode {
+            token: Token::new(TokenKind::NonTerminal, Some("Name")),
+            children: Vec::new(),
+        };
+        for token in &names {
+            package.children.push(ASTNode {
+                token: token.clone(),
+                children: Vec::new(),
+            });
+        }
+
+        Ok(ASTNodePackage { package: package })
     }
 }
 
@@ -310,18 +334,12 @@ impl fmt::Display for ASTNode {
 
 impl fmt::Display for ASTNodeImport {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        for t in &self.import {
-            try!(write!(f, "{} ", t));
-        }
-        Ok(())
+        write!(f, "{} ", &self.import)
     }
 }
 
 impl fmt::Display for ASTNodePackage {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        for t in &self.package {
-            try!(write!(f, "{} ", t));
-        }
-        Ok(())
+        write!(f, "{} ", &self.package)
     }
 }

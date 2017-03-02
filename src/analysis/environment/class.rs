@@ -9,27 +9,20 @@ use scanner::ASTNodeImport;
 use scanner::Token;
 use scanner::TokenKind;
 
-pub fn analyze_class_declaration(canonical: &Vec<Token>,
+pub fn analyze_class_declaration(canonical: &ASTNode,
                                  kinds: &mut Vec<ClassOrInterfaceEnvironment>,
                                  imports: &Vec<ASTNodeImport>,
                                  node: &ASTNode)
                                  -> Result<(), String> {
-    let mut current = ClassOrInterfaceEnvironment {
-        constructors: Vec::new(),
-        extends: vec![vec![Token::new(TokenKind::Identifier, Some("Object"))]],
-        fields: Vec::new(),
-        implements: Vec::new(),
-        kind: ClassOrInterface::CLASS,
-        methods: Vec::new(),
-        modifiers: Vec::new(),
-        name: canonical.clone(),
-    };
+    let mut current = ClassOrInterfaceEnvironment::new(canonical.clone(), ClassOrInterface::CLASS);
 
-    for class_or_interface in kinds.clone() {
-        if class_or_interface.name == current.name {
+    for kind in kinds.clone() {
+        if kind.name == current.name {
             return Err("class/interface names must be unique".to_owned());
         }
     }
+
+    current.imports = imports.clone();
 
     for child in node.children[0].clone().children {
         current.modifiers.push(child);
@@ -49,7 +42,7 @@ pub fn analyze_class_declaration(canonical: &Vec<Token>,
                 };
                 for mut greatgrandkid in grandkid.children {
                     if greatgrandkid.token.kind == TokenKind::Identifier {
-                        let interface = vec![greatgrandkid.clone().token];
+                        let interface = greatgrandkid.clone();
                         if current.implements.contains(&interface) {
                             return Err("interfaces must not be repeated in implements clauses"
                                 .to_owned());
@@ -57,15 +50,12 @@ pub fn analyze_class_declaration(canonical: &Vec<Token>,
                         current.implements.push(interface);
                     } else if greatgrandkid.clone().token.lexeme.unwrap_or("".to_owned()) ==
                               "Name" {
-                        let mut children = Vec::new();
-                        for child in greatgrandkid.flatten().clone().children {
-                            children.push(child.token);
-                        }
-                        if current.implements.contains(&children) {
+                        let interface = greatgrandkid.flatten().clone();
+                        if current.implements.contains(&interface) {
                             return Err("interfaces must not be repeated in implements clauses"
                                 .to_owned());
                         }
-                        current.implements.push(children);
+                        current.implements.push(interface);
                     } else if greatgrandkid.token.kind == TokenKind::Comma {
                         continue;
                     } else {
@@ -73,69 +63,19 @@ pub fn analyze_class_declaration(canonical: &Vec<Token>,
                                            greatgrandkid.token));
                     }
                 }
-
-                for implemented in &current.implements {
-                    for class_or_interface in kinds.clone() {
-                        // TODO: name lookup
-                        if class_or_interface.kind == ClassOrInterface::CLASS &&
-                           &class_or_interface.name == implemented {
-                            return Err("classes cannot implement classes".to_owned());
-                        }
-                    }
-                }
-                // TODO: no dups
             }
             Some(ref le) if le == "ClassExtends" => {
-                // remove implicit Object inheritance
-                current.extends = Vec::new();
                 if child.children[1].token.kind == TokenKind::Identifier {
-                    current.extends.push(vec![child.children[1].clone().token]);
+                    current.extends.push(child.children[1].clone());
                 } else if child.children[1].clone().token.lexeme.unwrap_or("".to_owned()) ==
                           "Name" {
-                    let mut children = Vec::new();
-                    for child in child.children[1].clone().flatten().clone().children {
-                        children.push(child.token);
-                    }
-                    current.extends.push(children);
+                    current.extends.push(child.children[1].clone().flatten().clone());
                 } else {
                     return Err(format!("got invalid ClassExtends child {}",
                                        child.children[1].token));
                 }
-
-                let fnode = ASTNode {
-                    token: Token::new(TokenKind::Final, None),
-                    children: Vec::new(),
-                };
-                for extended in &current.extends {
-                    for class_or_interface in kinds.clone() {
-                        // TODO: name lookup
-                        if class_or_interface.kind == ClassOrInterface::CLASS &&
-                           &class_or_interface.name == extended {
-                            if class_or_interface.modifiers.contains(&fnode) {
-                                return Err("classes cannot extend final classes".to_owned());
-                            }
-                            break;
-                        }
-                    }
-                }
-
-                for extended in &current.extends {
-                    for class_or_interface in kinds.clone() {
-                        // TODO: name lookup
-                        if class_or_interface.kind == ClassOrInterface::INTERFACE &&
-                           &class_or_interface.name == extended {
-                            return Err("classes cannot extend interfaces".to_owned());
-                        }
-                    }
-                }
-                // TODO: no dups, non-circular
             }
             Some(ref le) if le == "ClassBody" && child.children.len() == 3 => {
-                let anode = ASTNode {
-                    token: Token::new(TokenKind::Abstract, None),
-                    children: Vec::new(),
-                };
-
                 let mut decls = child.children[1].clone();
                 let decls = match decls.clone().token.lexeme {
                     Some(ref l) if l == "ClassBodyDeclarations" => decls.flatten().clone(),
@@ -144,23 +84,9 @@ pub fn analyze_class_declaration(canonical: &Vec<Token>,
                 for decl in &decls.children {
                     let result = match decl.token.lexeme {
                         Some(ref lex) if lex == "AbstractMethodDeclaration" => {
-                            match analyze_abstract_method_declaration(kinds,
-                                                                      &mut current,
-                                                                      &decl.children[0]) {
-                                Ok(_) => (),
-                                Err(e) => return Err(e),
-                            }
-
-                            // TODO: ensure non-abstract class does not contain
-                            // un-overriden abstract methods
-                            match current.methods.last() {
-                                Some(m) if m.modifiers.contains(&anode) &&
-                                           !current.modifiers.contains(&anode) => {
-                                    Err("a class with an abstract method must be abstract"
-                                        .to_owned())
-                                }
-                                _ => Ok(()),
-                            }
+                            analyze_abstract_method_declaration(kinds,
+                                                                &mut current,
+                                                                &decl.children[0])
                         }
                         Some(ref lex) if lex == "ConstructorDeclaration" => {
                             analyze_constructor_declaration(kinds,
@@ -189,6 +115,13 @@ pub fn analyze_class_declaration(canonical: &Vec<Token>,
             }
             _ => (),
         }
+    }
+
+    if current.extends.is_empty() {
+        current.extends.push(ASTNode {
+            token: Token::new(TokenKind::Identifier, Some("Object")),
+            children: Vec::new(),
+        });
     }
 
     kinds.push(current);

@@ -22,11 +22,9 @@ pub struct AST {
     pub imports: Vec<ASTNodeImport>,
     /// pointer to the root node of the AST for this file
     pub root: Option<ASTNode>,
-    /// name of the definied class or interface in this tree
-    pub name: Option<Token>,
     /// canonical name of the definied class or interface in this tree --
     /// effectively "package + name"
-    pub canonical: Vec<Token>,
+    pub canonical: ASTNode,
 }
 
 impl AST {
@@ -35,8 +33,15 @@ impl AST {
     /// statements as ASTNodeImports, and performing a recursive build on the
     /// remaining tree into ASTNodes.
     pub fn new(filename: &str, tree: &ParseTree) -> Result<AST, ASTError> {
+        let token_name = Token::new(TokenKind::NonTerminal, Some("Name"));
+
         let mut imports = Vec::new();
-        let mut package = ASTNodePackage { package: Vec::new() };
+        let mut package = ASTNodePackage {
+            package: ASTNode {
+                token: token_name.clone(),
+                children: Vec::new(),
+            },
+        };
         let mut root = None;
         let mut name = None;
         for child in &tree.root.children {
@@ -76,29 +81,53 @@ impl AST {
             }
         }
 
-        if package.package !=
-           vec![Token::new(TokenKind::Identifier, Some("java")),
-                Token::new(TokenKind::Identifier, Some("lang"))] {
-            imports.push(ASTNodeImport {
-                import: vec![Token::new(TokenKind::Identifier, Some("java")),
-                             Token::new(TokenKind::Identifier, Some("lang")),
-                             Token::new(TokenKind::Star, None)],
-            });
-        }
+
+        imports.push(ASTNodeImport {
+            import: ASTNode {
+                token: token_name.clone(),
+                children: vec![ASTNode {
+                                   token: Token::new(TokenKind::Identifier, Some("java")),
+                                   children: Vec::new(),
+                               },
+                               ASTNode {
+                                   token: Token::new(TokenKind::Dot, None),
+                                   children: Vec::new(),
+                               },
+                               ASTNode {
+                                   token: Token::new(TokenKind::Identifier, Some("lang")),
+                                   children: Vec::new(),
+                               },
+                               ASTNode {
+                                   token: Token::new(TokenKind::Dot, None),
+                                   children: Vec::new(),
+                               },
+                               ASTNode {
+                                   token: Token::new(TokenKind::Star, None),
+                                   children: Vec::new(),
+                               }],
+            },
+        });
 
         let mut canonical = package.package.clone();
-        let cname = match name {
-            Some(ref n) => n.clone(),
+        match name {
+            Some(ref n) => {
+                canonical.children.push(ASTNode {
+                    token: Token::new(TokenKind::Dot, None),
+                    children: Vec::new(),
+                });
+                canonical.children.push(ASTNode {
+                    token: n.clone(),
+                    children: Vec::new(),
+                });
+            }
             _ => return Err(ASTError::new(ErrorMessage::MissingName, &root.unwrap())),
         };
-        canonical.push(cname);
 
         Ok(AST {
             filename: filename.to_owned(),
             imports: imports,
             package: package,
             root: root,
-            name: name,
             canonical: canonical,
         })
     }

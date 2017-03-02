@@ -7,27 +7,21 @@ use scanner::ASTNodeImport;
 use scanner::Token;
 use scanner::TokenKind;
 
-pub fn analyze_interface_declaration(canonical: &Vec<Token>,
+pub fn analyze_interface_declaration(canonical: &ASTNode,
                                      kinds: &mut Vec<ClassOrInterfaceEnvironment>,
                                      imports: &Vec<ASTNodeImport>,
                                      node: &ASTNode)
                                      -> Result<(), String> {
-    let mut current = ClassOrInterfaceEnvironment {
-        constructors: Vec::new(),
-        extends: vec![vec![Token::new(TokenKind::Identifier, Some("Object"))]],
-        fields: Vec::new(),
-        implements: Vec::new(),
-        kind: ClassOrInterface::INTERFACE,
-        methods: Vec::new(),
-        modifiers: Vec::new(),
-        name: canonical.clone(),
-    };
+    let mut current = ClassOrInterfaceEnvironment::new(canonical.clone(),
+                                                       ClassOrInterface::INTERFACE);
 
-    for class_or_interface in kinds.clone() {
-        if class_or_interface.name == current.name {
+    for kind in kinds.clone() {
+        if kind.name == current.name {
             return Err("class/interface names must be unique".to_owned());
         }
     }
+
+    current.imports = imports.clone();
 
     for child in node.children[0].clone().children {
         current.modifiers.push(child);
@@ -35,9 +29,6 @@ pub fn analyze_interface_declaration(canonical: &Vec<Token>,
 
     match node.children[3].token.lexeme {
         Some(ref l) if l == "InterfaceExtends" => {
-            // remove implicit Object inheritance
-            current.extends = Vec::new();
-
             let mut grandkid = node.children[3].children[1].clone();
             let grandkid = match grandkid.clone().token.lexeme {
                 Some(ref l) if l == "InterfaceExtendsList" => grandkid.flatten().clone(),
@@ -45,13 +36,17 @@ pub fn analyze_interface_declaration(canonical: &Vec<Token>,
             };
             for mut greatgrandkid in grandkid.children {
                 if greatgrandkid.token.kind == TokenKind::Identifier {
-                    current.extends.push(vec![greatgrandkid.clone().token]);
-                } else if greatgrandkid.clone().token.lexeme.unwrap_or("".to_owned()) == "Name" {
-                    let mut children = Vec::new();
-                    for child in greatgrandkid.flatten().clone().children {
-                        children.push(child.token);
+                    let cls = greatgrandkid.clone();
+                    if current.extends.contains(&cls) {
+                        return Err("objects must not be repeated in extends clauses".to_owned());
                     }
-                    current.extends.push(children);
+                    current.extends.push(cls);
+                } else if greatgrandkid.clone().token.lexeme.unwrap_or("".to_owned()) == "Name" {
+                    let mut cls = greatgrandkid.flatten().clone();
+                    if current.extends.contains(&cls) {
+                        return Err("objects must not be repeated in extends clauses".to_owned());
+                    }
+                    current.extends.push(cls);
                 } else if greatgrandkid.token.kind == TokenKind::Comma {
                     continue;
                 } else {
@@ -59,17 +54,6 @@ pub fn analyze_interface_declaration(canonical: &Vec<Token>,
                                        greatgrandkid.token));
                 }
             }
-
-            for extended in &current.extends {
-                for class_or_interface in kinds.clone() {
-                    // TODO: name lookup
-                    if class_or_interface.kind == ClassOrInterface::CLASS &&
-                       &class_or_interface.name == extended {
-                        return Err("interfaces cannot extend classes".to_owned());
-                    }
-                }
-            }
-            // TODO: no dups, non-circular
         }
         Some(ref l) if l == "InterfaceBody" && node.children[3].children.len() == 3 => {
             let mut decls = node.children[3].clone().children[1].clone();

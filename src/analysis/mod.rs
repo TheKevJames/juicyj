@@ -8,6 +8,7 @@ use std;
 use scanner::AST;
 
 use self::environment::Environment;
+use self::types::verify;
 
 /// Runs a file through the analysis stack (environment builder) and exits with
 /// code 42 on a failure.
@@ -21,13 +22,21 @@ use self::environment::Environment;
 /// juicyj::analysis::analyze_or_exit(&vec![ast])
 /// ```
 pub fn analyze_or_exit(asts: &Vec<AST>) {
-    match Environment::annotate_asts(asts) {
-        Ok(_) => (),
+    let env = match Environment::new(asts) {
+        Ok(e) => e,
         Err(e) => {
             println!("{}", e);
             std::process::exit(42);
         }
     };
+
+    match verify(&env) {
+        Ok(_) => (),
+        Err(e) => {
+            println!("{}", e);
+            std::process::exit(42);
+        }
+    }
 }
 
 // TODO: this should be #[cfg(test)], but for some reason the test macros can't
@@ -39,10 +48,11 @@ pub mod tests {
     use super::super::scanner::AST;
 
     use super::environment::Environment;
+    use super::types::verify;
 
     pub fn analyze_and_assert(asts: &Vec<AST>) {
-        match Environment::annotate_asts(asts) {
-            Ok(_) => (),
+        let env = match Environment::new(asts) {
+            Ok(e) => e,
             Err(e) => {
                 println!("Annotation Error");
                 println!("{}", e);
@@ -51,13 +61,23 @@ pub mod tests {
             }
         };
 
+        match verify(&env) {
+            Ok(_) => (),
+            Err(e) => {
+                println!("Verification Error");
+                println!("{}", e);
+                assert!(true);
+                return;
+            }
+        }
+
         println!("No Error Found");
         assert!(false);
     }
 
     pub fn analyze_or_assert(asts: &Vec<AST>) {
-        match Environment::annotate_asts(asts) {
-            Ok(_) => (),
+        let env = match Environment::new(asts) {
+            Ok(e) => e,
             Err(e) => {
                 println!("Annotation Error");
                 println!("{}", e);
@@ -65,5 +85,15 @@ pub mod tests {
                 std::process::exit(1);
             }
         };
+
+        match verify(&env) {
+            Ok(_) => (),
+            Err(e) => {
+                println!("Verification Error");
+                println!("{}", e);
+                assert!(false);
+                std::process::exit(1);
+            }
+        }
     }
 }
