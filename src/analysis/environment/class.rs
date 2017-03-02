@@ -135,7 +135,6 @@ pub fn analyze_class_declaration(canonical: &ASTNode,
                        }],
     };
     if current.extends.is_empty() && current.name != object_name {
-        println!("{:?}", current.name);
         current.extends.push(ASTNode {
             token: Token::new(TokenKind::Identifier, Some("Object")),
             children: Vec::new(),

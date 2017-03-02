@@ -72,8 +72,10 @@ fn lookup(name: &ASTNode,
                     }
                 }
 
-                return Err(format!("could not find type for imported lookup {:?}",
-                                   import.import));
+                if found.is_none() {
+                    return Err(format!("could not find type for imported lookup {:?}",
+                                       import.import));
+                }
             }
         }
     }

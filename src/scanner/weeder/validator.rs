@@ -48,6 +48,7 @@ impl<'filename, 'tree> Weeder<'filename, 'tree> {
             TokenKind::NonTerminal => {
                 match node.token.lexeme {
                     Some(ref l) if l == "AbstractMethodDeclaration" => {
+                        // TODO: this is ok in interfaces
                         if !node.children[0].clone().has_child_kind(&TokenKind::Abstract) &&
                            !node.children[0].clone().has_child_kind(&TokenKind::Native) {
                             return self.error(ErrorMessage::ConcreteNoBody, &node);
