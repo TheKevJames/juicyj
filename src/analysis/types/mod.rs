@@ -147,7 +147,7 @@ pub fn verify_inheritance(env: &Environment,
             Err(e) => return Err(e),
         };
 
-        let result = verify_inheritance(env, &found, visited);
+        let result = verify_inheritance(env, &found, &mut visited.clone());
         if result.is_err() {
             return result;
         }
