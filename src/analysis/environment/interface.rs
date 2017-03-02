@@ -4,6 +4,7 @@ use analysis::environment::field::analyze_constant_declaration;
 use analysis::environment::method::analyze_abstract_method_declaration;
 use scanner::ASTNode;
 use scanner::ASTNodeImport;
+use scanner::Token;
 use scanner::TokenKind;
 
 pub fn analyze_interface_declaration(canonical: &ASTNode,
@@ -26,56 +27,78 @@ pub fn analyze_interface_declaration(canonical: &ASTNode,
         current.modifiers.push(child);
     }
 
-    match node.children[3].token.lexeme {
-        Some(ref l) if l == "InterfaceExtends" => {
-            let mut grandkid = node.children[3].children[1].clone();
-            let grandkid = match grandkid.clone().token.lexeme {
-                Some(ref l) if l == "InterfaceExtendsList" => grandkid.flatten().clone(),
-                _ => grandkid,
-            };
-            for mut greatgrandkid in grandkid.children {
-                if greatgrandkid.token.kind == TokenKind::Identifier {
-                    let cls = greatgrandkid.clone();
-                    if current.extends.contains(&cls) {
-                        return Err("objects must not be repeated in extends clauses".to_owned());
-                    }
-                    current.extends.push(cls);
-                } else if greatgrandkid.clone().token.lexeme.unwrap_or("".to_owned()) == "Name" {
-                    let cls = greatgrandkid.flatten().clone();
-                    if current.extends.contains(&cls) {
-                        return Err("objects must not be repeated in extends clauses".to_owned());
-                    }
-                    current.extends.push(cls);
-                } else if greatgrandkid.token.kind == TokenKind::Comma {
-                    continue;
-                } else {
-                    return Err(format!("got invalid InterfaceExtendsList child {}",
-                                       greatgrandkid.token));
-                }
-            }
+    for (idx, child) in node.children.iter().enumerate() {
+        if idx < 3 {
+            continue;
         }
-        Some(ref l) if l == "InterfaceBody" && node.children[3].children.len() == 3 => {
-            let mut decls = node.children[3].clone().children[1].clone();
-            let decls = match decls.clone().token.lexeme {
-                Some(ref l) if l == "InterfaceMemberDeclarations" => decls.flatten().clone(),
-                _ => decls,
-            };
-            for decl in &decls.children {
-                let result = match decl.token.lexeme {
-                    Some(ref lex) if lex == "AbstractMethodDeclaration" => {
-                        analyze_abstract_method_declaration(&mut current, &decl.children[0])
-                    }
-                    Some(ref lex) if lex == "ConstantDeclaration" => {
-                        analyze_constant_declaration(&mut current.fields, &decl)
-                    }
-                    _ => Ok(()),
+
+        match child.token.lexeme {
+            Some(ref l) if l == "InterfaceExtends" => {
+                let mut grandkid = child.children[1].clone();
+                let grandkid = match grandkid.clone().token.lexeme {
+                    Some(ref l) if l == "InterfaceExtendsList" => grandkid.flatten().clone(),
+                    _ => grandkid,
                 };
-                if result.is_err() {
-                    return result;
+                for mut greatgrandkid in grandkid.children {
+                    if greatgrandkid.token.kind == TokenKind::Identifier {
+                        let cls = greatgrandkid.clone();
+                        if current.extends.contains(&cls) {
+                            return Err("objects must not be repeated in extends clauses"
+                                .to_owned());
+                        }
+                        current.extends.push(cls);
+                    } else if greatgrandkid.clone().token.lexeme.unwrap_or("".to_owned()) ==
+                              "Name" {
+                        let cls = greatgrandkid.flatten().clone();
+                        if current.extends.contains(&cls) {
+                            return Err("objects must not be repeated in extends clauses"
+                                .to_owned());
+                        }
+                        current.extends.push(cls);
+                    } else if greatgrandkid.token.kind == TokenKind::Comma {
+                        continue;
+                    } else {
+                        return Err(format!("got invalid InterfaceExtendsList child {}",
+                                           greatgrandkid.token));
+                    }
                 }
             }
+            Some(ref l) if l == "InterfaceBody" && child.children.len() == 3 => {
+                let mut decls = child.clone().children[1].clone();
+                let decls = match decls.clone().token.lexeme {
+                    Some(ref l) if l == "InterfaceMemberDeclarations" => decls.flatten().clone(),
+                    _ => {
+                        ASTNode {
+                            token: Token::new(TokenKind::NonTerminal,
+                                              Some("ClassBodyDeclarations")),
+                            children: vec![decls],
+                        }
+                    }
+                };
+                for decl in &decls.children {
+                    let result = match decl.token.lexeme {
+                        Some(ref lex) if lex == "AbstractMethodDeclaration" => {
+                            analyze_abstract_method_declaration(&mut current, &decl.children[0])
+                        }
+                        // TODO: figure out why this gets pulled out of AbstractMethodDeclaration
+                        Some(ref lex) if lex == "MethodHeader" => {
+                            analyze_abstract_method_declaration(&mut current, &decl)
+                        }
+                        Some(ref lex) if lex == "ConstantDeclaration" => {
+                            analyze_constant_declaration(&mut current.fields, &decl)
+                        }
+                        Some(ref lex) => {
+                            return Err(format!("no InterfaceBody analyzer for {}", lex));
+                        }
+                        _ => Ok(()),
+                    };
+                    if result.is_err() {
+                        return result;
+                    }
+                }
+            }
+            _ => (),
         }
-        _ => (),
     }
 
     kinds.push(current);

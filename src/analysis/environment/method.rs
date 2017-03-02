@@ -1,3 +1,6 @@
+use std::fmt;
+
+use analysis::environment::classorinterface::ClassOrInterface;
 use analysis::environment::classorinterface::ClassOrInterfaceEnvironment;
 use scanner::ASTNode;
 use scanner::Token;
@@ -24,6 +27,22 @@ impl MethodEnvironment {
     }
 }
 
+impl fmt::Display for MethodEnvironment {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        try!(write!(f, "{}", self.name));
+        if !&self.parameters.is_empty() {
+            try!(write!(f, " ("));
+        }
+        for parameter in &self.parameters {
+            try!(write!(f, " {}", parameter));
+        }
+        if !&self.parameters.is_empty() {
+            try!(write!(f, " )"));
+        }
+        Ok(())
+    }
+}
+
 pub fn analyze_abstract_method_declaration(current: &mut ClassOrInterfaceEnvironment,
                                            header: &ASTNode)
                                            -> Result<(), String> {
@@ -34,6 +53,14 @@ pub fn analyze_abstract_method_declaration(current: &mut ClassOrInterfaceEnviron
 
     for child in header.children[0].clone().children {
         new.modifiers.push(child);
+    }
+
+    let modifier_abstract = ASTNode {
+        token: Token::new(TokenKind::Abstract, None),
+        children: Vec::new(),
+    };
+    if !new.modifiers.contains(&modifier_abstract) && current.kind == ClassOrInterface::INTERFACE {
+        new.modifiers.push(modifier_abstract);
     }
 
     if declarator.children.len() == 4 {

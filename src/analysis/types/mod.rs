@@ -157,11 +157,22 @@ pub fn verify_inheritance(env: &Environment,
 }
 
 pub fn verify(env: &Environment) -> Result<(), String> {
+    let modifier_abstract = ASTNode {
+        token: Token::new(TokenKind::Abstract, None),
+        children: Vec::new(),
+    };
     let modifier_final = ASTNode {
         token: Token::new(TokenKind::Final, None),
         children: Vec::new(),
     };
-
+    let modifier_native = ASTNode {
+        token: Token::new(TokenKind::Native, None),
+        children: Vec::new(),
+    };
+    let modifier_static = ASTNode {
+        token: Token::new(TokenKind::Static, None),
+        children: Vec::new(),
+    };
 
     for current in &env.kinds {
         if current.kind == ClassOrInterface::CLASS {
@@ -230,6 +241,12 @@ pub fn verify(env: &Environment) -> Result<(), String> {
         }
 
         for method in &current.methods {
+            if method.body.is_none() {
+                if !method.modifiers.contains(&modifier_abstract) &&
+                   !method.modifiers.contains(&modifier_native) {
+                    return Err(format!("concrete method {} has no body", method));
+                }
+            }
             // TODO: lookup each method.parameters
             // TODO: lookup method.return_type
             // TODO: if body, analyze method.body
@@ -239,6 +256,16 @@ pub fn verify(env: &Environment) -> Result<(), String> {
             //     Ok(_) => (),
             //     Err(e) => return Err(e),
             // }
+
+            if method.modifiers.contains(&modifier_abstract) {
+                if method.modifiers.contains(&modifier_final) {
+                    return Err(format!("final method {} is abstract", method));
+                }
+
+                if method.modifiers.contains(&modifier_static) {
+                    return Err(format!("static method {} is abstract", method));
+                }
+            }
         }
     }
 

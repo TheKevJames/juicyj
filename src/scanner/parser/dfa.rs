@@ -24,7 +24,6 @@ pub struct DFA {
 }
 
 impl DFA {
-    // TODO: cleanup
     pub fn new() -> DFA {
         let filename = "grammar/joos.lr1";
         let mut file = match File::open(filename) {

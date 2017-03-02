@@ -101,7 +101,7 @@ pub mod tests {
     use super::parser::Parser;
     use super::weeder::Weeder;
 
-    pub fn scan_and_assert(filename: &str, src: &str) {
+    pub fn scan_and_assert(filename: &str, src: &str) -> Option<AST> {
         let lexer = Lexer::new(&filename, &src);
         for token in lexer.clone().collect::<Vec<Result<_, _>>>() {
             match token {
@@ -109,7 +109,7 @@ pub mod tests {
                 Err(_) => {
                     println!("Lexer Error");
                     assert!(true);
-                    return;
+                    return None;
                 }
             }
         }
@@ -120,7 +120,7 @@ pub mod tests {
             Err(_) => {
                 println!("Parser Error");
                 assert!(true);
-                return;
+                return None;
             }
         };
 
@@ -130,21 +130,18 @@ pub mod tests {
             Err(_) => {
                 println!("Weeder Verification Error");
                 assert!(true);
-                return;
+                return None;
             }
         }
 
         match AST::new(&filename, &parse_tree) {
-            Ok(_) => (),
+            Ok(ast) => Some(ast),
             Err(_) => {
                 println!("AST Construction Error");
                 assert!(true);
-                return;
+                None
             }
-        };
-
-        println!("No Error Found");
-        assert!(false);
+        }
     }
 
     pub fn scan_or_assert(filename: &str, src: &str) -> AST {

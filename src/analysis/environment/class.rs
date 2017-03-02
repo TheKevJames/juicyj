@@ -79,7 +79,13 @@ pub fn analyze_class_declaration(canonical: &ASTNode,
                 let mut decls = child.children[1].clone();
                 let decls = match decls.clone().token.lexeme {
                     Some(ref l) if l == "ClassBodyDeclarations" => decls.flatten().clone(),
-                    _ => decls,
+                    _ => {
+                        ASTNode {
+                            token: Token::new(TokenKind::NonTerminal,
+                                              Some("ClassBodyDeclarations")),
+                            children: vec![decls],
+                        }
+                    }
                 };
                 for decl in &decls.children {
                     let result = match decl.token.lexeme {
@@ -99,6 +105,9 @@ pub fn analyze_class_declaration(canonical: &ASTNode,
                             analyze_method_declaration(&mut current,
                                                        &decl.children[0],
                                                        &decl.children[1])
+                        }
+                        Some(ref lex) => {
+                            return Err(format!("no ClassBody analyzer for {}", lex));
                         }
                         _ => Ok(()),
                     };
