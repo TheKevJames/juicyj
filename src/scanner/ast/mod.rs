@@ -35,7 +35,32 @@ impl AST {
     pub fn new(filename: &str, tree: &ParseTree) -> Result<AST, ASTError> {
         let token_name = Token::new(TokenKind::NonTerminal, Some("Name"));
 
-        let mut imports = Vec::new();
+        let mut imports =
+            vec![ASTNodeImport {
+                     import: ASTNode {
+                         token: token_name.clone(),
+                         children: vec![ASTNode {
+                                            token: Token::new(TokenKind::Identifier, Some("java")),
+                                            children: Vec::new(),
+                                        },
+                                        ASTNode {
+                                            token: Token::new(TokenKind::Dot, None),
+                                            children: Vec::new(),
+                                        },
+                                        ASTNode {
+                                            token: Token::new(TokenKind::Identifier, Some("lang")),
+                                            children: Vec::new(),
+                                        },
+                                        ASTNode {
+                                            token: Token::new(TokenKind::Dot, None),
+                                            children: Vec::new(),
+                                        },
+                                        ASTNode {
+                                            token: Token::new(TokenKind::Star, None),
+                                            children: Vec::new(),
+                                        }],
+                     },
+                 }];
         let mut package = ASTNodePackage {
             package: ASTNode {
                 token: token_name.clone(),
@@ -80,33 +105,6 @@ impl AST {
                 _ => return Err(ASTError::new(ErrorMessage::InvalidRootChild, child)),
             }
         }
-
-
-        imports.push(ASTNodeImport {
-            import: ASTNode {
-                token: token_name.clone(),
-                children: vec![ASTNode {
-                                   token: Token::new(TokenKind::Identifier, Some("java")),
-                                   children: Vec::new(),
-                               },
-                               ASTNode {
-                                   token: Token::new(TokenKind::Dot, None),
-                                   children: Vec::new(),
-                               },
-                               ASTNode {
-                                   token: Token::new(TokenKind::Identifier, Some("lang")),
-                                   children: Vec::new(),
-                               },
-                               ASTNode {
-                                   token: Token::new(TokenKind::Dot, None),
-                                   children: Vec::new(),
-                               },
-                               ASTNode {
-                                   token: Token::new(TokenKind::Star, None),
-                                   children: Vec::new(),
-                               }],
-            },
-        });
 
         let mut canonical = package.package.clone();
         match name {

@@ -114,7 +114,8 @@ fn lookup(name: &ASTNode,
                     if import_package == kind_package && &name == kind_name {
                         match found {
                             Some(_) => {
-                                return Err(format!("ambiguous type lookup on-demand for {:?}",
+                                return Err(format!("ambiguous on-demand lookup for {:?} in {:?}",
+                                                   name,
                                                    kind_package))
                             }
                             None => found = Some(kind.clone()),
