@@ -4,7 +4,6 @@ mod constructor;
 mod field;
 mod interface;
 mod method;
-mod variable;
 
 use scanner::AST;
 
