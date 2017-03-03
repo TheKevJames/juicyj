@@ -75,6 +75,9 @@ pub fn analyze_abstract_method_declaration(current: &mut ClassOrInterfaceEnviron
             }
         };
         for param in &params.children {
+            if param.token.kind == TokenKind::Comma {
+                continue;
+            }
             new.parameters.push(param.clone());
         }
     }
