@@ -12,7 +12,7 @@ pub struct VariableEnvironment {
 impl VariableEnvironment {
     pub fn new(node: ASTNode) -> VariableEnvironment {
         VariableEnvironment {
-            kind: node.children[0].clone(),
+            kind: node.children[0].clone().flatten().clone(),
             name: node.children[1].clone(),
             dim: node.children.len() == 3,
         }
@@ -21,22 +21,7 @@ impl VariableEnvironment {
 
 impl PartialEq for VariableEnvironment {
     fn eq(&self, other: &VariableEnvironment) -> bool {
-        if self.dim != other.dim {
-            return false;
-        }
-
-        if self.kind == other.kind {
-            return true;
-        }
-
-        // TODO: is this enough for type lookup?
-        if let Some(ref lexeme) = self.kind.token.lexeme {
-            if self.kind.token.lexeme == other.kind.token.lexeme && lexeme == "Name" {
-                return self.kind.children.last() == other.kind.children.last();
-            }
-        }
-
-        false
+        self.kind == other.kind && self.dim == other.dim
     }
 }
 

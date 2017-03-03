@@ -24,7 +24,7 @@ pub fn verify(env: &Environment,
 
         match verify(env, &found, &mut visited.clone()) {
             Ok(parent) => {
-                match child.inherit(&parent) {
+                match child.inherit(&parent, &env.kinds) {
                     Ok(_) => (),
                     Err(e) => return Err(e),
                 }
@@ -40,7 +40,7 @@ pub fn verify(env: &Environment,
 
         match verify(env, &found, &mut Vec::new()) {
             Ok(parent) => {
-                match child.inherit(&parent) {
+                match child.inherit(&parent, &env.kinds) {
                     Ok(_) => (),
                     Err(e) => return Err(e),
                 }
@@ -48,7 +48,7 @@ pub fn verify(env: &Environment,
             Err(e) => return Err(e),
         }
     }
-    match child.apply(&current) {
+    match child.apply(&current, &env.kinds) {
         Ok(_) => (),
         Err(e) => return Err(e),
     }

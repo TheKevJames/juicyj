@@ -3,6 +3,7 @@ use std::fmt;
 use analysis::environment::constructor::ConstructorEnvironment;
 use analysis::environment::field::FieldEnvironment;
 use analysis::environment::method::MethodEnvironment;
+use analysis::types::check;
 use scanner::ASTNode;
 use scanner::ASTNodeImport;
 use scanner::Token;
@@ -57,7 +58,10 @@ impl ClassOrInterfaceEnvironment {
     /// child.inherit(C);
     /// child.apply(A);
     /// ```
-    pub fn apply(&mut self, child: &ClassOrInterfaceEnvironment) -> Result<(), String> {
+    pub fn apply(&mut self,
+                 child: &ClassOrInterfaceEnvironment,
+                 kinds: &Vec<ClassOrInterfaceEnvironment>)
+                 -> Result<(), String> {
         let modifier_final = ASTNode {
             token: Token::new(TokenKind::Final, None),
             children: Vec::new(),
@@ -80,12 +84,34 @@ impl ClassOrInterfaceEnvironment {
         };
 
         for constructor in &child.constructors {
-            for (idx, inherited) in self.constructors.clone().iter().enumerate() {
-                if constructor.parameters == inherited.parameters {
+            for (idx, existing) in self.constructors.clone().iter().enumerate() {
+                let mut different = constructor.parameters.len() != existing.parameters.len();
+                if different || constructor.parameters == existing.parameters {
+                    continue;
+                }
+
+                for (constructor_param, existing_param) in
+                    constructor.parameters.iter().zip(existing.parameters.iter()) {
+                    let found_constructor_param =
+                        match check::lookup_or_primitive(&constructor_param.kind, child, kinds) {
+                            Ok(mp) => mp,
+                            Err(e) => return Err(e),
+                        };
+                    let found_existing_param =
+                        match check::lookup_or_primitive(&existing_param.kind, child, kinds) {
+                            Ok(mp) => mp,
+                            Err(e) => return Err(e),
+                        };
+                    if found_constructor_param.name != found_existing_param.name {
+                        different = true;
+                        break;
+                    }
+                }
+                if !different {
                     self.constructors.remove(idx);
                 }
             }
-            // TODO: any restrictions?
+
             self.constructors.push(constructor.clone());
         }
         for field in &child.fields {
@@ -94,14 +120,49 @@ impl ClassOrInterfaceEnvironment {
                     self.fields.remove(idx);
                 }
             }
-            // TODO: any restrictions?
+
             self.fields.push(field.clone());
         }
         for method in &child.methods {
             for (idx, existing) in self.methods.clone().iter().enumerate() {
-                if method.name == existing.name && method.parameters == existing.parameters {
-                    // TODO: lookup?
-                    if method.return_type != existing.return_type {
+                if method.name != existing.name {
+                    continue;
+                }
+
+                let mut different = method.parameters.len() != existing.parameters.len();
+                if different || method.parameters == existing.parameters {
+                    continue;
+                }
+
+                for (method_param, existing_param) in
+                    method.parameters.iter().zip(existing.parameters.iter()) {
+                    let found_method_param =
+                        match check::lookup_or_primitive(&method_param.kind, child, kinds) {
+                            Ok(mp) => mp,
+                            Err(e) => return Err(e),
+                        };
+                    let found_existing_param =
+                        match check::lookup_or_primitive(&existing_param.kind, child, kinds) {
+                            Ok(mp) => mp,
+                            Err(e) => return Err(e),
+                        };
+                    if found_method_param.name != found_existing_param.name {
+                        different = true;
+                        break;
+                    }
+                }
+                if !different {
+                    let method_return_type =
+                        match check::lookup_or_primitive(&method.return_type, child, kinds) {
+                            Ok(rt) => rt,
+                            Err(e) => return Err(e),
+                        };
+                    let existing_return_type =
+                        match check::lookup_or_primitive(&existing.return_type, child, kinds) {
+                            Ok(rt) => rt,
+                            Err(e) => return Err(e),
+                        };
+                    if method_return_type.name != existing_return_type.name {
                         return Err(format!("cannot override method {} with different return type",
                                            method.name));
                     }
@@ -130,6 +191,7 @@ impl ClassOrInterfaceEnvironment {
                     self.methods.remove(idx);
                 }
             }
+
             self.methods.push(method.clone());
         }
 
@@ -156,7 +218,10 @@ impl ClassOrInterfaceEnvironment {
     /// child.inherit(C);
     /// child.apply(A);
     /// ```
-    pub fn inherit(&mut self, parent: &ClassOrInterfaceEnvironment) -> Result<(), String> {
+    pub fn inherit(&mut self,
+                   parent: &ClassOrInterfaceEnvironment,
+                   kinds: &Vec<ClassOrInterfaceEnvironment>)
+                   -> Result<(), String> {
         let modifier_abstract = ASTNode {
             token: Token::new(TokenKind::Abstract, None),
             children: Vec::new(),
@@ -195,16 +260,36 @@ impl ClassOrInterfaceEnvironment {
                     continue;
                 }
 
-                if inherited.parameters == existing.parameters {
+                let mut different = constructor.parameters.len() != existing.parameters.len();
+                if different || constructor.parameters == existing.parameters {
+                    continue;
+                }
+
+                for (constructor_param, existing_param) in
+                    constructor.parameters.iter().zip(existing.parameters.iter()) {
+                    let found_constructor_param =
+                        match check::lookup_or_primitive(&constructor_param.kind, parent, kinds) {
+                            Ok(mp) => mp,
+                            Err(e) => return Err(e),
+                        };
+                    let found_existing_param =
+                        match check::lookup_or_primitive(&existing_param.kind, parent, kinds) {
+                            Ok(mp) => mp,
+                            Err(e) => return Err(e),
+                        };
+                    if found_constructor_param.name != found_existing_param.name {
+                        different = true;
+                        break;
+                    }
+                }
+                if !different {
                     return Err("could not inherit conflicting constructors".to_owned());
                 }
             }
-            // TODO: any other restrictions?
 
             self.constructors.push(inherited);
         }
         for field in &parent.fields {
-            // TODO: any restrictions?
             self.fields.push(field.clone());
         }
 
@@ -221,8 +306,44 @@ impl ClassOrInterfaceEnvironment {
         for method in &parent.methods {
             let mut overwrite = true;
             for (idx, existing) in self.methods.clone().iter().enumerate() {
-                if method.name == existing.name && method.parameters == existing.parameters {
-                    if method.return_type != existing.return_type {
+                if method.name != existing.name {
+                    continue;
+                }
+
+                let mut different = method.parameters.len() != existing.parameters.len();
+                if different || method.parameters == existing.parameters {
+                    continue;
+                }
+
+                for (method_param, existing_param) in
+                    method.parameters.iter().zip(existing.parameters.iter()) {
+                    let found_method_param =
+                        match check::lookup_or_primitive(&method_param.kind, parent, kinds) {
+                            Ok(mp) => mp,
+                            Err(e) => return Err(e),
+                        };
+                    let found_existing_param =
+                        match check::lookup_or_primitive(&existing_param.kind, parent, kinds) {
+                            Ok(mp) => mp,
+                            Err(e) => return Err(e),
+                        };
+                    if found_method_param.name != found_existing_param.name {
+                        different = true;
+                        break;
+                    }
+                }
+                if !different {
+                    let method_return_type =
+                        match check::lookup_or_primitive(&method.return_type, parent, kinds) {
+                            Ok(rt) => rt,
+                            Err(e) => return Err(e),
+                        };
+                    let existing_return_type =
+                        match check::lookup_or_primitive(&existing.return_type, parent, kinds) {
+                            Ok(rt) => rt,
+                            Err(e) => return Err(e),
+                        };
+                    if method_return_type.name != existing_return_type.name {
                         return Err(format!("could not inherit methods {} with conflicting returns",
                                            method.name));
                     }

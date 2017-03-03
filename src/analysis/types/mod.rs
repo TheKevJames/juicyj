@@ -1,5 +1,5 @@
 mod body;
-mod check;
+pub mod check;
 mod inheritance;
 
 use analysis::environment::ClassOrInterface;

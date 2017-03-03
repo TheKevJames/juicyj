@@ -1,3 +1,4 @@
+use analysis::environment::ClassOrInterface;
 use analysis::environment::ClassOrInterfaceEnvironment;
 use scanner::ASTNode;
 use scanner::Token;
@@ -112,6 +113,29 @@ pub fn lookup(name: &ASTNode,
         Some(f) => Ok(f),
         None => Err(format!("could not lookup kind {:?}", name)),
     }
+}
+
+pub fn lookup_or_primitive(kind: &ASTNode,
+                           current: &ClassOrInterfaceEnvironment,
+                           kinds: &Vec<ClassOrInterfaceEnvironment>)
+                           -> Result<ClassOrInterfaceEnvironment, String> {
+    let mut child_kind = kind.clone();
+    if let Some(l) = kind.clone().token.lexeme {
+        if l == "ArrayType" {
+            child_kind = kind.clone().children[0].clone();
+        }
+    }
+    if vec![TokenKind::Boolean,
+            TokenKind::Byte,
+            TokenKind::Char,
+            TokenKind::Int,
+            TokenKind::Short,
+            TokenKind::Void]
+        .contains(&child_kind.token.kind) {
+        return Ok(ClassOrInterfaceEnvironment::new(kind.clone(), ClassOrInterface::CLASS));
+    }
+
+    lookup(&child_kind, current, kinds)
 }
 
 pub fn verify(kind: ASTNode,
