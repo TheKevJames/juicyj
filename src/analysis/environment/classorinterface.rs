@@ -167,12 +167,6 @@ impl ClassOrInterfaceEnvironment {
                                            method.name));
                     }
 
-                    if existing.body == method.body {
-                        // if definitions are identical, no checks are needed
-                        self.methods.remove(idx);
-                        break;
-                    }
-
                     if existing.modifiers.contains(&modifier_final) {
                         return Err(format!("cannot override final method {}", existing.name));
                     }
@@ -180,11 +174,11 @@ impl ClassOrInterfaceEnvironment {
                     if existing.modifiers.contains(&public) &&
                        (method.modifiers.contains(&protected) ||
                         method.modifiers.contains(&private)) {
-                        return Err(format!("cannot weaken perms of public method {}",
+                        return Err(format!("cannot weaken access controls of public method {}",
                                            existing.name));
                     } else if existing.modifiers.contains(&protected) &&
                               method.modifiers.contains(&private) {
-                        return Err(format!("cannot weaken perms of protected method {}",
+                        return Err(format!("cannot weaken access controls of protected method {}",
                                            existing.name));
                     }
 
@@ -230,26 +224,6 @@ impl ClassOrInterfaceEnvironment {
                    -> Result<(), String> {
         let modifier_abstract = ASTNode {
             token: Token::new(TokenKind::Abstract, None),
-            children: Vec::new(),
-        };
-        let modifier_final = ASTNode {
-            token: Token::new(TokenKind::Final, None),
-            children: Vec::new(),
-        };
-        let modifier_static = ASTNode {
-            token: Token::new(TokenKind::Static, None),
-            children: Vec::new(),
-        };
-        let public = ASTNode {
-            token: Token::new(TokenKind::Public, None),
-            children: Vec::new(),
-        };
-        let protected = ASTNode {
-            token: Token::new(TokenKind::Protected, None),
-            children: Vec::new(),
-        };
-        let private = ASTNode {
-            token: Token::new(TokenKind::Private, None),
             children: Vec::new(),
         };
         let object_name = ASTNode {
@@ -374,69 +348,13 @@ impl ClassOrInterfaceEnvironment {
                                            method.name));
                     }
 
-                    if existing.body == method.body {
-                        // if definitions are identical, no checks are needed
-                        overwrite = false;
-                        break;
-                    }
-
                     if existing.modifiers.contains(&modifier_abstract) {
-                        if !method.modifiers.contains(&modifier_abstract) {
-                            if existing.modifiers.contains(&modifier_final) {
-                                return Err(format!("cannot override final method {}",
-                                                   existing.name));
-                            }
-
-                            if existing.modifiers.contains(&public) &&
-                               (method.modifiers.contains(&protected) ||
-                                method.modifiers.contains(&private)) {
-                                return Err(format!("cannot weaken perms of public method {}",
-                                                   existing.name));
-                            } else if existing.modifiers.contains(&protected) &&
-                                      method.modifiers.contains(&private) {
-                                return Err(format!("cannot weaken perms of protected method {}",
-                                                   existing.name));
-                            }
-
-                            if existing.modifiers.contains(&modifier_static) !=
-                               method.modifiers.contains(&modifier_static) {
-                                return Err(format!("cannot override staticity of method {}",
-                                                   existing.name));
-                            }
-
-                            self.methods.remove(idx);
-                        } else {
-                            overwrite = false;
-                        }
+                        self.methods.remove(idx);
                     } else {
                         if !method.modifiers.contains(&modifier_abstract) {
                             return Err(format!("could not inherit conflicting methods {}",
                                                method.name));
                         } else {
-                            // existing -> concrete, method -> abstract
-                            // thus we're basically overridding `method` with
-                            // `existing`
-                            if method.modifiers.contains(&modifier_final) {
-                                return Err(format!("cannot override final method {}", method.name));
-                            }
-
-                            if method.modifiers.contains(&public) &&
-                               (existing.modifiers.contains(&protected) ||
-                                existing.modifiers.contains(&private)) {
-                                return Err(format!("cannot weaken perms of public method {}",
-                                                   method.name));
-                            } else if method.modifiers.contains(&protected) &&
-                                      existing.modifiers.contains(&private) {
-                                return Err(format!("cannot weaken perms of protected method {}",
-                                                   method.name));
-                            }
-
-                            if method.modifiers.contains(&modifier_static) !=
-                               existing.modifiers.contains(&modifier_static) {
-                                return Err(format!("cannot override staticity of method {}",
-                                                   method.name));
-                            }
-
                             overwrite = false;
                         }
                     }
