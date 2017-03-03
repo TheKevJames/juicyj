@@ -4,6 +4,23 @@ use scanner::ASTNode;
 use scanner::Token;
 use scanner::TokenKind;
 
+pub fn lookup_canonical(name: &ASTNode,
+                        current: &ClassOrInterfaceEnvironment,
+                        kinds: &Vec<ClassOrInterfaceEnvironment>)
+                        -> Option<Result<ClassOrInterfaceEnvironment, String>> {
+    let name = name.clone();
+    for kind in kinds {
+        if name == kind.name {
+            return match verify_prefixes(name, current, kinds) {
+                Ok(_) => Some(Ok(kind.clone())),
+                Err(e) => Some(Err(e)),
+            };
+        }
+    }
+
+    None
+}
+
 pub fn lookup(name: &ASTNode,
               current: &ClassOrInterfaceEnvironment,
               kinds: &Vec<ClassOrInterfaceEnvironment>)
@@ -15,13 +32,9 @@ pub fn lookup(name: &ASTNode,
     };
 
     // 0. lookup canonical path
-    for kind in kinds {
-        if name == kind.name {
-            return match verify_prefixes(name, current, kinds) {
-                Ok(_) => Ok(kind.clone()),
-                Err(e) => return Err(e),
-            };
-        }
+    match lookup_canonical(&name, current, kinds) {
+        Some(x) => return x,
+        None => (),
     }
 
     // 1. try the enclosing class or interface
@@ -164,6 +177,33 @@ pub fn verify(kind: ASTNode,
     }
 }
 
+pub fn verify_canonical(kind: ASTNode,
+                        current: &ClassOrInterfaceEnvironment,
+                        kinds: &Vec<ClassOrInterfaceEnvironment>)
+                        -> Result<(), String> {
+    let mut kind = kind;
+    if let Some(l) = kind.clone().token.lexeme {
+        if l == "ArrayType" {
+            kind = kind.children[0].clone();
+        }
+    }
+    if vec![TokenKind::Boolean,
+            TokenKind::Byte,
+            TokenKind::Char,
+            TokenKind::Int,
+            TokenKind::Short,
+            TokenKind::Void]
+        .contains(&kind.token.kind) {
+        return Ok(());
+    }
+
+    match lookup_canonical(&kind.flatten(), current, kinds) {
+        Some(Ok(_)) => Ok(()),
+        Some(Err(e)) => Err(e),
+        _ => Err(format!("could not lookup canonical kind {:?}", kind)),
+    }
+}
+
 pub fn verify_prefixes(kind: ASTNode,
                        current: &ClassOrInterfaceEnvironment,
                        kinds: &Vec<ClassOrInterfaceEnvironment>)
@@ -177,7 +217,7 @@ pub fn verify_prefixes(kind: ASTNode,
             children: prefix.clone(),
         };
         if idx % 2 == 0 && testable != kind {
-            match verify(testable.clone(), current, kinds) {
+            match verify_canonical(testable.clone(), current, kinds) {
                 Ok(_) => return Err(format!("strict prefix {} resolves to type", testable)),
                 Err(_) => (),
             }

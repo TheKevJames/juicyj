@@ -68,7 +68,8 @@ pub fn verify(env: &Environment,
                     break;
                 }
                 return Err(format!("abstract method {} found in non-abstract class {}",
-                                   method.name, child.name));
+                                   method.name,
+                                   child.name));
             }
         }
     }
