@@ -219,7 +219,8 @@ impl ClassOrInterfaceEnvironment {
         }
 
         for method in &parent.methods {
-            for existing in self.methods.clone() {
+            let mut overwrite = true;
+            for (idx, existing) in self.methods.clone().iter().enumerate() {
                 if method.name == existing.name && method.parameters == existing.parameters {
                     if method.return_type != existing.return_type {
                         return Err(format!("could not inherit methods {} with conflicting returns",
@@ -227,20 +228,22 @@ impl ClassOrInterfaceEnvironment {
                     }
 
                     if existing.modifiers.contains(&modifier_abstract) {
-                        if !method.modifiers.contains(&modifier_abstract) {
-                            self.methods.push(method.clone());
-                        }
+                        self.methods.remove(idx);
                     } else {
                         if !method.modifiers.contains(&modifier_abstract) {
                             return Err(format!("could not inherit conflicting methods {}",
                                                method.name));
+                        } else {
+                            overwrite = false;
                         }
                     }
 
                     break;
                 }
             }
-            self.methods.push(method.clone());
+            if overwrite {
+                self.methods.push(method.clone());
+            }
         }
 
         Ok(())
