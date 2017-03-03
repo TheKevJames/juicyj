@@ -54,7 +54,13 @@ pub fn analyze_constructor_declaration(current: &mut ClassOrInterfaceEnvironment
     }
 
     for constructor in &current.constructors {
-        if constructor.parameters == new.parameters {
+        let mut different = false;
+        for (constructor_param, new_param) in constructor.parameters.iter().zip(new.parameters.iter()) {
+            if constructor_param.kind != new_param.kind {
+                different = true;
+            }
+        }
+        if !different {
             return Err("constructors must have unique signatures".to_owned());
         }
     }
