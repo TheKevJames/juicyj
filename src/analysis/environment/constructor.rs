@@ -1,5 +1,5 @@
 use analysis::environment::classorinterface::ClassOrInterfaceEnvironment;
-use analysis::environment::parameter::ParameterEnvironment;
+use analysis::environment::variable::VariableEnvironment;
 use scanner::ASTNode;
 use scanner::Token;
 use scanner::TokenKind;
@@ -8,7 +8,7 @@ use scanner::TokenKind;
 pub struct ConstructorEnvironment {
     pub modifiers: Vec<ASTNode>,
     pub name: ASTNode,
-    pub parameters: Vec<ParameterEnvironment>,
+    pub parameters: Vec<VariableEnvironment>,
     pub body: ASTNode,
 }
 
@@ -49,7 +49,7 @@ pub fn analyze_constructor_declaration(current: &mut ClassOrInterfaceEnvironment
             if param.token.kind == TokenKind::Comma {
                 continue;
             }
-            new.parameters.push(ParameterEnvironment::new(param.clone()));
+            new.parameters.push(VariableEnvironment::new(param.clone()));
         }
     }
 

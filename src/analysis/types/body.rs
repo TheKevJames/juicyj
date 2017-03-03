@@ -1,14 +1,9 @@
 use analysis::environment::ClassOrInterfaceEnvironment;
+use analysis::environment::VariableEnvironment;
 use analysis::types::check;
 use scanner::ASTNode;
 use scanner::Token;
 use scanner::TokenKind;
-
-#[derive(Clone,Debug)]
-pub struct VariableEnvironment {
-    pub kind: ASTNode,
-    pub name: ASTNode,
-}
 
 pub fn verify(node: &mut ASTNode,
               current: &ClassOrInterfaceEnvironment,
@@ -108,6 +103,7 @@ pub fn verify_declaration(kinds: &Vec<ClassOrInterfaceEnvironment>,
             TokenKind::Assignment => node.children[1].clone().children[0].clone(),
             _ => node.children[1].clone(),
         },
+        dim: false, // TODO: ArrayType?
     };
 
     for global in globals {

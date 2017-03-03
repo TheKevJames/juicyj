@@ -4,7 +4,7 @@ mod constructor;
 mod field;
 mod interface;
 mod method;
-mod parameter;
+mod variable;
 
 use scanner::AST;
 
@@ -12,6 +12,7 @@ use self::class::analyze_class_declaration;
 pub use self::classorinterface::ClassOrInterface;
 pub use self::classorinterface::ClassOrInterfaceEnvironment;
 use self::interface::analyze_interface_declaration;
+pub use self::variable::VariableEnvironment;
 
 #[derive(Clone,Debug)]
 pub struct Environment {
