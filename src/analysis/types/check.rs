@@ -16,7 +16,10 @@ pub fn lookup(name: &ASTNode,
     // 0. lookup canonical path
     for kind in kinds {
         if name == kind.name {
-            return Ok(kind.clone());
+            return match verify_prefixes(name, current, kinds) {
+                Ok(_) => Ok(kind.clone()),
+                Err(e) => return Err(e),
+            };
         }
     }
 
@@ -135,4 +138,27 @@ pub fn verify(kind: ASTNode,
         Ok(_) => Ok(()),
         Err(e) => Err(e),
     }
+}
+
+pub fn verify_prefixes(kind: ASTNode,
+                       current: &ClassOrInterfaceEnvironment,
+                       kinds: &Vec<ClassOrInterfaceEnvironment>)
+                       -> Result<(), String> {
+    let mut prefix = Vec::new();
+    for (idx, child) in kind.children.iter().enumerate() {
+        prefix.push(child.clone());
+
+        let testable = ASTNode {
+            token: Token::new(TokenKind::NonTerminal, Some("Name")),
+            children: prefix.clone(),
+        };
+        if idx % 2 == 0 && testable != kind {
+            match verify(testable.clone(), current, kinds) {
+                Ok(_) => return Err(format!("strict prefix {} resolves to type", testable)),
+                Err(_) => (),
+            }
+        }
+    }
+
+    Ok(())
 }
