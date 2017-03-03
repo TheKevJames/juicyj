@@ -56,20 +56,10 @@ pub fn analyze_interface_declaration(canonical: &ASTNode,
                 };
                 for mut greatgrandkid in grandkid.children {
                     if greatgrandkid.token.kind == TokenKind::Identifier {
-                        let cls = greatgrandkid.clone();
-                        if current.extends.contains(&cls) {
-                            return Err("objects must not be repeated in extends clauses"
-                                .to_owned());
-                        }
-                        current.extends.push(cls);
+                        current.extends.push(greatgrandkid.clone());
                     } else if greatgrandkid.clone().token.lexeme.unwrap_or("".to_owned()) ==
                               "Name" {
-                        let cls = greatgrandkid.flatten().clone();
-                        if current.extends.contains(&cls) {
-                            return Err("objects must not be repeated in extends clauses"
-                                .to_owned());
-                        }
-                        current.extends.push(cls);
+                        current.extends.push(greatgrandkid.flatten().clone());
                     } else if greatgrandkid.token.kind == TokenKind::Comma {
                         continue;
                     } else {

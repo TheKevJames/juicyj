@@ -64,24 +64,36 @@ pub fn verify(env: &Environment) -> Result<(), String> {
                 }
             }
 
+            let mut resolved = Vec::new();
             for implemented in &current.implements {
                 let found = match check::lookup(&implemented, &current, &env.kinds) {
                     Ok(f) => f,
                     Err(e) => return Err(e),
                 };
+                if resolved.contains(&found) {
+                    return Err(format!("interface {} must not be repeated in class implements",
+                                       found.name));
+                }
                 if found.kind == ClassOrInterface::CLASS {
                     return Err(format!("class {} cannot implement class {}", current, found));
                 }
+                resolved.push(found);
             }
         } else if current.kind == ClassOrInterface::INTERFACE {
+            let mut resolved = Vec::new();
             for extended in &current.extends {
                 let found = match check::lookup(&extended, &current, &env.kinds) {
                     Ok(f) => f,
                     Err(e) => return Err(e),
                 };
+                if resolved.contains(&found) {
+                    return Err(format!("type {} must not be repeated in interface extends",
+                                       found.name));
+                }
                 if found.kind == ClassOrInterface::CLASS && found.name != object_name {
                     return Err(format!("interface {} cannot extend class {}", current, found));
                 }
+                resolved.push(found);
             }
         }
 
