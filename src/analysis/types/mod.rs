@@ -50,6 +50,11 @@ pub fn verify(env: &Environment) -> Result<(), String> {
     };
 
     for current in &env.kinds {
+        match check::verify_prefixes(current.name.clone(), &current, &env.kinds) {
+            Ok(_) => (),
+            Err(e) => return Err(e),
+        }
+
         if current.kind == ClassOrInterface::CLASS {
             for extended in &current.extends {
                 let found = match check::lookup(&extended, &current, &env.kinds) {
