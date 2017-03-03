@@ -85,14 +85,14 @@ pub fn verify(env: &Environment) -> Result<(), String> {
             }
         }
 
-        match inheritance::verify(env, &current, &mut Vec::new()) {
-            Ok(_) => (),
+        let inherited = match inheritance::verify(env, &current, &mut Vec::new()) {
+            Ok(inherit) => inherit,
             Err(e) => return Err(e),
-        }
+        };
 
-        for constructor in &current.constructors {
+        for constructor in &inherited.constructors {
             for parameter in &constructor.parameters {
-                let result = check::verify(parameter.kind.clone(), &current, &env.kinds);
+                let result = check::verify(parameter.kind.clone(), &inherited, &env.kinds);
                 if result.is_err() {
                     return result;
                 }
@@ -103,21 +103,21 @@ pub fn verify(env: &Environment) -> Result<(), String> {
                 let globals = Vec::new();
 
                 let mut child = constructor.body.children[1].clone();
-                match body::verify(&mut child, &current, &env.kinds, &globals) {
+                match body::verify(&mut child, &inherited, &env.kinds, &globals) {
                     Ok(_) => (),
                     Err(e) => return Err(e),
                 }
             }
         }
 
-        for field in &current.fields {
-            let result = check::verify(field.kind.clone(), &current, &env.kinds);
+        for field in &inherited.fields {
+            let result = check::verify(field.kind.clone(), &inherited, &env.kinds);
             if result.is_err() {
                 return result;
             }
         }
 
-        for method in &current.methods {
+        for method in &inherited.methods {
             if method.body.is_none() {
                 if !method.modifiers.contains(&modifier_abstract) &&
                    !method.modifiers.contains(&modifier_native) {
@@ -126,13 +126,13 @@ pub fn verify(env: &Environment) -> Result<(), String> {
             }
 
             for parameter in &method.parameters {
-                let result = check::verify(parameter.kind.clone(), &current, &env.kinds);
+                let result = check::verify(parameter.kind.clone(), &inherited, &env.kinds);
                 if result.is_err() {
                     return result;
                 }
             }
 
-            let result = check::verify(method.return_type.clone(), &current, &env.kinds);
+            let result = check::verify(method.return_type.clone(), &inherited, &env.kinds);
             if result.is_err() {
                 return result;
             }
@@ -142,7 +142,7 @@ pub fn verify(env: &Environment) -> Result<(), String> {
                 let globals = Vec::new();
 
                 let mut child = method.clone().body.unwrap().children[1].clone();
-                match body::verify(&mut child, &current, &env.kinds, &globals) {
+                match body::verify(&mut child, &inherited, &env.kinds, &globals) {
                     Ok(_) => (),
                     Err(e) => return Err(e),
                 }
