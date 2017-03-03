@@ -92,7 +92,7 @@ pub fn verify(env: &Environment) -> Result<(), String> {
 
         for constructor in &current.constructors {
             for parameter in &constructor.parameters {
-                let result = check::verify(parameter.children[0].clone(), &current, &env.kinds);
+                let result = check::verify(parameter.kind.clone(), &current, &env.kinds);
                 if result.is_err() {
                     return result;
                 }
@@ -126,7 +126,7 @@ pub fn verify(env: &Environment) -> Result<(), String> {
             }
 
             for parameter in &method.parameters {
-                let result = check::verify(parameter.children[0].clone(), &current, &env.kinds);
+                let result = check::verify(parameter.kind.clone(), &current, &env.kinds);
                 if result.is_err() {
                     return result;
                 }

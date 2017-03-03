@@ -2,6 +2,7 @@ use std::fmt;
 
 use analysis::environment::classorinterface::ClassOrInterface;
 use analysis::environment::classorinterface::ClassOrInterfaceEnvironment;
+use analysis::environment::parameter::ParameterEnvironment;
 use scanner::ASTNode;
 use scanner::Token;
 use scanner::TokenKind;
@@ -11,7 +12,7 @@ pub struct MethodEnvironment {
     pub modifiers: Vec<ASTNode>,
     pub return_type: ASTNode,
     pub name: ASTNode,
-    pub parameters: Vec<ASTNode>,
+    pub parameters: Vec<ParameterEnvironment>,
     pub body: Option<ASTNode>,
 }
 
@@ -78,7 +79,7 @@ pub fn analyze_abstract_method_declaration(current: &mut ClassOrInterfaceEnviron
             if param.token.kind == TokenKind::Comma {
                 continue;
             }
-            new.parameters.push(param.clone());
+            new.parameters.push(ParameterEnvironment::new(param.clone()));
         }
     }
 
@@ -120,7 +121,7 @@ pub fn analyze_method_declaration(current: &mut ClassOrInterfaceEnvironment,
             if param.token.kind == TokenKind::Comma {
                 continue;
             }
-            new.parameters.push(param.clone());
+            new.parameters.push(ParameterEnvironment::new(param.clone()));
         }
     }
 
