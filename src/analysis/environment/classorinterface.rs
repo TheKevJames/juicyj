@@ -86,7 +86,7 @@ impl ClassOrInterfaceEnvironment {
         for constructor in &child.constructors {
             for (idx, existing) in self.constructors.clone().iter().enumerate() {
                 let mut different = constructor.parameters.len() != existing.parameters.len();
-                if different || constructor.parameters == existing.parameters {
+                if different {
                     continue;
                 }
 
@@ -130,7 +130,7 @@ impl ClassOrInterfaceEnvironment {
                 }
 
                 let mut different = method.parameters.len() != existing.parameters.len();
-                if different || method.parameters == existing.parameters {
+                if different {
                     continue;
                 }
 
@@ -261,7 +261,7 @@ impl ClassOrInterfaceEnvironment {
                 }
 
                 let mut different = constructor.parameters.len() != existing.parameters.len();
-                if different || constructor.parameters == existing.parameters {
+                if different {
                     continue;
                 }
 
@@ -311,7 +311,7 @@ impl ClassOrInterfaceEnvironment {
                 }
 
                 let mut different = method.parameters.len() != existing.parameters.len();
-                if different || method.parameters == existing.parameters {
+                if different {
                     continue;
                 }
 

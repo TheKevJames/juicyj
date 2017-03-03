@@ -60,8 +60,8 @@ pub fn verify(env: &Environment,
     if child.kind == ClassOrInterface::CLASS && !child.modifiers.contains(&modifier_abstract) {
         for method in &child.methods {
             if method.modifiers.contains(&modifier_abstract) {
-                return Err(format!("abstract methods found in non-abstract class {}",
-                                   child.name));
+                return Err(format!("abstract method {} found in non-abstract class {}",
+                                   method.name, child.name));
             }
         }
     }
