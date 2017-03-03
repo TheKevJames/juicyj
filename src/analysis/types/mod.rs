@@ -76,7 +76,7 @@ pub fn verify(env: &Environment) -> Result<(), String> {
             }
 
             if constructor.body.children.len() == 3 {
-                // TODO: get the relevant globals here
+                // TODO: are there any relevant globals here?
                 let globals = Vec::new();
 
                 let mut child = constructor.body.children[1].clone();
@@ -114,11 +114,11 @@ pub fn verify(env: &Environment) -> Result<(), String> {
                 return result;
             }
 
-            if method.body.is_some() && method.body.unwrap().children.len() == 3 {
-                // TODO: get the relevant globals here
+            if method.body.is_some() && method.clone().body.unwrap().children.len() == 3 {
+                // TODO: are there any relevant globals here?
                 let globals = Vec::new();
 
-                let mut child = constructor.body.children[1].clone();
+                let mut child = method.clone().body.unwrap().children[1].clone();
                 match body::verify(&mut child, &current, &env.kinds, &globals) {
                     Ok(_) => (),
                     Err(e) => return Err(e),
