@@ -132,13 +132,14 @@ pub fn analyze_method_declaration(current: &mut ClassOrInterfaceEnvironment,
             continue;
         }
 
-        let mut different = false;
+        let mut different = method.parameters.len() != new.parameters.len();
         for (method_param, new_param) in method.parameters.iter().zip(new.parameters.iter()) {
             if method_param.kind != new_param.kind {
                 different = true;
             }
         }
         if !different {
+            // TODO: check after inheritance?
             return Err("methods must have unique signatures".to_owned());
         }
     }
