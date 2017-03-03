@@ -34,6 +34,10 @@ impl AST {
     /// remaining tree into ASTNodes.
     pub fn new(filename: &str, tree: &ParseTree) -> Result<AST, ASTError> {
         let token_name = Token::new(TokenKind::NonTerminal, Some("Name"));
+        let node_star = ASTNode {
+            token: Token::new(TokenKind::Star, None),
+            children: Vec::new(),
+        };
 
         let mut imports =
             vec![ASTNodeImport {
@@ -55,10 +59,7 @@ impl AST {
                                             token: Token::new(TokenKind::Dot, None),
                                             children: Vec::new(),
                                         },
-                                        ASTNode {
-                                            token: Token::new(TokenKind::Star, None),
-                                            children: Vec::new(),
-                                        }],
+                                        node_star.clone()],
                      },
                  }];
         let mut package = ASTNodePackage {
@@ -122,6 +123,27 @@ impl AST {
             }
             _ => return Err(ASTError::new(ErrorMessage::MissingName, &root.unwrap())),
         };
+
+        for first_import in &imports {
+            if let Some(first_import_name) = first_import.import.children.last() {
+                if first_import_name == &node_star {
+                    continue;
+                }
+
+                for second_import in &imports {
+                    if let Some(second_import_name) = second_import.import.children.last() {
+                        if first_import == second_import || second_import_name == &node_star {
+                            continue;
+                        }
+
+                        if first_import_name == second_import_name {
+                            return Err(ASTError::new(ErrorMessage::ImportClashSingleTogether,
+                                                     &first_import_name));
+                        }
+                    }
+                }
+            }
+        }
 
         Ok(AST {
             filename: filename.to_owned(),

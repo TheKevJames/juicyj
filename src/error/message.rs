@@ -25,6 +25,8 @@ pub enum ErrorMessage {
     FinalAbstract,
     /// Final fields must have initializers.
     FinalNoInit,
+    /// Single-Type import declarations must not clash.
+    ImportClashSingleTogether,
     /// Interfaces must have the same name as the file they are declared in.
     InterfaceBadName,
     /// Integers must be within 32-bit range.
@@ -78,6 +80,9 @@ impl fmt::Display for ErrorMessage {
             ErrorMessage::CouldNotReduceStack => write!(f, "could not entirely reduce stack"),
             ErrorMessage::FinalAbstract => write!(f, "final method is abstract"),
             ErrorMessage::FinalNoInit => write!(f, "final field has no initializer"),
+            ErrorMessage::ImportClashSingleTogether => {
+                write!(f, "single-type-import declarations clash")
+            }
             ErrorMessage::InterfaceBadName => write!(f, "interface is badly named"),
             ErrorMessage::IntOOB => write!(f, "integer out of bounds"),
             ErrorMessage::InvalidCast => write!(f, "invalid cast type"),
