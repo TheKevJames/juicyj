@@ -32,6 +32,22 @@ pub fn verify(env: &Environment,
             Err(e) => return Err(e),
         }
     }
+    for implemented in &current.implements {
+        let found = match check::lookup(&implemented, &current, &env.kinds) {
+            Ok(f) => f,
+            Err(e) => return Err(e),
+        };
+
+        match verify(env, &found, &mut Vec::new()) {
+            Ok(parent) => {
+                match child.inherit(&parent) {
+                    Ok(_) => (),
+                    Err(e) => return Err(e),
+                }
+            }
+            Err(e) => return Err(e),
+        }
+    }
     match child.apply(&current) {
         Ok(_) => (),
         Err(e) => return Err(e),
