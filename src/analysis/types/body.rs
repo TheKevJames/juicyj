@@ -113,7 +113,11 @@ pub fn verify_statement(node: &mut ASTNode,
                 // "Primary Dot Identifier ..."
                 5 | 6 => {
                     let primary = node.children[0].clone();
-                    verify_statement(&mut primary.clone(), current, kinds, &globals, &mut locals.clone())
+                    verify_statement(&mut primary.clone(),
+                                     current,
+                                     kinds,
+                                     &globals,
+                                     &mut locals.clone())
                 }
                 _ => Ok(()),
             }

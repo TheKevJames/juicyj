@@ -85,6 +85,7 @@ pub fn analyze_abstract_method_declaration(current: &mut ClassOrInterfaceEnviron
 
     for method in current.methods.clone() {
         if method.name == new.name && method.parameters == new.parameters {
+            // TODO: check after inheritance?
             return Err("methods must have unique signatures".to_owned());
         }
     }
@@ -128,17 +129,7 @@ pub fn analyze_method_declaration(current: &mut ClassOrInterfaceEnvironment,
     new.body = Some(body.clone());
 
     for method in current.methods.clone() {
-        if method.name != new.name {
-            continue;
-        }
-
-        let mut different = method.parameters.len() != new.parameters.len();
-        for (method_param, new_param) in method.parameters.iter().zip(new.parameters.iter()) {
-            if method_param.kind != new_param.kind {
-                different = true;
-            }
-        }
-        if !different {
+        if method.name == new.name && method.parameters == new.parameters {
             // TODO: check after inheritance?
             return Err("methods must have unique signatures".to_owned());
         }

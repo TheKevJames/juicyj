@@ -65,7 +65,8 @@ impl Environment {
                             }
                         }
                         if !found {
-                            return Err(format!("could not find imported package {}", import_package));
+                            return Err(format!("could not find imported package {}",
+                                               import_package));
                         }
                     }
                 }
