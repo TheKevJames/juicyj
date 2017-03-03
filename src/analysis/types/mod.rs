@@ -62,9 +62,9 @@ pub fn verify(env: &Environment) -> Result<(), String> {
             }
         }
 
-        let result = inheritance::verify(env, &current, &mut Vec::new());
-        if result.is_err() {
-            return result;
+        match inheritance::verify(env, &current, &mut Vec::new()) {
+            Ok(_) => (),
+            Err(e) => return Err(e),
         }
 
         for constructor in &current.constructors {
