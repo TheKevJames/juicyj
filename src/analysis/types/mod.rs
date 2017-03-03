@@ -245,7 +245,10 @@ pub fn verify(env: &Environment) -> Result<(), String> {
         }
 
         for field in &current.fields {
-            // TODO: lookup field.kind
+            let result = verify_kind(field.kind.clone(), &current, &env.kinds);
+            if result.is_err() {
+                return result;
+            }
         }
 
         for method in &current.methods {
