@@ -109,10 +109,12 @@ impl AST {
         let mut canonical = package.package.clone();
         match name {
             Some(ref n) => {
-                canonical.children.push(ASTNode {
-                    token: Token::new(TokenKind::Dot, None),
-                    children: Vec::new(),
-                });
+                if !canonical.children.is_empty() {
+                    canonical.children.push(ASTNode {
+                        token: Token::new(TokenKind::Dot, None),
+                        children: Vec::new(),
+                    });
+                }
                 canonical.children.push(ASTNode {
                     token: n.clone(),
                     children: Vec::new(),

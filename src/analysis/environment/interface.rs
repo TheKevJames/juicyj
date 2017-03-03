@@ -22,6 +22,15 @@ pub fn analyze_interface_declaration(canonical: &ASTNode,
     }
 
     current.imports = imports.clone();
+    if let Some(interface_name) = current.name.children.last() {
+        for import in &current.imports {
+            if let Some(import_name) = import.import.children.last() {
+                if import_name == interface_name {
+                    return Err("single-type-import declaration clashes with interface".to_owned());
+                }
+            }
+        }
+    }
 
     for child in node.children[0].clone().children {
         current.modifiers.push(child);
