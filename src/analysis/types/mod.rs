@@ -105,14 +105,12 @@ pub fn verify(env: &Environment) -> Result<(), String> {
                 }
             }
 
-            if constructor.body.children.len() == 3 {
-                let globals = constructor.parameters.clone();
-
-                let mut child = constructor.body.children[1].clone();
-                match body::verify(&mut child, &inherited, &env.kinds, &globals) {
-                    Ok(_) => (),
-                    Err(e) => return Err(e),
-                }
+            match body::verify(&mut constructor.body.clone(),
+                               &inherited,
+                               &env.kinds,
+                               &constructor.parameters.clone()) {
+                Ok(_) => (),
+                Err(e) => return Err(e),
             }
         }
 
@@ -145,11 +143,11 @@ pub fn verify(env: &Environment) -> Result<(), String> {
                 return result;
             }
 
-            if method.body.is_some() && method.clone().body.unwrap().children.len() == 3 {
-                let globals = method.parameters.clone();
-
-                let mut child = method.clone().body.unwrap().children[1].clone();
-                match body::verify(&mut child, &inherited, &env.kinds, &globals) {
+            if method.body.is_some() {
+                match body::verify(&mut method.clone().body.unwrap().clone(),
+                                   &inherited,
+                                   &env.kinds,
+                                   &method.parameters.clone()) {
                     Ok(_) => (),
                     Err(e) => return Err(e),
                 }

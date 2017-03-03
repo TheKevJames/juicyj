@@ -88,17 +88,6 @@ impl ASTNode {
                             children: children,
                         })
                     }
-                    Some(ref l) if node.children.len() == 3 && l == "ReturnStatement" => {
-                        let mut children: Vec<ASTNode> = Vec::new();
-                        match ASTNode::new(&node.children[1]) {
-                            Ok(child) => children.push(child),
-                            Err(e) => return Err(e),
-                        }
-                        Ok(ASTNode {
-                            token: node.children[0].token.clone(),
-                            children: children,
-                        })
-                    }
                     Some(ref l) if node.children.len() == 3 && l == "PrimaryNoNewArray" => {
                         ASTNode::new(&node.children[1])
                     }

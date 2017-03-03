@@ -10,10 +10,11 @@ pub fn verify(node: &mut ASTNode,
               kinds: &Vec<ClassOrInterfaceEnvironment>,
               globals: &Vec<VariableEnvironment>)
               -> Result<(), String> {
-    let mut locals = Vec::new();
-
     let node = match node.clone().token.lexeme {
         Some(ref l) if l == "BlockStatements" => node.flatten().clone(),
+        Some(ref l) if l == "Block" => {
+            return verify_statement(&mut node.clone(), current, kinds, globals, &mut Vec::new())
+        }
         _ => {
             ASTNode {
                 token: Token::new(TokenKind::NonTerminal, Some("BlockStatements")),
@@ -21,6 +22,7 @@ pub fn verify(node: &mut ASTNode,
             }
         }
     };
+    let mut locals = Vec::new();
     for child in &node.children {
         match verify_statement(&mut child.clone(), current, kinds, globals, &mut locals) {
             Ok(_) => (),
@@ -38,8 +40,9 @@ pub fn verify_statement(node: &mut ASTNode,
                         locals: &mut Vec<VariableEnvironment>)
                         -> Result<(), String> {
     match node.token.lexeme {
-        Some(ref l) if l == "LocalVariableDeclaration" => {
-            verify_declaration(kinds, current, globals, locals, &node)
+        Some(ref l) if l == "ArrayCreationExpression" || l == "ClassInstanceCreationExpression" => {
+            let kind = node.children[1].clone();
+            check::verify(kind, current, kinds)
         }
         Some(ref l) if l == "Block" && node.children.len() == 3 => {
             let mut block_globals = globals.clone();
@@ -47,6 +50,26 @@ pub fn verify_statement(node: &mut ASTNode,
                 block_globals.push(local.clone());
             }
             verify(&mut node.children[1], current, kinds, &block_globals)
+        }
+        Some(ref l) if l == "ForStatement" || l == "ForStatementNoShortIf" => {
+            let mut block_globals = globals.clone();
+            for local in locals {
+                block_globals.push(local.clone());
+            }
+            let mut block_locals = Vec::new();
+
+            let mut init = node.children[2].clone();
+            match verify_statement(&mut init, current, kinds, &block_globals, &mut block_locals) {
+                Ok(_) => (),
+                Err(e) => return Err(e),
+            }
+
+            let mut block = node.children.last().unwrap().clone();
+            verify_statement(&mut block,
+                             current,
+                             kinds,
+                             &block_globals,
+                             &mut block_locals)
         }
         Some(ref l) if l == "IfStatement" || l == "WhileStatement" ||
                        l == "WhileStatementNoShortIf" => {
@@ -79,26 +102,27 @@ pub fn verify_statement(node: &mut ASTNode,
                              &block_globals,
                              &mut Vec::new())
         }
-        Some(ref l) if l == "ForStatement" || l == "ForStatementNoShortIf" => {
-            let mut block_globals = globals.clone();
-            for local in locals {
-                block_globals.push(local.clone());
-            }
-            let mut block_locals = Vec::new();
-
-            let mut init = node.children[2].clone();
-            match verify_statement(&mut init, current, kinds, &block_globals, &mut block_locals) {
-                Ok(_) => (),
-                Err(e) => return Err(e),
-            }
-
-            let mut block = node.children.last().unwrap().clone();
-            verify_statement(&mut block,
-                             current,
-                             kinds,
-                             &block_globals,
-                             &mut block_locals)
+        Some(ref l) if l == "LocalVariableDeclaration" => {
+            verify_declaration(kinds, current, globals, locals, &node)
         }
+        Some(ref l) if l == "MethodInvocation" => {
+            // TODO: check method calls Primary.Identifier and Name
+            match node.children.len() {
+                // "Name ..."
+                3 | 4 => Ok(()),
+                // "Primary Dot Identifier ..."
+                5 | 6 => {
+                    let primary = node.children[0].clone();
+                    verify_statement(&mut primary.clone(), current, kinds, &globals, &mut locals.clone())
+                }
+                _ => Ok(()),
+            }
+        }
+        Some(ref l) if l == "PrimaryNoNewArray" || l == "ReturnStatement" => {
+            let mut expr = node.children[1].clone();
+            verify_statement(&mut expr, current, kinds, &globals, &mut locals.clone())
+        }
+        // TODO: CastExpression
         _ => Ok(()),
     }
 }
