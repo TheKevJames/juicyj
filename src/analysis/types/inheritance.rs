@@ -1,3 +1,4 @@
+use analysis::environment::ClassOrInterface;
 use analysis::environment::ClassOrInterfaceEnvironment;
 use analysis::environment::Environment;
 use analysis::types::check;
@@ -40,7 +41,7 @@ pub fn verify(env: &Environment,
         token: Token::new(TokenKind::Abstract, None),
         children: Vec::new(),
     };
-    if !child.modifiers.contains(&modifier_abstract) {
+    if child.kind == ClassOrInterface::CLASS && !child.modifiers.contains(&modifier_abstract) {
         for method in &child.methods {
             if method.modifiers.contains(&modifier_abstract) {
                 return Err(format!("abstract methods found in non-abstract class {}",
