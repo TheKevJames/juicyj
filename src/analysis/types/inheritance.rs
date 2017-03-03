@@ -16,13 +16,13 @@ pub fn verify(env: &Environment,
     visited.push(current.name.clone());
 
     let mut child = ClassOrInterfaceEnvironment::new(current.name.clone(), current.kind.clone());
-    for extended in &current.extends {
-        let found = match check::lookup(&extended, &current, &env.kinds) {
+    for implemented in &current.implements {
+        let found = match check::lookup(&implemented, &current, &env.kinds) {
             Ok(f) => f,
             Err(e) => return Err(e),
         };
 
-        match verify(env, &found, &mut visited.clone()) {
+        match verify(env, &found, &mut Vec::new()) {
             Ok(parent) => {
                 match child.inherit(&parent, &env.kinds) {
                     Ok(_) => (),
@@ -32,13 +32,13 @@ pub fn verify(env: &Environment,
             Err(e) => return Err(e),
         }
     }
-    for implemented in &current.implements {
-        let found = match check::lookup(&implemented, &current, &env.kinds) {
+    for extended in &current.extends {
+        let found = match check::lookup(&extended, &current, &env.kinds) {
             Ok(f) => f,
             Err(e) => return Err(e),
         };
 
-        match verify(env, &found, &mut Vec::new()) {
+        match verify(env, &found, &mut visited.clone()) {
             Ok(parent) => {
                 match child.inherit(&parent, &env.kinds) {
                     Ok(_) => (),
