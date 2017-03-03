@@ -150,7 +150,17 @@ pub fn verify(env: &Environment) -> Result<(), String> {
 
             if method.modifiers.contains(&modifier_abstract) {
                 if method.modifiers.contains(&modifier_final) {
-                    return Err(format!("final method {} is abstract", method));
+                    let node_get_class = ASTNode {
+                        token: Token::new(TokenKind::NonTerminal, Some("Name")),
+                        children: vec![ASTNode {
+                                           token: Token::new(TokenKind::Identifier,
+                                                             Some("getClass")),
+                                           children: Vec::new(),
+                                       }],
+                    };
+                    if method.name != node_get_class {
+                        return Err(format!("final method {} is abstract", method));
+                    }
                 }
 
                 if method.modifiers.contains(&modifier_static) {
