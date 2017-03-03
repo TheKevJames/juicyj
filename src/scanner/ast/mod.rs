@@ -65,7 +65,10 @@ impl AST {
         let mut package = ASTNodePackage {
             package: ASTNode {
                 token: token_name.clone(),
-                children: Vec::new(),
+                children: vec![ASTNode {
+                                   token: Token::new(TokenKind::Identifier, Some("juicyj-unnamed")),
+                                   children: Vec::new(),
+                               }],
             },
         };
         let mut root = None;
