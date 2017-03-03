@@ -207,7 +207,7 @@ impl ClassOrInterfaceEnvironment {
                 self.methods.push(inherited);
             }
 
-            return Ok(())
+            return Ok(());
         }
 
         for method in &parent.methods {

@@ -27,7 +27,8 @@ pub fn analyze_class_declaration(canonical: &ASTNode,
         for import in &current.imports {
             if let Some(import_name) = import.import.children.last() {
                 if import_name == class_name {
-                    return Err("single-type-import declaration clashes with class".to_owned());
+                    return Err(format!("single-type-import declaration clashes with class {}",
+                                       class_name));
                 }
             }
         }

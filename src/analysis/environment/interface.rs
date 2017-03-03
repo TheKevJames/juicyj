@@ -26,7 +26,8 @@ pub fn analyze_interface_declaration(canonical: &ASTNode,
         for import in &current.imports {
             if let Some(import_name) = import.import.children.last() {
                 if import_name == interface_name {
-                    return Err("single-type-import declaration clashes with interface".to_owned());
+                    return Err(format!("single-type-import declaration clashes with interface {}",
+                                       interface_name));
                 }
             }
         }
