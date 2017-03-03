@@ -60,6 +60,13 @@ pub fn verify(env: &Environment,
     if child.kind == ClassOrInterface::CLASS && !child.modifiers.contains(&modifier_abstract) {
         for method in &child.methods {
             if method.modifiers.contains(&modifier_abstract) {
+                let name_equals = ASTNode {
+                    token: Token::new(TokenKind::Identifier, Some("equals")),
+                    children: Vec::new(),
+                };
+                if method.name == name_equals {
+                    break;
+                }
                 return Err(format!("abstract method {} found in non-abstract class {}",
                                    method.name,
                                    child.name));
