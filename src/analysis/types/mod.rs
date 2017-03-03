@@ -137,6 +137,32 @@ pub fn verify_inheritance(env: &Environment,
     Ok(())
 }
 
+pub fn verify_kind(kind: ASTNode,
+                   current: &ClassOrInterfaceEnvironment,
+                   kinds: &Vec<ClassOrInterfaceEnvironment>)
+                   -> Result<(), String> {
+    let mut kind = kind;
+    if let Some(l) = kind.clone().token.lexeme {
+        if l == "ArrayType" {
+            kind = kind.children[0].clone();
+        }
+    }
+    if vec![TokenKind::Boolean,
+            TokenKind::Byte,
+            TokenKind::Char,
+            TokenKind::Int,
+            TokenKind::Short,
+            TokenKind::Void]
+        .contains(&kind.token.kind) {
+        return Ok(());
+    }
+
+    match lookup(&kind.flatten(), current, kinds) {
+        Ok(_) => Ok(()),
+        Err(e) => Err(e),
+    }
+}
+
 pub fn verify(env: &Environment) -> Result<(), String> {
     let modifier_abstract = ASTNode {
         token: Token::new(TokenKind::Abstract, None),
@@ -198,23 +224,9 @@ pub fn verify(env: &Environment) -> Result<(), String> {
 
         for constructor in &current.constructors {
             for parameter in &constructor.parameters {
-                let mut kind = parameter.children[0].clone();
-                if let Some(l) = kind.clone().token.lexeme {
-                    if l == "ArrayType" {
-                        kind = kind.children[0].clone();
-                    }
-                }
-                if !vec![TokenKind::Boolean,
-                         TokenKind::Byte,
-                         TokenKind::Char,
-                         TokenKind::Int,
-                         TokenKind::Short,
-                         TokenKind::Void]
-                    .contains(&kind.token.kind) {
-                    match lookup(&kind.flatten(), &current, &env.kinds) {
-                        Ok(_) => (),
-                        Err(e) => return Err(e),
-                    }
+                let result = verify_kind(parameter.children[0].clone(), &current, &env.kinds);
+                if result.is_err() {
+                    return result;
                 }
             }
 
@@ -243,8 +255,19 @@ pub fn verify(env: &Environment) -> Result<(), String> {
                     return Err(format!("concrete method {} has no body", method));
                 }
             }
-            // TODO: lookup each method.parameters
-            // TODO: lookup method.return_type
+
+            for parameter in &method.parameters {
+                let result = verify_kind(parameter.children[0].clone(), &current, &env.kinds);
+                if result.is_err() {
+                    return result;
+                }
+            }
+
+            let result = verify_kind(method.return_type.clone(), &current, &env.kinds);
+            if result.is_err() {
+                return result;
+            }
+
             // TODO: if body, analyze method.body
 
             // TODO: analyze override:
@@ -267,8 +290,6 @@ pub fn verify(env: &Environment) -> Result<(), String> {
 
     // TODO: ensure non-abstract class does not contain un-overriden abstract
     // methods or define new ones
-
-    // TODO: check type of parameter lists
 
     Ok(())
 }
