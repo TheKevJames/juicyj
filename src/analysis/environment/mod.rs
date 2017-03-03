@@ -7,9 +7,6 @@ mod method;
 mod variable;
 
 use scanner::AST;
-use scanner::ASTNode;
-use scanner::Token;
-use scanner::TokenKind;
 
 use self::class::analyze_class_declaration;
 pub use self::classorinterface::ClassOrInterface;
@@ -24,11 +21,6 @@ pub struct Environment {
 
 impl Environment {
     pub fn new(trees: &Vec<AST>) -> Result<Environment, String> {
-        let node_star = ASTNode {
-            token: Token::new(TokenKind::Star, None),
-            children: Vec::new(),
-        };
-
         let mut env = Environment { kinds: Vec::new() };
 
         for tree in trees {
@@ -55,20 +47,17 @@ impl Environment {
             }
 
             'import: for import in &tree.imports {
-                if let Some(import_name) = import.import.children.last() {
-                    let mut import_package = import.import.clone();
-                    import_package.children.pop();
-                    import_package.children.pop();
+                let mut import_package = import.import.clone();
+                import_package.children.pop();
+                import_package.children.pop();
 
-                    for kind in trees {
-                        // TODO: import_package is strict prefix of kind.package.package
-                        if kind.package.package == import_package {
-                            continue 'import;
-                        }
+                for kind in trees {
+                    if kind.package.package.children.starts_with(&import_package.children) {
+                        continue 'import;
                     }
-
-                    return Err(format!("could not find imported package {}", import_package));
                 }
+
+                return Err(format!("could not find imported package {}", import_package));
             }
         }
 
