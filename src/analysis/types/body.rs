@@ -1,6 +1,7 @@
 use analysis::environment::ClassOrInterfaceEnvironment;
 use analysis::types::check;
 use scanner::ASTNode;
+use scanner::Token;
 use scanner::TokenKind;
 
 #[derive(Clone,Debug)]
@@ -17,8 +18,13 @@ pub fn verify(node: &mut ASTNode,
     let mut locals = Vec::new();
 
     let node = match node.clone().token.lexeme {
-        Some(ref l) if l == "BlockStatements" => node.flatten(),
-        _ => return Err("body::verify was not passed a BlockStatements".to_owned()),
+        Some(ref l) if l == "BlockStatements" => node.flatten().clone(),
+        _ => {
+            ASTNode {
+                token: Token::new(TokenKind::NonTerminal, Some("BlockStatements")),
+                children: vec![node.clone()],
+            }
+        }
     };
     for child in &node.children {
         match verify_statement(&mut child.clone(), current, kinds, globals, &mut locals) {
