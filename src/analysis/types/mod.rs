@@ -91,7 +91,14 @@ pub fn verify(env: &Environment) -> Result<(), String> {
         };
 
         for constructor in &inherited.constructors {
+            let mut params = Vec::new();
             for parameter in &constructor.parameters {
+                if params.contains(&parameter.name) {
+                    return Err(format!("constructor has multiple parameters with same name {}",
+                                       parameter.name));
+                }
+                params.push(parameter.name.clone());
+
                 let result = check::verify(parameter.kind.clone(), &inherited, &env.kinds);
                 if result.is_err() {
                     return result;
@@ -125,11 +132,13 @@ pub fn verify(env: &Environment) -> Result<(), String> {
                 }
             }
 
+            let mut params = Vec::new();
             for parameter in &method.parameters {
-                let result = check::verify(parameter.kind.clone(), &inherited, &env.kinds);
-                if result.is_err() {
-                    return result;
+                if params.contains(&parameter.name) {
+                    return Err(format!("method has multiple parameters with same name {}",
+                                       parameter.name));
                 }
+                params.push(parameter.name.clone());
             }
 
             let result = check::verify(method.return_type.clone(), &inherited, &env.kinds);
