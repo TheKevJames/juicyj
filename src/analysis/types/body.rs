@@ -84,8 +84,20 @@ pub fn verify_statement(node: &mut ASTNode,
             for local in locals {
                 block_globals.push(local.clone());
             }
-            let mut child = node.children.last().unwrap().clone();
-            verify_statement(&mut child, current, kinds, &block_globals, &mut Vec::new())
+            let mut block_locals = Vec::new();
+
+            let mut init = node.children[2].clone();
+            match verify_statement(&mut init, current, kinds, &block_globals, &mut block_locals) {
+                Ok(_) => (),
+                Err(e) => return Err(e),
+            }
+
+            let mut block = node.children.last().unwrap().clone();
+            verify_statement(&mut block,
+                             current,
+                             kinds,
+                             &block_globals,
+                             &mut block_locals)
         }
         _ => Ok(()),
     }
@@ -108,14 +120,15 @@ pub fn verify_declaration(kinds: &Vec<ClassOrInterfaceEnvironment>,
 
     for global in globals {
         if global.name == new.name {
-            return Err("cannot declare variables with same name as variable in outer scope"
-                .to_owned());
+            return Err(format!("cannot declare variable {} with conflict in outer scope",
+                               new.name));
         }
     }
 
     for local in locals.clone() {
         if local.name == new.name {
-            return Err("cannot declare multiple variables with same name in same scope".to_owned());
+            return Err(format!("cannot declare multiple variables with same name {} in same scope",
+                               new.name));
         }
     }
 
