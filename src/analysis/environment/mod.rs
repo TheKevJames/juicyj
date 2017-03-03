@@ -56,15 +56,12 @@ impl Environment {
 
             'import: for import in &tree.imports {
                 if let Some(import_name) = import.import.children.last() {
-                    if import_name != &node_star {
-                        continue;
-                    }
-
                     let mut import_package = import.import.clone();
                     import_package.children.pop();
                     import_package.children.pop();
 
                     for kind in trees {
+                        // TODO: import_package is strict prefix of kind.package.package
                         if kind.package.package == import_package {
                             continue 'import;
                         }
