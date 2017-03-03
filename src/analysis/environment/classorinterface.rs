@@ -161,6 +161,29 @@ impl ClassOrInterfaceEnvironment {
             token: Token::new(TokenKind::Abstract, None),
             children: Vec::new(),
         };
+        let object_name = ASTNode {
+            token: Token::new(TokenKind::NonTerminal, Some("Name")),
+            children: vec![ASTNode {
+                               token: Token::new(TokenKind::Identifier, Some("java")),
+                               children: Vec::new(),
+                           },
+                           ASTNode {
+                               token: Token::new(TokenKind::Dot, None),
+                               children: Vec::new(),
+                           },
+                           ASTNode {
+                               token: Token::new(TokenKind::Identifier, Some("lang")),
+                               children: Vec::new(),
+                           },
+                           ASTNode {
+                               token: Token::new(TokenKind::Dot, None),
+                               children: Vec::new(),
+                           },
+                           ASTNode {
+                               token: Token::new(TokenKind::Identifier, Some("Object")),
+                               children: Vec::new(),
+                           }],
+        };
 
         for constructor in &parent.constructors {
             for existing in &self.constructors {
@@ -169,12 +192,24 @@ impl ClassOrInterfaceEnvironment {
                 }
             }
             // TODO: any other restrictions?
+            // TODO: change name to kid?
             self.constructors.push(constructor.clone());
         }
         for field in &parent.fields {
             // TODO: any restrictions?
             self.fields.push(field.clone());
         }
+
+        if self.kind == ClassOrInterface::INTERFACE && parent.name == object_name {
+            for method in &parent.methods {
+                let mut inherited = method.clone();
+                inherited.modifiers.push(modifier_abstract.clone());
+                self.methods.push(inherited);
+            }
+
+            return Ok(())
+        }
+
         for method in &parent.methods {
             for existing in self.methods.clone() {
                 if method.name == existing.name && method.parameters == existing.parameters {
@@ -193,10 +228,11 @@ impl ClassOrInterfaceEnvironment {
                                                method.name));
                         }
                     }
-                } else {
-                    self.methods.push(method.clone());
+
+                    break;
                 }
             }
+            self.methods.push(method.clone());
         }
 
         Ok(())

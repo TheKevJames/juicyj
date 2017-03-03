@@ -25,6 +25,29 @@ pub fn verify(env: &Environment) -> Result<(), String> {
         token: Token::new(TokenKind::Static, None),
         children: Vec::new(),
     };
+    let object_name = ASTNode {
+        token: Token::new(TokenKind::NonTerminal, Some("Name")),
+        children: vec![ASTNode {
+                           token: Token::new(TokenKind::Identifier, Some("java")),
+                           children: Vec::new(),
+                       },
+                       ASTNode {
+                           token: Token::new(TokenKind::Dot, None),
+                           children: Vec::new(),
+                       },
+                       ASTNode {
+                           token: Token::new(TokenKind::Identifier, Some("lang")),
+                           children: Vec::new(),
+                       },
+                       ASTNode {
+                           token: Token::new(TokenKind::Dot, None),
+                           children: Vec::new(),
+                       },
+                       ASTNode {
+                           token: Token::new(TokenKind::Identifier, Some("Object")),
+                           children: Vec::new(),
+                       }],
+    };
 
     for current in &env.kinds {
         if current.kind == ClassOrInterface::CLASS {
@@ -56,7 +79,7 @@ pub fn verify(env: &Environment) -> Result<(), String> {
                     Ok(f) => f,
                     Err(e) => return Err(e),
                 };
-                if found.kind == ClassOrInterface::CLASS {
+                if found.kind == ClassOrInterface::CLASS && found.name != object_name {
                     return Err(format!("interface {} cannot extend class {}", current, found));
                 }
             }
