@@ -19,7 +19,7 @@ pub fn analyze_block(kinds: &Vec<ClassOrInterfaceEnvironment>,
 
     let node = match node.clone().token.lexeme {
         Some(ref l) if l == "BlockStatements" => node.flatten(),
-        _ => node,
+        _ => return Err("analyze_block was not passed a BlockStatements".to_owned()),
     };
     for child in &node.children {
         match analyze_statement(kinds,

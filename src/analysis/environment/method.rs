@@ -67,7 +67,12 @@ pub fn analyze_abstract_method_declaration(current: &mut ClassOrInterfaceEnviron
         let mut params = declarator.children[2].clone();
         let params = match params.clone().token.lexeme {
             Some(ref l) if l == "ParameterList" => params.flatten().clone(),
-            _ => params,
+            _ => {
+                ASTNode {
+                    token: Token::new(TokenKind::NonTerminal, Some("ParameterList")),
+                    children: vec![params],
+                }
+            }
         };
         for param in &params.children {
             new.parameters.push(param.clone());
@@ -101,9 +106,17 @@ pub fn analyze_method_declaration(current: &mut ClassOrInterfaceEnvironment,
         let mut params = declarator.children[2].clone();
         let params = match params.clone().token.lexeme {
             Some(ref l) if l == "ParameterList" => params.flatten().clone(),
-            _ => params,
+            _ => {
+                ASTNode {
+                    token: Token::new(TokenKind::NonTerminal, Some("ParameterList")),
+                    children: vec![params],
+                }
+            }
         };
         for param in &params.children {
+            if param.token.kind == TokenKind::Comma {
+                continue;
+            }
             new.parameters.push(param.clone());
         }
     }

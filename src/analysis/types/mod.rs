@@ -2,31 +2,12 @@ use analysis::environment::ClassOrInterface;
 use analysis::environment::ClassOrInterfaceEnvironment;
 use analysis::environment::Environment;
 use scanner::ASTNode;
-use scanner::ASTNodeImport;
 use scanner::Token;
 use scanner::TokenKind;
 
-// if let Some(l) = declared_kind_astnode.clone().token.lexeme {
-//     if l == "ArrayType" {
-//         kind = kind.children[0].clone();
-//     }
-// }
-// if !vec![TokenKind::Boolean,
-//          TokenKind::Byte,
-//          TokenKind::Char,
-//          TokenKind::Int,
-//          TokenKind::Short,
-//          TokenKind::Void]
-//     .contains(&kind.token.kind) {
-//     match lookup(&kind.flatten(), current, kinds, imports) {
-//         Ok(c) => (),  // TODO: do something with this kind
-//         Err(e) => return Err(e),
-//     }
-// }
 fn lookup(name: &ASTNode,
           current: &ClassOrInterfaceEnvironment,
-          kinds: &Vec<ClassOrInterfaceEnvironment>,
-          imports: &Vec<ASTNodeImport>)
+          kinds: &Vec<ClassOrInterfaceEnvironment>)
           -> Result<ClassOrInterfaceEnvironment, String> {
     let name = name.clone();
     let node_star = ASTNode {
@@ -51,7 +32,7 @@ fn lookup(name: &ASTNode,
     let mut found = None;
 
     // 2. try any single-type-import (A.B.C.D)
-    for import in imports {
+    for import in &current.imports {
         if let Some(import_name) = import.import.children.last() {
             if import_name == &node_star {
                 continue;
@@ -103,7 +84,7 @@ fn lookup(name: &ASTNode,
     }
 
     // 4. try any import-on-demand package (A.B.C.*) including java.lang.*
-    for import in imports {
+    for import in &current.imports {
         if let Some((import_name, import_package)) = import.import.children.split_last() {
             if import_name != &node_star {
                 continue;
@@ -142,7 +123,7 @@ pub fn verify_inheritance(env: &Environment,
     visited.push(current.name.clone());
 
     for extended in &current.extends {
-        let found = match lookup(&extended, &current, &env.kinds, &current.imports) {
+        let found = match lookup(&extended, &current, &env.kinds) {
             Ok(f) => f,
             Err(e) => return Err(e),
         };
@@ -177,9 +158,7 @@ pub fn verify(env: &Environment) -> Result<(), String> {
     for current in &env.kinds {
         if current.kind == ClassOrInterface::CLASS {
             for extended in &current.extends {
-                // TODO: non-circular
-
-                let found = match lookup(&extended, &current, &env.kinds, &current.imports) {
+                let found = match lookup(&extended, &current, &env.kinds) {
                     Ok(f) => f,
                     Err(e) => return Err(e),
                 };
@@ -192,7 +171,7 @@ pub fn verify(env: &Environment) -> Result<(), String> {
             }
 
             for implemented in &current.implements {
-                let found = match lookup(&implemented, &current, &env.kinds, &current.imports) {
+                let found = match lookup(&implemented, &current, &env.kinds) {
                     Ok(f) => f,
                     Err(e) => return Err(e),
                 };
@@ -202,9 +181,7 @@ pub fn verify(env: &Environment) -> Result<(), String> {
             }
         } else if current.kind == ClassOrInterface::INTERFACE {
             for extended in &current.extends {
-                // TODO: non-circular
-
-                let found = match lookup(&extended, &current, &env.kinds, &current.imports) {
+                let found = match lookup(&extended, &current, &env.kinds) {
                     Ok(f) => f,
                     Err(e) => return Err(e),
                 };
@@ -220,7 +197,26 @@ pub fn verify(env: &Environment) -> Result<(), String> {
         }
 
         for constructor in &current.constructors {
-            // TODO: lookup each constructor.parameters
+            for parameter in &constructor.parameters {
+                let mut kind = parameter.children[0].clone();
+                if let Some(l) = kind.clone().token.lexeme {
+                    if l == "ArrayType" {
+                        kind = kind.children[0].clone();
+                    }
+                }
+                if !vec![TokenKind::Boolean,
+                         TokenKind::Byte,
+                         TokenKind::Char,
+                         TokenKind::Int,
+                         TokenKind::Short,
+                         TokenKind::Void]
+                    .contains(&kind.token.kind) {
+                    match lookup(&kind.flatten(), &current, &env.kinds) {
+                        Ok(_) => (),
+                        Err(e) => return Err(e),
+                    }
+                }
+            }
 
             // TODO: analyze constructor.body:
             // if body.children.len() == 3 {

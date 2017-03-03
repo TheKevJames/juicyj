@@ -37,7 +37,12 @@ pub fn analyze_interface_declaration(canonical: &ASTNode,
                 let mut grandkid = child.children[1].clone();
                 let grandkid = match grandkid.clone().token.lexeme {
                     Some(ref l) if l == "InterfaceExtendsList" => grandkid.flatten().clone(),
-                    _ => grandkid,
+                    _ => {
+                        ASTNode {
+                            token: Token::new(TokenKind::NonTerminal, Some("InterfaceExtendsList")),
+                            children: vec![grandkid],
+                        }
+                    }
                 };
                 for mut greatgrandkid in grandkid.children {
                     if greatgrandkid.token.kind == TokenKind::Identifier {

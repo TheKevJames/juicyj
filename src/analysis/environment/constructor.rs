@@ -1,5 +1,7 @@
 use analysis::environment::classorinterface::ClassOrInterfaceEnvironment;
 use scanner::ASTNode;
+use scanner::Token;
+use scanner::TokenKind;
 
 #[derive(Clone,Debug)]
 pub struct ConstructorEnvironment {
@@ -35,9 +37,17 @@ pub fn analyze_constructor_declaration(current: &mut ClassOrInterfaceEnvironment
         let mut params = declarator.children[2].clone();
         let params = match params.clone().token.lexeme {
             Some(ref l) if l == "ParameterList" => params.flatten().clone(),
-            _ => params,
+            _ => {
+                ASTNode {
+                    token: Token::new(TokenKind::NonTerminal, Some("ParameterList")),
+                    children: vec![params],
+                }
+            }
         };
         for param in &params.children {
+            if param.token.kind == TokenKind::Comma {
+                continue;
+            }
             new.parameters.push(param.clone());
         }
     }
