@@ -22,10 +22,10 @@ pub fn analyze_interface_declaration(canonical: &ASTNode,
     }
 
     current.imports = imports.clone();
-    if let Some(interface_name) = current.name.children.last() {
+    if let Some((interface_name, interface_package)) = current.name.children.split_last() {
         for import in &current.imports {
-            if let Some(import_name) = import.import.children.last() {
-                if import_name == interface_name {
+            if let Some((import_name, import_package)) = import.import.children.split_last() {
+                if import_name == interface_name && import_package != interface_package {
                     return Err(format!("single-type-import declaration clashes with interface {}",
                                        interface_name));
                 }

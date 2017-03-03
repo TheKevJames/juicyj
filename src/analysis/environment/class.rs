@@ -23,10 +23,10 @@ pub fn analyze_class_declaration(canonical: &ASTNode,
     }
 
     current.imports = imports.clone();
-    if let Some(class_name) = current.name.children.last() {
+    if let Some((class_name, class_package)) = current.name.children.split_last() {
         for import in &current.imports {
-            if let Some(import_name) = import.import.children.last() {
-                if import_name == class_name {
+            if let Some((import_name, import_package)) = import.import.children.split_last() {
+                if import_name == class_name && import_package != class_package {
                     return Err(format!("single-type-import declaration clashes with class {}",
                                        class_name));
                 }
