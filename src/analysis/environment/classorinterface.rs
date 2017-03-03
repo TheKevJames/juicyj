@@ -186,14 +186,22 @@ impl ClassOrInterfaceEnvironment {
         };
 
         for constructor in &parent.constructors {
-            for existing in &self.constructors {
-                if constructor.parameters == existing.parameters {
+            let mut inherited = constructor.clone();
+            inherited.name = self.name.clone();
+
+            for (idx, existing) in self.constructors.clone().iter().enumerate() {
+                if &inherited == existing {
+                    self.constructors.remove(idx);
+                    continue;
+                }
+
+                if inherited.parameters == existing.parameters {
                     return Err("could not inherit conflicting constructors".to_owned());
                 }
             }
             // TODO: any other restrictions?
-            // TODO: change name to kid?
-            self.constructors.push(constructor.clone());
+
+            self.constructors.push(inherited);
         }
         for field in &parent.fields {
             // TODO: any restrictions?

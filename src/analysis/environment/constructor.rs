@@ -3,7 +3,7 @@ use scanner::ASTNode;
 use scanner::Token;
 use scanner::TokenKind;
 
-#[derive(Clone,Debug)]
+#[derive(Clone,Debug,PartialEq)]
 pub struct ConstructorEnvironment {
     pub modifiers: Vec<ASTNode>,
     pub name: ASTNode,
