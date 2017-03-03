@@ -167,13 +167,7 @@ impl ClassOrInterfaceEnvironment {
                                            method.name));
                     }
 
-                    if existing.body == method.body {
-                        // if definitions are identical, no checks are needed
-                        self.methods.remove(idx);
-                        break;
-                    }
-
-                    if existing.modifiers.contains(&modifier_final) {
+                    if existing.modifiers.contains(&modifier_final) && existing.body != method.body {
                         return Err(format!("cannot override final method {}", existing.name));
                     }
 
@@ -380,15 +374,9 @@ impl ClassOrInterfaceEnvironment {
                                            method.name));
                     }
 
-                    if existing.body == method.body {
-                        // if definitions are identical, no checks are needed
-                        overwrite = false;
-                        break;
-                    }
-
                     if existing.modifiers.contains(&modifier_abstract) {
                         if !method.modifiers.contains(&modifier_abstract) {
-                            if existing.modifiers.contains(&modifier_final) {
+                            if existing.modifiers.contains(&modifier_final) && existing.body != method.body {
                                 return Err(format!("cannot override final method {}",
                                                    existing.name));
                             }
@@ -422,7 +410,7 @@ impl ClassOrInterfaceEnvironment {
                             // existing -> concrete, method -> abstract
                             // thus we're basically overridding `method` with
                             // `existing`
-                            if method.modifiers.contains(&modifier_final) {
+                            if method.modifiers.contains(&modifier_final) && existing.body != method.body {
                                 return Err(format!("cannot override final method {}", method.name));
                             }
 
