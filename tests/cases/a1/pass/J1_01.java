@@ -2,7 +2,8 @@
 package com.tests.cases;
 
 import java.lang.*;
-import java.util.something;
+// XXX: changed this from java.util.something to avoid testing import existence
+import java.util.Arrays;
 
 public class J1_01 {
     public J1_01() {}
