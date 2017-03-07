@@ -50,7 +50,8 @@ pub fn analyze_class_declaration(canonical: &ASTNode,
                     Some(ref l) if l == "ClassOrInterfaceTypeList" => grandkid.flatten().clone(),
                     _ => {
                         ASTNode {
-                            token: Token::new(TokenKind::NonTerminal, Some("ClassOrInterfaceTypeList")),
+                            token: Token::new(TokenKind::NonTerminal,
+                                              Some("ClassOrInterfaceTypeList")),
                             children: vec![grandkid],
                         }
                     }

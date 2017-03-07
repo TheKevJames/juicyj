@@ -39,10 +39,20 @@ pub fn verify_statement(node: &mut ASTNode,
                         globals: &Vec<VariableEnvironment>,
                         locals: &mut Vec<VariableEnvironment>)
                         -> Result<(), String> {
+    let modifier_abstract = ASTNode {
+        token: Token::new(TokenKind::Abstract, None),
+        children: Vec::new(),
+    };
+
     match node.token.lexeme {
         Some(ref l) if l == "ArrayCreationExpression" || l == "ClassInstanceCreationExpression" => {
-            let kind = node.children[1].clone();
-            check::verify(kind, current, kinds)
+            match check::lookup_or_primitive(&node.children[1], current, kinds) {
+                Ok(ref k) if k.modifiers.contains(&modifier_abstract) => {
+                    Err(format!("instantiated abstract class {}", k.name))
+                }
+                Ok(_) => Ok(()),
+                Err(e) => Err(e),
+            }
         }
         Some(ref l) if l == "Block" && node.children.len() == 3 => {
             let mut block_globals = globals.clone();
@@ -140,7 +150,14 @@ pub fn verify_declaration(kinds: &Vec<ClassOrInterfaceEnvironment>,
     let new = VariableEnvironment {
         kind: node.children[0].clone(),
         name: match node.children[1].clone().token.kind {
-            TokenKind::Assignment => node.children[1].clone().children[0].clone(),
+            TokenKind::Assignment => {
+                let mut rvalue = node.children[1].clone().children[1].clone();
+                match verify_statement(&mut rvalue, current, kinds, globals, locals) {
+                    Ok(_) => (),
+                    Err(e) => return Err(e),
+                }
+                node.children[1].clone().children[0].clone()
+            }
             _ => node.children[1].clone(),
         },
         dim: false, // TODO: ArrayType?
