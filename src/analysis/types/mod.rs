@@ -129,6 +129,12 @@ pub fn verify(env: &Environment) -> Result<(), String> {
                 Ok(_) => (),
                 Err(e) => return Err(e),
             }
+
+            if constructor.name != current.name {
+                return Err(format!("constructor {} does not share class name {}",
+                                   constructor.name,
+                                   class.name));
+            }
         }
 
         for field in &inherited.fields {
