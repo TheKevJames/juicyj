@@ -16,7 +16,9 @@ pub struct ASTNode {
 }
 
 #[derive(Clone,Debug,PartialEq)]
+/// An AST node denoting an import statement.
 pub struct ASTNodeImport {
+    /// the associated ASTNode, usually a <Name> NonTerminal
     pub import: ASTNode,
 }
 
@@ -266,6 +268,8 @@ impl ASTNode {
 }
 
 impl ASTNodeImport {
+    /// Creates an ASTNodeImport from a parse node of form: `import { a.b.[c*] }`
+    /// End result is `<Name> { a . b . [c*] }`
     pub fn new(node: &ParseNode) -> Result<ASTNodeImport, ASTError> {
         let mut names: Vec<Token> = Vec::new();
         node.collect_child_kinds(&vec![&TokenKind::Dot, &TokenKind::Identifier, &TokenKind::Star],
