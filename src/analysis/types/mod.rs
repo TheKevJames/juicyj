@@ -67,6 +67,21 @@ pub fn verify(env: &Environment) -> Result<(), String> {
                 } else if found.kind == ClassOrInterface::INTERFACE {
                     return Err(format!("class {} cannot extend interface {}", current, found));
                 }
+
+                if current.name != object_name {
+                    let mut zero_argument_parent = false;
+                    for constructor in found.constructors {
+                        if constructor.parameters.is_empty() {
+                            zero_argument_parent = true;
+                            break;
+                        }
+                    }
+                    if !zero_argument_parent {
+                        return Err(format!("class {} has missing zero-argument constructor in {}",
+                                           current.name,
+                                           found.name));
+                    }
+                }
             }
 
             let mut resolved = Vec::new();
@@ -107,7 +122,6 @@ pub fn verify(env: &Environment) -> Result<(), String> {
             Err(e) => return Err(e),
         };
 
-        // TODO: check that parent zero-argument constructor exists in all cases
         for constructor in &inherited.constructors {
             let mut params = Vec::new();
             for parameter in &constructor.parameters {
