@@ -18,6 +18,10 @@ pub fn lookup_canonical(name: &ASTNode,
         }
     }
 
+    if &name == current.name.children.last().unwrap() {
+        return Some(Ok(current.clone()));
+    }
+
     None
 }
 
