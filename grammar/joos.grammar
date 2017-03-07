@@ -371,7 +371,7 @@ RelationalExpression:
 	RelationalExpression > AdditiveExpression
 	RelationalExpression <= AdditiveExpression
 	RelationalExpression >= AdditiveExpression
-	RelationalExpression INSTANCEOF ClassType
+	RelationalExpression INSTANCEOF ReferenceType
 
 EqualityExpression:
 	RelationalExpression
