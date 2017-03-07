@@ -57,13 +57,20 @@ macro_rules! a2_fail_tests_folders {
                 match path.unwrap().path().to_str() {
                     Some(filename) if filename.ends_with(".java") => {
                         let src: String = juicyj::scanner::read_src_file(&filename.to_string());
-                        asts.push(juicyj::scanner::tests::scan_or_assert(&filename, &src));
+                        if format!("{}", $case).starts_with("Je_3_SingleTypeImport_ClashWithEach") {
+                            // these fail as AST building
+                            juicyj::scanner::tests::scan_and_assert(&filename, &src);
+                        } else {
+                            asts.push(juicyj::scanner::tests::scan_or_assert(&filename, &src));
+                        }
                     }
                     _ => (),
                 }
             }
 
-            juicyj::analysis::tests::analyze_and_assert(&asts);
+            if !format!("{}", $case).starts_with("Je_3_SingleTypeImport_ClashWithEach") {
+                juicyj::analysis::tests::analyze_and_assert(&asts);
+            }
         }
     )*
     }

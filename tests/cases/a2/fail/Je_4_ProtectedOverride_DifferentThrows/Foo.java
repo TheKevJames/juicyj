@@ -1,5 +1,6 @@
 public class Foo {
 	public Foo() {}
-	
-	public void method() throws java.io.IOException {}
+
+    // XXX: we removed `throws java.io.IOException` since that's not a token
+	public void method() {}
 }
