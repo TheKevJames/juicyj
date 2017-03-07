@@ -137,6 +137,12 @@ pub fn verify_statement(node: &mut ASTNode,
             verify_statement(&mut expr, current, kinds, &globals, &mut locals.clone())
         }
         // TODO: CastExpression
+        // TODO: prevent bitwise operations
+        // TODO: check accesses of protected fields, methods, and constructors are in subtype or same package
+        // TODO: check static/non-static accesses to fields and methods
+        // TODO: resolve all non-static field and method usages
+        // TODO: resolve all names except the above
+        // TODO: check expressions are correctly types (no narrowing conversions)
         _ => Ok(()),
     }
 }

@@ -107,6 +107,7 @@ pub fn verify(env: &Environment) -> Result<(), String> {
             Err(e) => return Err(e),
         };
 
+        // TODO: check that parent zero-argument constructor exists in all cases
         for constructor in &inherited.constructors {
             let mut params = Vec::new();
             for parameter in &constructor.parameters {
@@ -130,7 +131,7 @@ pub fn verify(env: &Environment) -> Result<(), String> {
                 Err(e) => return Err(e),
             }
 
-            if constructor.name != current.name {
+            if &constructor.name != current.name.children.last().unwrap() {
                 return Err(format!("constructor {} does not share class name {}",
                                    constructor.name,
                                    current.name));
@@ -142,6 +143,8 @@ pub fn verify(env: &Environment) -> Result<(), String> {
             if result.is_err() {
                 return result;
             }
+
+            // TODO: static fields can not use `this`
         }
 
         for method in &inherited.methods {
@@ -195,9 +198,9 @@ pub fn verify(env: &Environment) -> Result<(), String> {
                     return Err(format!("static method {} is abstract", method));
                 }
             }
-        }
 
-        // TODO: static methods can not use `this`
+            // TODO: static methods can not use `this`
+        }
     }
 
     Ok(())

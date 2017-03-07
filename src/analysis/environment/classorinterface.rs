@@ -271,47 +271,6 @@ impl ClassOrInterfaceEnvironment {
                            }],
         };
 
-        // TODO: constructors are not inherited
-        // TODO: check that parent zero-argument constructor exists in all cases
-        for constructor in &parent.constructors {
-            let mut inherited = constructor.clone();
-            inherited.name = self.name.clone();
-
-            for (idx, existing) in self.constructors.clone().iter().enumerate() {
-                if &inherited == existing {
-                    self.constructors.remove(idx);
-                    continue;
-                }
-
-                let mut different = constructor.parameters.len() != existing.parameters.len();
-                if different {
-                    continue;
-                }
-
-                for (constructor_param, existing_param) in
-                    constructor.parameters.iter().zip(existing.parameters.iter()) {
-                    let found_constructor_param =
-                        match check::lookup_or_primitive(&constructor_param.kind, parent, kinds) {
-                            Ok(mp) => mp,
-                            Err(e) => return Err(e),
-                        };
-                    let found_existing_param =
-                        match check::lookup_or_primitive(&existing_param.kind, parent, kinds) {
-                            Ok(mp) => mp,
-                            Err(e) => return Err(e),
-                        };
-                    if found_constructor_param.name != found_existing_param.name {
-                        different = true;
-                        break;
-                    }
-                }
-                if !different {
-                    return Err("could not inherit conflicting constructors".to_owned());
-                }
-            }
-
-            self.constructors.push(inherited);
-        }
         for field in &parent.fields {
             self.fields.push(field.clone());
         }
