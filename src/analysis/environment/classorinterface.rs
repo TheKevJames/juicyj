@@ -316,15 +316,7 @@ impl ClassOrInterfaceEnvironment {
 
         if self.kind == ClassOrInterface::INTERFACE && parent.name == object_name {
             for method in &parent.methods {
-                let mut inherited = method.clone();
-
-                // TODO: this gets around the final Object.getClass issue. FIXME
-                // inherited.modifiers.push(modifier_abstract.clone());
-                inherited.modifiers = vec![inherited.modifiers[0].clone(),
-                                           modifier_abstract.clone()];
-
-                inherited.body = None;
-                self.methods.push(inherited);
+                self.methods.push(method.clone());
             }
 
             return Ok(());
