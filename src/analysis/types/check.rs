@@ -18,11 +18,34 @@ pub fn lookup_canonical(name: &ASTNode,
         }
     }
 
-    if &name == current.name.children.last().unwrap() {
-        return Some(Ok(current.clone()));
-    }
-
     None
+}
+
+pub fn lookup_in_package(name: &ASTNode,
+                         current: &ClassOrInterfaceEnvironment,
+                         kinds: &Vec<ClassOrInterfaceEnvironment>)
+                         -> Option<Result<ClassOrInterfaceEnvironment, String>> {
+    let mut found = None;
+
+    for kind in kinds {
+        if let Some((kind_name, kind_package)) = kind.name.children.split_last() {
+            if let Some((_, package)) = current.name.children.split_last() {
+                if package == kind_package && name == kind_name {
+                    match found {
+                        Some(_) => {
+                            return Some(Err(format!("ambiguous type lookup in package {:?}",
+                                                    package)))
+                        }
+                        None => found = Some(kind.clone()),
+                    }
+                }
+            }
+        }
+    }
+    match found {
+        Some(f) => Some(Ok(f)),
+        _ => None,
+    }
 }
 
 pub fn lookup(name: &ASTNode,
@@ -43,7 +66,7 @@ pub fn lookup(name: &ASTNode,
 
     // 1. try the enclosing class or interface
     if let Some(class_name) = current.name.children.last() {
-        if name == class_name.clone() {
+        if &name == class_name {
             return Ok(current.clone());
         }
     }
@@ -84,22 +107,9 @@ pub fn lookup(name: &ASTNode,
     }
 
     // 3. try the same package
-    for kind in kinds {
-        if let Some((kind_name, kind_package)) = kind.name.children.split_last() {
-            if let Some((_, package)) = current.name.children.split_last() {
-                if package == kind_package && &name == kind_name {
-                    match found {
-                        Some(_) => {
-                            return Err(format!("ambiguous type lookup in package {:?}", package))
-                        }
-                        None => found = Some(kind.clone()),
-                    }
-                }
-            }
-        }
-    }
-    if let Some(f) = found {
-        return Ok(f);
+    let result = lookup_in_package(&name, current, kinds);
+    if result.is_some() {
+        return result.unwrap();
     }
 
     // 4. try any import-on-demand package (A.B.C.*) including java.lang.*
@@ -181,33 +191,6 @@ pub fn verify(kind: ASTNode,
     }
 }
 
-pub fn verify_canonical(kind: ASTNode,
-                        current: &ClassOrInterfaceEnvironment,
-                        kinds: &Vec<ClassOrInterfaceEnvironment>)
-                        -> Result<(), String> {
-    let mut kind = kind;
-    if let Some(l) = kind.clone().token.lexeme {
-        if l == "ArrayType" {
-            kind = kind.children[0].clone();
-        }
-    }
-    if vec![TokenKind::Boolean,
-            TokenKind::Byte,
-            TokenKind::Char,
-            TokenKind::Int,
-            TokenKind::Short,
-            TokenKind::Void]
-        .contains(&kind.token.kind) {
-        return Ok(());
-    }
-
-    match lookup_canonical(&kind.flatten(), current, kinds) {
-        Some(Ok(_)) => Ok(()),
-        Some(Err(e)) => Err(e),
-        _ => Err(format!("could not lookup canonical kind {:?}", kind)),
-    }
-}
-
 pub fn verify_prefixes(kind: ASTNode,
                        current: &ClassOrInterfaceEnvironment,
                        kinds: &Vec<ClassOrInterfaceEnvironment>)
@@ -216,14 +199,72 @@ pub fn verify_prefixes(kind: ASTNode,
     for (idx, child) in kind.children.iter().enumerate() {
         prefix.push(child.clone());
 
-        let testable = ASTNode {
+        let mut testable = ASTNode {
             token: Token::new(TokenKind::NonTerminal, Some("Name")),
             children: prefix.clone(),
         };
+        testable.flatten();
         if idx % 2 == 0 && testable != kind {
-            match verify_canonical(testable.clone(), current, kinds) {
-                Ok(_) => return Err(format!("strict prefix {} resolves to type", testable)),
-                Err(_) => (),
+            if vec![TokenKind::Boolean,
+                    TokenKind::Byte,
+                    TokenKind::Char,
+                    TokenKind::Int,
+                    TokenKind::Short,
+                    TokenKind::Void]
+                .contains(&testable.token.kind) {
+                return Err(format!("strict prefix {} resolves to primitive type", testable));
+            }
+
+            match lookup_canonical(&testable, current, kinds) {
+                Some(Ok(_)) => {
+                    return Err(format!("strict prefix {} resolves to canonical type", testable))
+                }
+                _ => (),
+            }
+
+            match lookup_in_package(&testable, current, kinds) {
+                Some(Ok(_)) => {
+                    return Err(format!("strict prefix {} resolves to local type", testable))
+                }
+                _ => (),
+            }
+        }
+    }
+
+    Ok(())
+}
+
+pub fn verify_package_prefixes(kind: ASTNode,
+                               current: &ClassOrInterfaceEnvironment,
+                               kinds: &Vec<ClassOrInterfaceEnvironment>)
+                               -> Result<(), String> {
+    let mut prefix = Vec::new();
+    for (idx, child) in kind.children.iter().enumerate() {
+        prefix.push(child.clone());
+
+        let mut testable = ASTNode {
+            token: Token::new(TokenKind::NonTerminal, Some("Name")),
+            children: prefix.clone(),
+        };
+        testable.flatten();
+        if idx % 2 == 0 && testable != kind {
+            if vec![TokenKind::Boolean,
+                    TokenKind::Byte,
+                    TokenKind::Char,
+                    TokenKind::Int,
+                    TokenKind::Short,
+                    TokenKind::Void]
+                .contains(&testable.token.kind) {
+                return Err(format!("strict package prefix {} resolves to primitive type",
+                                   testable));
+            }
+
+            match lookup_canonical(&testable, current, kinds) {
+                Some(Ok(_)) => {
+                    return Err(format!("strict package prefix {} resolves to canonical type",
+                                       testable))
+                }
+                _ => (),
             }
         }
     }

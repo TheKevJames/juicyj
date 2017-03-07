@@ -50,7 +50,7 @@ pub fn verify(env: &Environment) -> Result<(), String> {
     };
 
     for current in &env.kinds {
-        match check::verify_prefixes(current.name.clone(), &current, &env.kinds) {
+        match check::verify_package_prefixes(current.name.clone(), &current, &env.kinds) {
             Ok(_) => (),
             Err(e) => return Err(e),
         }
