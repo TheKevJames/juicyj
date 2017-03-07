@@ -1,5 +1,5 @@
 //! The analysis module for juicyj. Includes the environment builder. Roughly
-//! corresponds to assignment 2 of the original CS444 project.
+//! corresponds to assignments 2 through 4 of the original CS444 project.
 mod environment;
 mod types;
 

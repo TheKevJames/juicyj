@@ -1,4 +1,5 @@
 extern crate juicyj;
+extern crate walkdir;
 
 macro_rules! a3_fail_tests {
     ($($name:ident: $case:tt,)*) => {
@@ -6,10 +7,27 @@ macro_rules! a3_fail_tests {
         #[test]
         #[ignore]
         fn $name() {
+            let stdlib_io = std::fs::read_dir("stdlib/java/io").unwrap();
+            let stdlib_lang = std::fs::read_dir("stdlib/java/lang").unwrap();
+            let stdlib_util = std::fs::read_dir("stdlib/java/util").unwrap();
+
+            let mut asts = Vec::new();
+
+            for path in stdlib_io.chain(stdlib_lang).chain(stdlib_util) {
+                match path.unwrap().path().to_str() {
+                    Some(filename) => {
+                        let src: String = juicyj::scanner::read_src_file(&filename.to_string());
+                        asts.push(juicyj::scanner::tests::scan_or_assert(&filename, &src));
+                    }
+                    _ => (),
+                }
+            }
+
             let filename: String = format!("tests/cases/a3/fail/{}.java", $case);
             let src: String = juicyj::scanner::read_src_file(&filename);
+            asts.push(juicyj::scanner::tests::scan_or_assert(&filename, &src));
 
-            juicyj::scanner::tests::scan_and_assert(&filename, &src);
+            juicyj::analysis::tests::analyze_and_assert(&asts);
         }
     )*
     }
@@ -21,16 +39,39 @@ macro_rules! a3_fail_tests_folders {
         #[test]
         #[ignore]
         fn $name() {
-            let paths = std::fs::read_dir(format!("tests/cases/a3/fail/{}", $case)).unwrap();
-            for path in paths {
+            let stdlib_io = std::fs::read_dir("stdlib/java/io").unwrap();
+            let stdlib_lang = std::fs::read_dir("stdlib/java/lang").unwrap();
+            let stdlib_util = std::fs::read_dir("stdlib/java/util").unwrap();
+
+            let mut asts = Vec::new();
+
+            for path in stdlib_io.chain(stdlib_lang).chain(stdlib_util) {
                 match path.unwrap().path().to_str() {
                     Some(filename) => {
-                        // TODO: compile multiple together
                         let src: String = juicyj::scanner::read_src_file(&filename.to_string());
-                        juicyj::scanner::tests::scan_and_assert(&filename, &src);
+                        asts.push(juicyj::scanner::tests::scan_or_assert(&filename, &src));
                     }
                     _ => (),
                 }
+            }
+
+            for path in walkdir::WalkDir::new(format!("tests/cases/a3/fail/{}", $case)) {
+                match path.unwrap().path().to_str() {
+                    Some(filename) if filename.ends_with(".java") => {
+                        let src: String = juicyj::scanner::read_src_file(&filename.to_string());
+                        if format!("{}", $case).starts_with("Je_3_SingleTypeImport_ClashWithEach") {
+                            // these fail as AST building
+                            juicyj::scanner::tests::scan_and_assert(&filename, &src);
+                        } else {
+                            asts.push(juicyj::scanner::tests::scan_or_assert(&filename, &src));
+                        }
+                    }
+                    _ => (),
+                }
+            }
+
+            if !format!("{}", $case).starts_with("Je_3_SingleTypeImport_ClashWithEach") {
+                juicyj::analysis::tests::analyze_and_assert(&asts);
             }
         }
     )*
