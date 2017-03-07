@@ -133,7 +133,7 @@ pub fn verify(env: &Environment) -> Result<(), String> {
             if constructor.name != current.name {
                 return Err(format!("constructor {} does not share class name {}",
                                    constructor.name,
-                                   class.name));
+                                   current.name));
             }
         }
 
@@ -196,6 +196,8 @@ pub fn verify(env: &Environment) -> Result<(), String> {
                 }
             }
         }
+
+        // TODO: static methods can not use `this`
     }
 
     Ok(())

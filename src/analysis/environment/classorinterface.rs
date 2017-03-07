@@ -271,6 +271,8 @@ impl ClassOrInterfaceEnvironment {
                            }],
         };
 
+        // TODO: constructors are not inherited
+        // TODO: check that parent zero-argument constructor exists in all cases
         for constructor in &parent.constructors {
             let mut inherited = constructor.clone();
             inherited.name = self.name.clone();
