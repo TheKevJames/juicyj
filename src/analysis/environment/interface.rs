@@ -46,10 +46,10 @@ pub fn analyze_interface_declaration(canonical: &ASTNode,
             Some(ref l) if l == "InterfaceExtends" => {
                 let mut grandkid = child.children[1].clone();
                 let grandkid = match grandkid.clone().token.lexeme {
-                    Some(ref l) if l == "InterfaceExtendsList" => grandkid.flatten().clone(),
+                    Some(ref l) if l == "ClassOrInterfaceTypeList" => grandkid.flatten().clone(),
                     _ => {
                         ASTNode {
-                            token: Token::new(TokenKind::NonTerminal, Some("InterfaceExtendsList")),
+                            token: Token::new(TokenKind::NonTerminal, Some("ClassOrInterfaceTypeList")),
                             children: vec![grandkid],
                         }
                     }
@@ -63,7 +63,7 @@ pub fn analyze_interface_declaration(canonical: &ASTNode,
                     } else if greatgrandkid.token.kind == TokenKind::Comma {
                         continue;
                     } else {
-                        return Err(format!("got invalid InterfaceExtendsList child {}",
+                        return Err(format!("got invalid ClassOrInterfaceTypeList child {}",
                                            greatgrandkid.token));
                     }
                 }

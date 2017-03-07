@@ -30,12 +30,6 @@ ReferenceType:
 ClassOrInterfaceType:
 	Name
 
-ClassType:
-	ClassOrInterfaceType
-
-InterfaceType:
-	ClassOrInterfaceType
-
 ArrayType:
 	PrimitiveType Dim
 	Name Dim
@@ -104,14 +98,14 @@ Absinalative:
 	NATIVE
 
 ClassExtends:
-	EXTENDS ClassType
+	EXTENDS ClassOrInterfaceType
 
 Implements:
-	IMPLEMENTS InterfaceTypeList
+	IMPLEMENTS ClassOrInterfaceTypeList
 
-InterfaceTypeList:
-	InterfaceType
-	InterfaceTypeList COMMA InterfaceType
+ClassOrInterfaceTypeList:
+	ClassOrInterfaceType
+	ClassOrInterfaceTypeList COMMA ClassOrInterfaceType
 
 ClassBody:
 	{ ClassBodyDeclarations }
@@ -171,11 +165,7 @@ InterfaceDeclaration:
 	Modifiers INTERFACE IDENTIFIER InterfaceExtends InterfaceBody
 
 InterfaceExtends:
-	EXTENDS InterfaceExtendsList
-
-InterfaceExtendsList:
-	InterfaceType
-	InterfaceExtendsList COMMA InterfaceType
+	EXTENDS ClassOrInterfaceTypeList
 
 InterfaceBody:
 	{ }
@@ -303,8 +293,8 @@ PrimaryNoNewArray:
 	ArrayAccess
 
 ClassInstanceCreationExpression:
-	NEW ClassType ( )
-	NEW ClassType ( ArgumentList )
+	NEW ClassOrInterfaceType ( )
+	NEW ClassOrInterfaceType ( ArgumentList )
 
 ArgumentList:
 	Expression
