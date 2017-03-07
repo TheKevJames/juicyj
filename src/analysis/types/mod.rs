@@ -160,7 +160,7 @@ pub fn verify(env: &Environment) -> Result<(), String> {
                 return result;
             }
 
-            // TODO: static fields can not use `this`
+            // TODO: static fields can not use implicit `this`
         }
 
         for method in &inherited.methods {
@@ -215,7 +215,7 @@ pub fn verify(env: &Environment) -> Result<(), String> {
                 }
             }
 
-            // TODO: static methods can not use `this`
+            // TODO: static methods can not use implicit `this`
         }
     }
 
