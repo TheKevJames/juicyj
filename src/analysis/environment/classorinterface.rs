@@ -316,7 +316,9 @@ impl ClassOrInterfaceEnvironment {
 
         if self.kind == ClassOrInterface::INTERFACE && parent.name == object_name {
             for method in &parent.methods {
-                self.methods.push(method.clone());
+                let mut new = method.clone();
+                new.modifiers.push(modifier_abstract.clone());
+                self.methods.push(new);
             }
 
             return Ok(());
@@ -398,6 +400,12 @@ impl ClassOrInterfaceEnvironment {
                         }
                     } else {
                         if !method.modifiers.contains(&modifier_abstract) {
+                            if existing.modifiers == method.modifiers &&
+                               existing.body == method.body {
+                                overwrite = false;
+                                break;
+                            }
+
                             return Err(format!("could not inherit conflicting methods {}",
                                                method.name));
                         } else {
