@@ -6,13 +6,13 @@ machine:
         # https://github.com/rust-lang/cargo/issues/2078#issuecomment-263027534
         - git config --global --unset url.ssh://git@github.com:.insteadof
 
-# TODO: figure out how to cache dependencies
 dependencies:
     cache_directories:
         - "~/.cargo"
         - "~/.local"
         - "~/.multirust"
         - "~/.rustup"
+        - "target"
     pre:
         - |
           test -e $HOME/.cargo || {
@@ -23,6 +23,9 @@ dependencies:
         - rustc --version
 
         - test -e $HOME/.cargo/bin/cargo-fmt || cargo install --force rustfmt || true
+    override:
+        - cargo build
+        - cargo test --no-run
 
 test:
     override:
