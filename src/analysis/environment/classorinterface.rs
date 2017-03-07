@@ -48,7 +48,7 @@ impl ClassOrInterfaceEnvironment {
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// ```rust,ignore
     /// let A: ClassOrInterfaceEnvironment;
     /// let B: ClassOrInterfaceEnvironment;
     /// let C: ClassOrInterfaceEnvironment;
@@ -209,7 +209,7 @@ impl ClassOrInterfaceEnvironment {
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// ```rust,ignore
     /// let A: ClassOrInterfaceEnvironment;
     /// let B: ClassOrInterfaceEnvironment;
     /// let C: ClassOrInterfaceEnvironment;
