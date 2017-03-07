@@ -149,7 +149,7 @@ pub fn lookup_or_primitive(kind: &ASTNode,
     let mut child_kind = kind.clone();
     if let Some(l) = kind.clone().token.lexeme {
         if l == "ArrayType" {
-            child_kind = kind.clone().children[0].clone();
+            child_kind = kind.children[0].clone();
         }
     }
     if vec![TokenKind::Boolean,
@@ -162,7 +162,7 @@ pub fn lookup_or_primitive(kind: &ASTNode,
         return Ok(ClassOrInterfaceEnvironment::new(kind.clone(), ClassOrInterface::CLASS));
     }
 
-    lookup(&child_kind, current, kinds)
+    lookup(&child_kind.flatten(), current, kinds)
 }
 
 pub fn verify(kind: ASTNode,
