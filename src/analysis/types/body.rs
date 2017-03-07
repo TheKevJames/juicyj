@@ -167,7 +167,7 @@ pub fn verify_declaration(kinds: &Vec<ClassOrInterfaceEnvironment>,
             }
             _ => node.children[1].clone(),
         },
-        dim: false, // TODO: ArrayType?
+        dim: node.children[0].clone().token.lexeme.unwrap_or("".to_owned()) == "ArrayType",
     };
 
     for global in globals {
