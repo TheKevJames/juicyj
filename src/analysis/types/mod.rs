@@ -138,6 +138,8 @@ pub fn verify(env: &Environment) -> Result<(), String> {
             }
         }
 
+        // TODO: non-static fields must be initialized in order and without implicit `this`:
+        // http://titanium.cs.berkeley.edu/doc/java-langspec-1.0/8.doc.html#38013
         for field in &inherited.fields {
             let result = check::verify(field.kind.clone(), &inherited, &env.kinds);
             if result.is_err() {
