@@ -55,7 +55,6 @@ pub fn analyze_constructor_declaration(current: &mut ClassOrInterfaceEnvironment
 
     for constructor in &current.constructors {
         if constructor.parameters == new.parameters {
-            // TODO: check after inheritance?
             return Err("constructors must have unique signatures".to_owned());
         }
     }

@@ -19,7 +19,7 @@ impl FieldEnvironment {
         }
     }
 
-    // TODO: deal with modifiers
+    // TODO: stop converting back and forth. FieldEnv { Vec, VariableEnv } ?
     pub fn to_variable(&self) -> VariableEnvironment {
         let mut fakename = ASTNode {
             token: Token::new(TokenKind::NonTerminal, Some("Name")),

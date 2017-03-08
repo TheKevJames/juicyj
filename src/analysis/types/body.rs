@@ -7,7 +7,7 @@ use scanner::ASTNode;
 use scanner::Token;
 use scanner::TokenKind;
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 struct Type {
     kind: ClassOrInterfaceEnvironment,
 }
@@ -23,45 +23,44 @@ impl Type {
         self == other
     }
 
-    // TODO: arrays?
     // TODO: subset of operations (string concat only, no subtraction)
     fn mathable(&self, other: &Type) -> bool {
         if self == other {
             return true;
         }
 
-        let byte_node = ASTNode {
+        let byte = ASTNode {
             token: Token::new(TokenKind::Byte, None),
             children: Vec::new(),
         };
 
-        let char_node = ASTNode {
+        let charr = ASTNode {
             token: Token::new(TokenKind::Char, None),
             children: Vec::new(),
         };
 
-        let int_node = ASTNode {
+        let int = ASTNode {
             token: Token::new(TokenKind::Int, None),
             children: Vec::new(),
         };
 
-        let short_node = ASTNode {
+        let short = ASTNode {
             token: Token::new(TokenKind::Short, None),
             children: Vec::new(),
         };
 
-        let mathable_primitives = vec![byte_node, char_node, int_node, short_node];
+        let mathable_primitives = vec![byte, charr.clone(), int, short];
         if mathable_primitives.contains(&self.kind.name) &&
         mathable_primitives.contains(&other.kind.name) {
             return true;
         }
 
-        let string_node = ASTNode {
+        let string = ASTNode {
             token: Token::new(TokenKind::Identifier, Some("String")),
             children: Vec::new(),
         };
 
-        let mathable_strings = vec![char_node, string_node];
+        let mathable_strings = vec![charr, string];
         if mathable_strings.contains(&self.kind.name) && mathable_strings.contains(&other.kind.name) {
             return true;
         }
@@ -71,8 +70,23 @@ impl Type {
 }
 
 impl PartialEq for Type {
-    // TODO: ArrayType { Name { .. } } (j1_namedtypearray)
     fn eq(&self, other: &Type) -> bool {
+        if let Some(lhs_lex) = self.kind.name.clone().token.lexeme {
+            if lhs_lex == "ArrayType" {
+                let mut lhs = self.clone();
+                lhs.kind.name = lhs.kind.name.children[0].clone();
+                return &lhs == other;
+            }
+        }
+
+        if let Some(rhs_lex) = other.kind.name.clone().token.lexeme {
+            if rhs_lex == "ArrayType" {
+                let mut rhs = other.clone();
+                rhs.kind.name = rhs.kind.name.children[0].clone();
+                return self == &rhs;
+            }
+        }
+
         if self.kind.name == other.kind.name {
             return true;
         }
