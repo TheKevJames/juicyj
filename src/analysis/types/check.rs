@@ -50,6 +50,7 @@ pub fn lookup_in_package(name: &ASTNode,
 }
 
 // TODO: does this include inherited fields, etc?
+// TODO: lookup("thing") is String (j1_stringliteralinvoke)
 pub fn lookup(name: &ASTNode,
               current: &ClassOrInterfaceEnvironment,
               kinds: &Vec<ClassOrInterfaceEnvironment>)

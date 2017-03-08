@@ -1,3 +1,4 @@
+// TODO: j1_forinitcast
 use analysis::environment::ClassOrInterface;
 use analysis::environment::ClassOrInterfaceEnvironment;
 use analysis::environment::VariableEnvironment;
@@ -18,9 +19,12 @@ impl Type {
 
     fn assignable(&self, other: &Type) -> bool {
         // TODO: subset
+        // TODO: j1_intcharinit ?
         self == other
     }
 
+    // TODO: arrays?
+    // TODO: subset of operations (string concat only, no subtraction)
     fn mathable(&self, other: &Type) -> bool {
         if self == other {
             return true;
@@ -47,13 +51,27 @@ impl Type {
         };
 
         let mathable_primitives = vec![byte_node, char_node, int_node, short_node];
+        if mathable_primitives.contains(&self.kind.name) &&
+        mathable_primitives.contains(&other.kind.name) {
+            return true;
+        }
 
-        mathable_primitives.contains(&self.kind.name) &&
-        mathable_primitives.contains(&other.kind.name)
+        let string_node = ASTNode {
+            token: Token::new(TokenKind::Identifier, Some("String")),
+            children: Vec::new(),
+        };
+
+        let mathable_strings = vec![char_node, string_node];
+        if mathable_strings.contains(&self.kind.name) && mathable_strings.contains(&other.kind.name) {
+            return true;
+        }
+
+        false
     }
 }
 
 impl PartialEq for Type {
+    // TODO: ArrayType { Name { .. } } (j1_namedtypearray)
     fn eq(&self, other: &Type) -> bool {
         if self.kind.name == other.kind.name {
             return true;
@@ -100,6 +118,44 @@ impl PartialEq for Type {
             children: Vec::new(),
         };
         if rhs == null {
+            return true;
+        }
+
+        // can assign any non-primitive to Object
+        let object_node = ASTNode {
+            token: Token::new(TokenKind::Identifier, Some("Object")),
+            children: Vec::new(),
+        };
+
+        let boolean_node = ASTNode {
+            token: Token::new(TokenKind::Boolean, None),
+            children: Vec::new(),
+        };
+
+        let byte_node = ASTNode {
+            token: Token::new(TokenKind::Byte, None),
+            children: Vec::new(),
+        };
+
+        let char_node = ASTNode {
+            token: Token::new(TokenKind::Char, None),
+            children: Vec::new(),
+        };
+
+        let int_node = ASTNode {
+            token: Token::new(TokenKind::Int, None),
+            children: Vec::new(),
+        };
+
+        let short_node = ASTNode {
+            token: Token::new(TokenKind::Short, None),
+            children: Vec::new(),
+        };
+
+        let primitives = vec![boolean_node, byte_node, char_node, int_node, short_node];
+
+        // TODO: verify (j1_1_instanceof_inlazyexp)
+        if lhs == object_node && !primitives.contains(&rhs) {
             return true;
         }
 
@@ -185,6 +241,8 @@ fn resolve_expression(node: &ASTNode,
             }
         }
         Some(ref l) if l == "FieldAccess" => {
+            // TODO: node can be MethodInvocation (j1_1_ambiguousname_accessresultfrommethod)
+            // TODO: node can be ClassInstanceCreationExpression (j1_classinstance)
             let mut node = node.clone();
             node.token.lexeme = Some("Name".to_owned());
 
@@ -200,23 +258,6 @@ fn resolve_expression(node: &ASTNode,
 
             Err(format!("incomplete FieldAccess for {}", node))
         }
-        // Some(ref l) if l == "MethodInvocation" => {
-        //     // TODO: check method calls Primary.Identifier and Name
-        //     match node.children.len() {
-        //         // "Name ..."
-        //         3 | 4 => Ok(()),
-        //         // "Primary Dot Identifier ..."
-        //         5 | 6 => {
-        //             let primary = node.children[0].clone();
-        //             verify_statement(&mut primary.clone(),
-        //                              current,
-        //                              kinds,
-        //                              &globals,
-        //                              &mut locals.clone())
-        //         }
-        //         _ => Ok(()),
-        //     }
-        // }
         Some(ref l) if l == "MethodInvocation" => {
             let lookup = match node.children.len() {
                 3 | 4 => {
@@ -408,7 +449,6 @@ fn resolve_expression(node: &ASTNode,
                 }
             }
 
-            println!("fail name {:?}", node);
             match check::lookup(&node, current, kinds) {
                 Ok(f) => Ok(Type::new(f)),
                 Err(e) => Err(e),
@@ -429,14 +469,12 @@ fn resolve_expression(node: &ASTNode,
                             Err(e) => return Err(e),
                         };
 
-                    let boolean_node = ASTNode {
+                    let boolean = ASTNode {
                         token: Token::new(TokenKind::Boolean, None),
                         children: Vec::new(),
                     };
-                    let boolean =
-                        Type::new(ClassOrInterfaceEnvironment::new(boolean_node,
-                                                                   ClassOrInterface::CLASS));
-                    if lhs == rhs && lhs == boolean {
+
+                    if lhs == rhs && lhs.kind.name == boolean {
                         Ok(lhs)
                     } else {
                         Err(format!("could not apply {:?} to {:?} and {:?}",
@@ -464,6 +502,8 @@ fn resolve_expression(node: &ASTNode,
                     }
                 }
                 TokenKind::BitAnd | TokenKind::BitOr | TokenKind::BitXor => {
+                    // TODO: wtf is a bitwise operation? (j1_eagerbooleanoperations)
+                    // TODO: non-booleans on each side?
                     // these are allowed in grammar but not in type analysis
                     Err(format!("bitwise operations are not allowed"))
                 }
@@ -472,7 +512,8 @@ fn resolve_expression(node: &ASTNode,
                 TokenKind::LessThan |
                 TokenKind::LessThanOrEqual |
                 TokenKind::GreaterThan |
-                TokenKind::GreaterThanOrEqual => {
+                TokenKind::GreaterThanOrEqual |
+                TokenKind::Instanceof => {
                     let lhs =
                         match resolve_expression(&node.children[0], current, kinds, globals) {
                             Ok(l) => l,
@@ -484,9 +525,17 @@ fn resolve_expression(node: &ASTNode,
                             Err(e) => return Err(e),
                         };
 
+                    let boolean_node = ASTNode {
+                        token: Token::new(TokenKind::Boolean, None),
+                        children: Vec::new(),
+                    };
+                    let boolean =
+                        Type::new(ClassOrInterfaceEnvironment::new(boolean_node,
+                                                                   ClassOrInterface::CLASS));
+
                     // TODO: if comparable
                     if lhs == rhs {
-                        Ok(lhs)
+                        Ok(boolean)
                     } else {
                         Err(format!("could not apply {:?} to {:?} and {:?}",
                                     node.token.kind,
@@ -509,6 +558,7 @@ fn resolve_expression(node: &ASTNode,
 
                     if lhs.mathable(&rhs) {
                         Ok(lhs)
+                        // return precedence: '' + "" => "", "" + '' => ""
                     } else {
                         Err(format!("could not apply {:?} to {:?} and {:?}",
                                     node.token.kind,
@@ -635,7 +685,7 @@ fn verify_statement(node: &mut ASTNode,
                 Err(e) => return Err(e),
             };
 
-
+            // TODO: canonical (j1_commentsinexp5)
             if lhs.assignable(&rhs) {
                 Ok(())
             } else {
@@ -775,6 +825,7 @@ fn verify_declaration(kinds: &Vec<ClassOrInterfaceEnvironment>,
                 Err(e) => return Err(e),
             };
 
+            // TODO: canonical (j1_commentsinexp5)
             if !lhs.assignable(&rhs) {
                 return Err(format!("can not assign {} to {}", rhs.kind.name, lhs.kind.name));
             }
