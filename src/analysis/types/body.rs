@@ -16,6 +16,11 @@ impl Type {
         Type { kind: kind }
     }
 
+    fn assignable(&self, other: &Type) -> bool {
+        // TODO: subset
+        self == other
+    }
+
     fn mathable(&self, other: &Type) -> bool {
         if self == other {
             return true;
@@ -50,7 +55,41 @@ impl Type {
 
 impl PartialEq for Type {
     fn eq(&self, other: &Type) -> bool {
-        self.kind.name == other.kind.name
+        if self.kind.name == other.kind.name {
+            return true;
+        }
+
+        let mut lhs = self.kind.name.clone();
+        if self.kind.name.children.len() >= 3 &&
+           self.kind
+            .name
+            .children
+            .first()
+            .unwrap()
+            .clone()
+            .token
+            .lexeme
+            .unwrap_or("".to_owned()) == "juicyj-unnamed" {
+            lhs.children.remove(0);
+            lhs.children.remove(0);
+        }
+
+        let mut rhs = other.kind.name.clone();
+        if other.kind.name.children.len() >= 3 &&
+           other.kind
+            .name
+            .children
+            .first()
+            .unwrap()
+            .clone()
+            .token
+            .lexeme
+            .unwrap_or("".to_owned()) == "juicyj-unnamed" {
+            rhs.children.remove(0);
+            rhs.children.remove(0);
+        }
+
+        lhs == rhs
     }
 }
 
@@ -122,6 +161,12 @@ fn resolve_expression(node: &ASTNode,
                     }
                     Ok(Type::new(kind))
                 }
+                Err(e) => Err(e),
+            }
+        }
+        Some(ref l) if l == "ClassInstanceCreationExpression" => {
+            match check::lookup(&node.children[0], current, kinds) {
+                Ok(cls) => Ok(Type::new(cls)),
                 Err(e) => Err(e),
             }
         }
@@ -577,14 +622,10 @@ fn verify_statement(node: &mut ASTNode,
             };
 
 
-            // TODO: rhs must be subset of lhs, not just equal
-            if lhs == rhs {
+            if lhs.assignable(&rhs) {
                 Ok(())
             } else {
-                println!("=====");
-                println!("lhs: {:?}", lhs);
-                println!("rhs: {:?}", rhs);
-                Err(format!("incorrect assignment"))
+                Err(format!("can not assign {} to {}", rhs.kind.name, lhs.kind.name))
             }
         }
         Some(ref l) if l == "Block" && node.children.len() == 3 => {
@@ -713,20 +754,15 @@ fn verify_declaration(kinds: &Vec<ClassOrInterfaceEnvironment>,
                 block_globals.push(local);
             }
 
-            let lhs = Type::new(ClassOrInterfaceEnvironment::new(new.kind.clone(), ClassOrInterface::CLASS));
+            let lhs = Type::new(ClassOrInterfaceEnvironment::new(new.kind.clone(),
+                                                                 ClassOrInterface::CLASS));
             let rhs = match resolve_expression(&rvalue, current, kinds, &block_globals) {
                 Ok(r) => r,
                 Err(e) => return Err(e),
             };
 
-            // TODO: rhs must be subset of lhs, not just equal
-            if lhs == rhs {
-                // Ok(())
-            } else {
-                println!("=====");
-                println!("lhs: {:?}", lhs);
-                println!("rhs: {:?}", rhs);
-                return Err(format!("incorrect assignment"))
+            if !lhs.assignable(&rhs) {
+                return Err(format!("can not assign {} to {}", rhs.kind.name, lhs.kind.name));
             }
         }
         _ => (),
