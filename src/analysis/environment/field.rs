@@ -1,4 +1,7 @@
+use analysis::environment::variable::VariableEnvironment;
 use scanner::ASTNode;
+use scanner::Token;
+use scanner::TokenKind;
 
 #[derive(Clone,Debug)]
 pub struct FieldEnvironment {
@@ -14,6 +17,27 @@ impl FieldEnvironment {
             kind: kind,
             name: name,
         }
+    }
+
+    // TODO: deal with modifiers
+    pub fn to_variable(&self) -> VariableEnvironment {
+        let mut fakename = ASTNode {
+            token: Token::new(TokenKind::NonTerminal, Some("Name")),
+            children: vec![ASTNode {
+                               token: Token::new(TokenKind::This, None),
+                               children: Vec::new(),
+                           },
+                           ASTNode {
+                               token: Token::new(TokenKind::Dot, None),
+                               children: Vec::new(),
+                           },
+                           self.name.clone()],
+        };
+        let fakenode = ASTNode {
+            token: Token::new(TokenKind::Void, None),
+            children: vec![self.kind.clone(), fakename.flatten().clone()],
+        };
+        VariableEnvironment::new(fakenode)
     }
 }
 

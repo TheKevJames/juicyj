@@ -137,10 +137,17 @@ pub fn verify(env: &Environment) -> Result<(), String> {
                 }
             }
 
+            let mut globals = Vec::new();
+            for param in &constructor.parameters {
+                globals.push(param.clone());
+            }
+            for field in &inherited.fields {
+                globals.push(field.to_variable());
+            }
             match body::verify(&mut constructor.body.clone(),
                                &inherited,
                                &env.kinds,
-                               &constructor.parameters.clone()) {
+                               &globals) {
                 Ok(_) => (),
                 Err(e) => return Err(e),
             }
@@ -186,10 +193,17 @@ pub fn verify(env: &Environment) -> Result<(), String> {
             }
 
             if method.body.is_some() {
+                let mut globals = Vec::new();
+                for param in &method.parameters {
+                    globals.push(param.clone());
+                }
+                for field in &inherited.fields {
+                    globals.push(field.to_variable());
+                }
                 match body::verify(&mut method.clone().body.unwrap().clone(),
                                    &inherited,
                                    &env.kinds,
-                                   &method.parameters.clone()) {
+                                   &globals) {
                     Ok(_) => (),
                     Err(e) => return Err(e),
                 }

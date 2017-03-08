@@ -1,5 +1,6 @@
 use analysis::environment::ClassOrInterface;
 use analysis::environment::ClassOrInterfaceEnvironment;
+use analysis::environment::FieldEnvironment;
 use scanner::ASTNode;
 use scanner::Token;
 use scanner::TokenKind;
@@ -48,6 +49,7 @@ pub fn lookup_in_package(name: &ASTNode,
     }
 }
 
+// TODO: does this include inherited fields, etc?
 pub fn lookup(name: &ASTNode,
               current: &ClassOrInterfaceEnvironment,
               kinds: &Vec<ClassOrInterfaceEnvironment>)
@@ -57,6 +59,40 @@ pub fn lookup(name: &ASTNode,
         token: Token::new(TokenKind::Star, None),
         children: Vec::new(),
     };
+
+    if let Some(l) = name.clone().token.lexeme {
+        if l == "ArrayType" {
+            let mut array = ClassOrInterfaceEnvironment::new(name.clone(), ClassOrInterface::CLASS);
+
+            array.extends.push(ASTNode {
+                token: Token::new(TokenKind::Identifier, Some("Object")),
+                children: Vec::new(),
+            });
+
+            // array.fields clone is public
+
+            let mut length = FieldEnvironment::new(ASTNode {
+                                                       token: Token::new(TokenKind::Identifier,
+                                                                         Some("length")),
+                                                       children: Vec::new(),
+                                                   },
+                                                   ASTNode {
+                                                       token: Token::new(TokenKind::Int, None),
+                                                       children: Vec::new(),
+                                                   });
+            length.modifiers.push(ASTNode {
+                token: Token::new(TokenKind::Public, None),
+                children: Vec::new(),
+            });
+            length.modifiers.push(ASTNode {
+                token: Token::new(TokenKind::Final, None),
+                children: Vec::new(),
+            });
+            array.fields.push(length);
+
+            return Ok(array);
+        }
+    }
 
     // 0. lookup canonical path
     match lookup_canonical(&name, current, kinds) {

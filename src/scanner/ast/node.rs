@@ -74,6 +74,38 @@ impl ASTNode {
                             children: children,
                         })
                     }
+                    Some(ref l) if node.children.len() == 3 && l == "ArrayCreationExpression" => {
+                        let mut children: Vec<ASTNode> = Vec::new();
+                        match ASTNode::new(&node.children[1]) {
+                            Ok(child) => children.push(child),
+                            Err(e) => return Err(e),
+                        }
+                        match ASTNode::new(&node.children[2]) {
+                            Ok(child) => children.push(child),
+                            Err(e) => return Err(e),
+                        }
+                        Ok(ASTNode {
+                            token: node.token.clone(),
+                            children: children,
+                        })
+                    }
+                    Some(ref l) if l == "ClassInstanceCreationExpression" => {
+                        let mut children: Vec<ASTNode> = Vec::new();
+                        match ASTNode::new(&node.children[1]) {
+                            Ok(child) => children.push(child),
+                            Err(e) => return Err(e),
+                        }
+                        if node.children.len() == 5 {
+                            match ASTNode::new(&node.children[3]) {
+                                Ok(child) => children.push(child),
+                                Err(e) => return Err(e),
+                            }
+                        }
+                        Ok(ASTNode {
+                            token: node.token.clone(),
+                            children: children,
+                        })
+                    }
                     Some(ref l) if node.children.len() == 3 &&
                                    (l.ends_with("Expression") || l == "VariableDeclarator") => {
                         let mut children: Vec<ASTNode> = Vec::new();
@@ -125,6 +157,18 @@ impl ASTNode {
                             },
                             children: Vec::new(),
                         });
+                        match ASTNode::new(&node.children[1]) {
+                            Ok(child) => children.push(child),
+                            Err(e) => return Err(e),
+                        }
+
+                        Ok(ASTNode {
+                            token: node.children[0].token.clone(),
+                            children: children,
+                        })
+                    }
+                    Some(ref l) if node.children.len() == 2 && l == "UnaryNoSignExpression" => {
+                        let mut children: Vec<ASTNode> = Vec::new();
                         match ASTNode::new(&node.children[1]) {
                             Ok(child) => children.push(child),
                             Err(e) => return Err(e),

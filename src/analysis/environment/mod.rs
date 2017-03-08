@@ -14,6 +14,7 @@ use scanner::TokenKind;
 use self::class::analyze_class_declaration;
 pub use self::classorinterface::ClassOrInterface;
 pub use self::classorinterface::ClassOrInterfaceEnvironment;
+pub use self::field::FieldEnvironment;
 use self::interface::analyze_interface_declaration;
 pub use self::variable::VariableEnvironment;
 
