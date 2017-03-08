@@ -526,7 +526,7 @@ fn resolve_expression(node: &ASTNode,
                 }
                 TokenKind::StrValue => {
                     let node = ASTNode {
-                        token: Token::new(TokenKind::Char, None), // TODO: not Char
+                        token: Token::new(TokenKind::Identifier, Some("String")),
                         children: Vec::new(),
                     };
                     Ok(Type::new(ClassOrInterfaceEnvironment::new(node, ClassOrInterface::CLASS)))
