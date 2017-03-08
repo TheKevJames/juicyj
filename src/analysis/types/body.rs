@@ -17,10 +17,59 @@ impl Type {
         Type { kind: kind }
     }
 
+    // TODO: j1_intcharinit ?
     fn assignable(&self, other: &Type) -> bool {
-        // TODO: subset
-        // TODO: j1_intcharinit ?
-        self == other
+        if self == other {
+            return true;
+        }
+
+        // TODO: ArrayType? Name?
+        // can assign null to anything
+        let null = ASTNode {
+            token: Token::new(TokenKind::Null, None),
+            children: Vec::new(),
+        };
+        if other.kind.name == null {
+            return true;
+        }
+
+        // can assign any non-primitive to Object
+        let object = ASTNode {
+            token: Token::new(TokenKind::Identifier, Some("Object")),
+            children: Vec::new(),
+        };
+
+        let boolean = ASTNode {
+            token: Token::new(TokenKind::Boolean, None),
+            children: Vec::new(),
+        };
+
+        let byte = ASTNode {
+            token: Token::new(TokenKind::Byte, None),
+            children: Vec::new(),
+        };
+
+        let charr = ASTNode {
+            token: Token::new(TokenKind::Char, None),
+            children: Vec::new(),
+        };
+
+        let int = ASTNode {
+            token: Token::new(TokenKind::Int, None),
+            children: Vec::new(),
+        };
+
+        let short = ASTNode {
+            token: Token::new(TokenKind::Short, None),
+            children: Vec::new(),
+        };
+
+        let primitives = vec![boolean, byte, charr.clone(), int, short];
+        if self.kind.name == object && !primitives.contains(&other.kind.name) {
+            return true;
+        }
+
+        false
     }
 
     // TODO: subset of operations (string concat only, no subtraction)
@@ -51,17 +100,21 @@ impl Type {
 
         let mathable_primitives = vec![byte, charr.clone(), int, short];
         if mathable_primitives.contains(&self.kind.name) &&
-        mathable_primitives.contains(&other.kind.name) {
+           mathable_primitives.contains(&other.kind.name) {
             return true;
         }
 
         let string = ASTNode {
-            token: Token::new(TokenKind::Identifier, Some("String")),
-            children: Vec::new(),
+            token: Token::new(TokenKind::NonTerminal, Some("Name")),
+            children: vec![ASTNode {
+                               token: Token::new(TokenKind::Identifier, Some("String")),
+                               children: Vec::new(),
+                           }],
         };
 
         let mathable_strings = vec![charr, string];
-        if mathable_strings.contains(&self.kind.name) && mathable_strings.contains(&other.kind.name) {
+        if mathable_strings.contains(&self.kind.name) &&
+           mathable_strings.contains(&other.kind.name) {
             return true;
         }
 
@@ -91,7 +144,6 @@ impl PartialEq for Type {
             return true;
         }
 
-        // unnammed package might get in the way
         let mut lhs = self.kind.name.clone();
         if self.kind.name.children.len() >= 3 &&
            self.kind
@@ -122,57 +174,7 @@ impl PartialEq for Type {
             rhs.children.remove(0);
         }
 
-        if lhs == rhs {
-            return true;
-        }
-
-        // can assign null to anything
-        let null = ASTNode {
-            token: Token::new(TokenKind::Null, None),
-            children: Vec::new(),
-        };
-        if rhs == null {
-            return true;
-        }
-
-        // can assign any non-primitive to Object
-        let object_node = ASTNode {
-            token: Token::new(TokenKind::Identifier, Some("Object")),
-            children: Vec::new(),
-        };
-
-        let boolean_node = ASTNode {
-            token: Token::new(TokenKind::Boolean, None),
-            children: Vec::new(),
-        };
-
-        let byte_node = ASTNode {
-            token: Token::new(TokenKind::Byte, None),
-            children: Vec::new(),
-        };
-
-        let char_node = ASTNode {
-            token: Token::new(TokenKind::Char, None),
-            children: Vec::new(),
-        };
-
-        let int_node = ASTNode {
-            token: Token::new(TokenKind::Int, None),
-            children: Vec::new(),
-        };
-
-        let short_node = ASTNode {
-            token: Token::new(TokenKind::Short, None),
-            children: Vec::new(),
-        };
-
-        let primitives = vec![boolean_node, byte_node, char_node, int_node, short_node];
-
-        if lhs == object_node && !primitives.contains(&rhs) {
-            return true;
-        }
-
-        false
+        lhs == rhs
     }
 }
 
@@ -492,8 +494,8 @@ fn resolve_expression(node: &ASTNode,
                     } else {
                         Err(format!("could not apply {:?} to {:?} and {:?}",
                                     node.token.kind,
-                                    lhs,
-                                    rhs))
+                                    lhs.kind.name,
+                                    rhs.kind.name))
                     }
                 }
                 TokenKind::Not => {
@@ -511,7 +513,9 @@ fn resolve_expression(node: &ASTNode,
                     if arg.kind.name == boolean {
                         Ok(arg)
                     } else {
-                        Err(format!("could not apply {:?} to {:?}", node.token.kind, arg))
+                        Err(format!("could not apply {:?} to {:?}",
+                                    node.token.kind,
+                                    arg.kind.name))
                     }
                 }
                 TokenKind::BitAnd | TokenKind::BitOr | TokenKind::BitXor => {
@@ -525,8 +529,7 @@ fn resolve_expression(node: &ASTNode,
                 TokenKind::LessThan |
                 TokenKind::LessThanOrEqual |
                 TokenKind::GreaterThan |
-                TokenKind::GreaterThanOrEqual |
-                TokenKind::Instanceof => {
+                TokenKind::GreaterThanOrEqual => {
                     let lhs =
                         match resolve_expression(&node.children[0], current, kinds, globals) {
                             Ok(l) => l,
@@ -552,9 +555,30 @@ fn resolve_expression(node: &ASTNode,
                     } else {
                         Err(format!("could not apply {:?} to {:?} and {:?}",
                                     node.token.kind,
-                                    lhs,
-                                    rhs))
+                                    lhs.kind.name,
+                                    rhs.kind.name))
                     }
+                }
+                TokenKind::Instanceof => {
+                    match resolve_expression(&node.children[0], current, kinds, globals) {
+                        Ok(_) => (),
+                        Err(e) => return Err(e),
+                    }
+                    match resolve_expression(&node.children[1], current, kinds, globals) {
+                        Ok(_) => (),
+                        Err(e) => return Err(e),
+                    }
+
+                    let boolean_node = ASTNode {
+                        token: Token::new(TokenKind::Boolean, None),
+                        children: Vec::new(),
+                    };
+                    let boolean =
+                        Type::new(ClassOrInterfaceEnvironment::new(boolean_node,
+                                                                   ClassOrInterface::CLASS));
+
+                    // TODO: always Ok?
+                    Ok(boolean)
                 }
                 TokenKind::FSlash | TokenKind::Minus | TokenKind::Percent | TokenKind::Plus |
                 TokenKind::Star => {
@@ -575,8 +599,8 @@ fn resolve_expression(node: &ASTNode,
                     } else {
                         Err(format!("could not apply {:?} to {:?} and {:?}",
                                     node.token.kind,
-                                    lhs,
-                                    rhs))
+                                    lhs.kind.name,
+                                    rhs.kind.name))
                     }
                 }
                 // Primitives
