@@ -168,7 +168,6 @@ impl PartialEq for Type {
 
         let primitives = vec![boolean_node, byte_node, char_node, int_node, short_node];
 
-        // TODO: verify (j1_1_instanceof_inlazyexp)
         if lhs == object_node && !primitives.contains(&rhs) {
             return true;
         }
