@@ -59,6 +59,7 @@ impl PartialEq for Type {
             return true;
         }
 
+        // unnammed package might get in the way
         let mut lhs = self.kind.name.clone();
         if self.kind.name.children.len() >= 3 &&
            self.kind
@@ -89,7 +90,20 @@ impl PartialEq for Type {
             rhs.children.remove(0);
         }
 
-        lhs == rhs
+        if lhs == rhs {
+            return true;
+        }
+
+        // can assign null to anything
+        let null = ASTNode {
+            token: Token::new(TokenKind::Null, None),
+            children: Vec::new(),
+        };
+        if rhs == null {
+            return true;
+        }
+
+        false
     }
 }
 
@@ -504,7 +518,7 @@ fn resolve_expression(node: &ASTNode,
                 }
                 // Primitives
                 TokenKind::Boolean | TokenKind::Byte | TokenKind::Char | TokenKind::Int |
-                TokenKind::Short => {
+                TokenKind::Null | TokenKind::Short => {
                     Ok(Type::new(ClassOrInterfaceEnvironment::new(node.clone(),
                                                                   ClassOrInterface::CLASS)))
                 }
