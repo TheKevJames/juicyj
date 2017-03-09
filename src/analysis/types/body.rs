@@ -403,8 +403,7 @@ fn resolve_expression(node: &ASTNode,
         Some(ref l) if l == "MethodInvocation" => {
             let lookup = match node.children.len() {
                 3 | 4 => {
-                    let mut name = node.children[0].clone().flatten().clone();
-
+                    let mut name = node.children[0].clone();
                     let lhs = match resolve_expression(&name, current, kinds, globals) {
                         Ok(l) => check::lookup_or_primitive(&l.kind.name, current, kinds).ok(),
                         Err(_) => None,
@@ -413,9 +412,12 @@ fn resolve_expression(node: &ASTNode,
                     if lhs.is_some() {
                         Some((lhs.unwrap(), node.children[2].clone()))
                     } else {
+                        name.flatten();
+
                         let method = name.children.pop().unwrap();
                         name.children.pop();
 
+                        // TODO: if name.chlidren had 3+ anyway
                         // TODO: other.x, etc?
                         // TODO: just fucking write a globals.lookup
                         for var in globals {
@@ -447,7 +449,7 @@ fn resolve_expression(node: &ASTNode,
                     }
                 }
                 5 | 6 => {
-                    let name = node.children[0].clone().flatten().clone();
+                    let name = node.children[0].clone();
                     let lhs = match resolve_expression(&name, current, kinds, globals) {
                         Ok(r) => r,
                         Err(e) => return Err(e),
@@ -462,6 +464,9 @@ fn resolve_expression(node: &ASTNode,
             };
 
             if let Some((cls, method)) = lookup {
+                let mut method = method;
+                method.flatten();
+
                 let mut found = None;
                 for cls_method in &cls.methods {
                     if cls_method.name != method {
