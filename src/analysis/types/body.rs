@@ -198,7 +198,31 @@ impl Type {
                                children: Vec::new(),
                            }],
         };
-        if self.kind.name == object.clone() && !primitives.contains(&other.kind.name) {
+        let java_lang_object = ASTNode {
+            token: Token::new(TokenKind::NonTerminal, Some("Name")),
+            children: vec![ASTNode {
+                               token: Token::new(TokenKind::Identifier, Some("java")),
+                               children: Vec::new(),
+                           },
+                           ASTNode {
+                               token: Token::new(TokenKind::Dot, None),
+                               children: Vec::new(),
+                           },
+                           ASTNode {
+                               token: Token::new(TokenKind::Identifier, Some("lang")),
+                               children: Vec::new(),
+                           },
+                           ASTNode {
+                               token: Token::new(TokenKind::Dot, None),
+                               children: Vec::new(),
+                           },
+                           ASTNode {
+                               token: Token::new(TokenKind::Identifier, Some("Object")),
+                               children: Vec::new(),
+                           }],
+        };
+        let objects = vec![object.clone(), java_lang_object.clone()];
+        if objects.contains(&self.kind.name) && !primitives.contains(&other.kind.name) {
             return Ok(self.clone());
         }
 
@@ -372,7 +396,9 @@ fn resolve_expression(node: &ASTNode,
                 }
             }
 
-            Err(format!("could not find field {} in class {}", node.children[2], cls.name))
+            Err(format!("could not find field {} in class {}",
+                        node.children[2],
+                        cls.name))
         }
         Some(ref l) if l == "MethodInvocation" => {
             let lookup = match node.children.len() {
