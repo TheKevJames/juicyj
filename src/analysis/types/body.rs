@@ -17,6 +17,70 @@ impl Type {
         Type { kind: kind }
     }
 
+    // TODO: subset of operations (string concat only, no subtraction)
+    fn apply_math(&self, operation: &TokenKind, other: &Type) -> Result<Type, String> {
+        if self == other {
+            return Ok(self.clone());
+        }
+
+        let charr = ASTNode {
+            token: Token::new(TokenKind::Char, None),
+            children: Vec::new(),
+        };
+        if self.kind.name == charr.clone() && other.kind.name == charr.clone() {
+            return Ok(Type::new(ClassOrInterfaceEnvironment::new(charr.clone(),
+                                                                 ClassOrInterface::CLASS)));
+        }
+
+        let byte = ASTNode {
+            token: Token::new(TokenKind::Byte, None),
+            children: Vec::new(),
+        };
+        if self.kind.name == byte.clone() && other.kind.name == byte.clone() {
+            return Ok(Type::new(ClassOrInterfaceEnvironment::new(byte.clone(),
+                                                                 ClassOrInterface::CLASS)));
+        }
+
+        let short = ASTNode {
+            token: Token::new(TokenKind::Short, None),
+            children: Vec::new(),
+        };
+        let shortables = vec![byte.clone(), short.clone()];
+        if shortables.contains(&self.kind.name) && shortables.contains(&other.kind.name) {
+            return Ok(Type::new(ClassOrInterfaceEnvironment::new(short.clone(),
+                                                                 ClassOrInterface::CLASS)));
+        }
+
+        let int = ASTNode {
+            token: Token::new(TokenKind::Int, None),
+            children: Vec::new(),
+        };
+        let primitives = vec![byte.clone(), charr.clone(), int.clone(), short.clone()];
+        if primitives.contains(&self.kind.name) && primitives.contains(&other.kind.name) {
+            return Ok(Type::new(ClassOrInterfaceEnvironment::new(int.clone(),
+                                                                 ClassOrInterface::CLASS)));
+        }
+
+        let string = ASTNode {
+            token: Token::new(TokenKind::NonTerminal, Some("Name")),
+            children: vec![ASTNode {
+                               token: Token::new(TokenKind::Identifier, Some("String")),
+                               children: Vec::new(),
+                           }],
+        };
+
+        let stringable = vec![charr.clone(), string.clone()];
+        if stringable.contains(&self.kind.name) && stringable.contains(&other.kind.name) {
+            return Ok(Type::new(ClassOrInterfaceEnvironment::new(string.clone(),
+                                                                 ClassOrInterface::CLASS)));
+        }
+
+        Err(format!("could not apply {:?} to {:?} and {:?}",
+                    operation,
+                    self.kind.name,
+                    other.kind.name))
+    }
+
     // TODO: j1_intcharinit ?
     fn assignable(&self, other: &Type) -> bool {
         if self == other {
@@ -66,55 +130,6 @@ impl Type {
 
         let primitives = vec![boolean, byte, charr.clone(), int, short];
         if self.kind.name == object && !primitives.contains(&other.kind.name) {
-            return true;
-        }
-
-        false
-    }
-
-    // TODO: subset of operations (string concat only, no subtraction)
-    fn mathable(&self, other: &Type) -> bool {
-        if self == other {
-            return true;
-        }
-
-        let byte = ASTNode {
-            token: Token::new(TokenKind::Byte, None),
-            children: Vec::new(),
-        };
-
-        let charr = ASTNode {
-            token: Token::new(TokenKind::Char, None),
-            children: Vec::new(),
-        };
-
-        let int = ASTNode {
-            token: Token::new(TokenKind::Int, None),
-            children: Vec::new(),
-        };
-
-        let short = ASTNode {
-            token: Token::new(TokenKind::Short, None),
-            children: Vec::new(),
-        };
-
-        let mathable_primitives = vec![byte, charr.clone(), int, short];
-        if mathable_primitives.contains(&self.kind.name) &&
-           mathable_primitives.contains(&other.kind.name) {
-            return true;
-        }
-
-        let string = ASTNode {
-            token: Token::new(TokenKind::NonTerminal, Some("Name")),
-            children: vec![ASTNode {
-                               token: Token::new(TokenKind::Identifier, Some("String")),
-                               children: Vec::new(),
-                           }],
-        };
-
-        let mathable_strings = vec![charr, string];
-        if mathable_strings.contains(&self.kind.name) &&
-           mathable_strings.contains(&other.kind.name) {
             return true;
         }
 
@@ -593,15 +608,7 @@ fn resolve_expression(node: &ASTNode,
                             Err(e) => return Err(e),
                         };
 
-                    if lhs.mathable(&rhs) {
-                        Ok(lhs)
-                        // return precedence: '' + "" => "", "" + '' => ""
-                    } else {
-                        Err(format!("could not apply {:?} to {:?} and {:?}",
-                                    node.token.kind,
-                                    lhs.kind.name,
-                                    rhs.kind.name))
-                    }
+                    lhs.apply_math(&node.token.kind, &rhs)
                 }
                 // Primitives
                 TokenKind::Boolean | TokenKind::Byte | TokenKind::Char | TokenKind::Int |
