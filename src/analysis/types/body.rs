@@ -16,6 +16,31 @@ impl Type {
         Type { kind: kind }
     }
 
+    fn apply_comparison(&self, operation: &TokenKind, other: &Type) -> Result<Type, String> {
+        let boolean = ASTNode {
+            token: Token::new(TokenKind::Boolean, None),
+            children: Vec::new(),
+        };
+        let boolean = ClassOrInterfaceEnvironment::new(boolean.clone(), ClassOrInterface::CLASS);
+        let boolean = Type::new(boolean);
+
+        // Anything assignable is comparable. Comparability, though, is reflexive
+        match self.assign(other) {
+            Ok(_) => Ok(boolean),
+            Err(_) => {
+                match other.assign(self) {
+                    Ok(_) => Ok(boolean),
+                    Err(_) => {
+                        Err(format!("could not apply {:?} to {:?} and {:?}",
+                                    operation,
+                                    self.kind.name,
+                                    other.kind.name))
+                    }
+                }
+            }
+        }
+    }
+
     // TODO: subset of operations (string concat only, no subtraction)
     fn apply_math(&self, operation: &TokenKind, other: &Type) -> Result<Type, String> {
         if self == other {
@@ -600,23 +625,7 @@ fn resolve_expression(node: &ASTNode,
                             Err(e) => return Err(e),
                         };
 
-                    let boolean_node = ASTNode {
-                        token: Token::new(TokenKind::Boolean, None),
-                        children: Vec::new(),
-                    };
-                    let boolean =
-                        Type::new(ClassOrInterfaceEnvironment::new(boolean_node,
-                                                                   ClassOrInterface::CLASS));
-
-                    // TODO: if comparable
-                    if lhs == rhs {
-                        Ok(boolean)
-                    } else {
-                        Err(format!("could not apply {:?} to {:?} and {:?}",
-                                    node.token.kind,
-                                    lhs.kind.name,
-                                    rhs.kind.name))
-                    }
+                    lhs.apply_comparison(&node.token.kind, &rhs)
                 }
                 TokenKind::Instanceof => {
                     match resolve_expression(&node.children[0], current, kinds, globals) {
