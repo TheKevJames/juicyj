@@ -139,10 +139,10 @@ impl Type {
                     other.kind.name))
     }
 
-    fn assign(&self, other: &Type) -> Result<(), String> {
+    fn assign(&self, other: &Type) -> Result<Type, String> {
         // TODO: ArrayType? Name?
         if self == other {
-            return Ok(());
+            return Ok(self.clone());
         }
 
         // can assign null to anything
@@ -151,7 +151,7 @@ impl Type {
             children: Vec::new(),
         };
         if other.kind.name == null {
-            return Ok(());
+            return Ok(self.clone());
         }
 
         let boolean = ASTNode {
@@ -164,7 +164,7 @@ impl Type {
         };
         let mut primitives = vec![boolean.clone(), byte.clone()];
         if self.kind.name == byte.clone() && primitives.contains(&other.kind.name) {
-            return Ok(());
+            return Ok(self.clone());
         }
 
         let short = ASTNode {
@@ -173,7 +173,7 @@ impl Type {
         };
         primitives.push(short.clone());
         if self.kind.name == short.clone() && primitives.contains(&other.kind.name) {
-            return Ok(());
+            return Ok(self.clone());
         }
 
         let charr = ASTNode {
@@ -187,7 +187,7 @@ impl Type {
         primitives.push(charr.clone());
         primitives.push(int.clone());
         if self.kind.name == int.clone() && primitives.contains(&other.kind.name) {
-            return Ok(());
+            return Ok(self.clone());
         }
 
         // can assign any non-primitive to Object
@@ -199,7 +199,7 @@ impl Type {
                            }],
         };
         if self.kind.name == object.clone() && !primitives.contains(&other.kind.name) {
-            return Ok(());
+            return Ok(self.clone());
         }
 
         Err(format!("can not assign {} to {}", other.kind.name, self.kind.name))
@@ -318,6 +318,19 @@ fn resolve_expression(node: &ASTNode,
                 Err(e) => return Err(e),
             }
         }
+        Some(ref l) if l == "Assignment" => {
+            let lhs = match resolve_expression(&node.children[0], current, kinds, globals) {
+                Ok(l) => l,
+                Err(e) => return Err(e),
+            };
+
+            let rhs = match resolve_expression(&node.children[2], current, kinds, globals) {
+                Ok(r) => r,
+                Err(e) => return Err(e),
+            };
+
+            lhs.assign(&rhs)
+        }
         Some(ref l) if l == "CastExpression" => {
             match resolve_expression(&node.children[1], current, kinds, globals) {
                 Ok(x) => {
@@ -361,40 +374,56 @@ fn resolve_expression(node: &ASTNode,
             let lookup = match node.children.len() {
                 3 | 4 => {
                     let mut name = node.children[0].clone().flatten().clone();
-                    let method = name.children.pop().unwrap();
-                    name.children.pop();
 
-                    // TODO: other.x, etc?
-                    // TODO: just fucking write a globals.lookup
-                    for var in globals {
-                        // this.x
-                        if var.name == name {
-                            name = var.kind.clone();
-                            break;
+                    let lhs = match resolve_expression(&name, current, kinds, globals) {
+                        Ok(l) => check::lookup_or_primitive(&l.kind.name, current, kinds).ok(),
+                        Err(_) => None,
+                    };
+
+                    if lhs.is_some() {
+                        Some((lhs.unwrap(), node.children[2].clone()))
+                    } else {
+                        let method = name.children.pop().unwrap();
+                        name.children.pop();
+
+                        // TODO: other.x, etc?
+                        // TODO: just fucking write a globals.lookup
+                        for var in globals {
+                            // this.x
+                            if var.name == name {
+                                name = var.kind.clone();
+                                break;
+                            }
+
+                            // x
+                            if var.name.children.len() == 3 &&
+                               var.name.children[0].clone().token.kind == TokenKind::This &&
+                               var.name.children[2] == name {
+                                // let result = check::lookup(&var.kind, current, kinds);
+                                // if result.is_err() {
+                                //     continue;
+                                // }
+                                // return Some((result.ok(), method.clone()))
+                                name = var.kind.clone();
+                                break;
+                            }
                         }
 
-                        // x
-                        if var.name.children.len() == 3 &&
-                           var.name.children[0].clone().token.kind == TokenKind::This &&
-                           var.name.children[2] == name {
-                            // let result = check::lookup(&var.kind, current, kinds);
-                            // if result.is_err() {
-                            //     continue;
-                            // }
-                            // return Some((result.ok(), method.clone()))
-                            name = var.kind.clone();
-                            break;
+                        match check::lookup(&name, current, kinds) {
+                            Ok(cls) => Some((cls, method.clone())),
+                            // assume we don't need to resolve
+                            Err(_) => Some((current.clone(), node.children[0].clone())),
                         }
-                    }
-
-                    match check::lookup(&name, current, kinds) {
-                        Ok(cls) => Some((cls, method.clone())),
-                        // assume we don't need to resolve
-                        Err(_) => Some((current.clone(), node.children[0].clone())),
                     }
                 }
                 5 | 6 => {
-                    match check::lookup(&node.children[0], current, kinds) {
+                    let name = node.children[0].clone().flatten().clone();
+                    let lhs = match resolve_expression(&name, current, kinds, globals) {
+                        Ok(r) => r,
+                        Err(e) => return Err(e),
+                    };
+
+                    match check::lookup_or_primitive(&lhs.kind.name, current, kinds) {
                         Ok(cls) => Some((cls, node.children[2].clone())),
                         Err(e) => return Err(e),
                     }
@@ -783,24 +812,16 @@ fn verify_statement(node: &mut ASTNode,
                 Err(e) => Err(e),
             }
         }
-        // TODO: uh... isn't this a TokenKind? Whytf does this work?
+        // TODO: look into TokenKind::Assignment vs "Assignment"
         Some(ref l) if l == "Assignment" => {
             let mut block_globals = globals.clone();
             for local in locals {
                 block_globals.push(local.clone());
             }
-
-            let lhs = match resolve_expression(&node.children[0], current, kinds, &block_globals) {
-                Ok(l) => l,
+            match resolve_expression(&node, current, kinds, &block_globals) {
+                Ok(_) => Ok(()),
                 Err(e) => return Err(e),
-            };
-
-            let rhs = match resolve_expression(&node.children[2], current, kinds, &block_globals) {
-                Ok(r) => r,
-                Err(e) => return Err(e),
-            };
-
-            lhs.assign(&rhs)
+            }
         }
         Some(ref l) if l == "Block" && node.children.len() == 3 => {
             let mut block_globals = globals.clone();
@@ -836,6 +857,7 @@ fn verify_statement(node: &mut ASTNode,
             for local in locals {
                 block_globals.push(local.clone());
             }
+
             verify_statement(&mut node.children[4],
                              current,
                              kinds,
