@@ -555,7 +555,7 @@ fn resolve_expression(node: &ASTNode,
                                                                          ClassOrInterface::CLASS);
                                     Ok(Type::new(kind))
                                 }
-                                None => Err(format!("could not find field {} on {}", node, f)),
+                                None => Err(format!("could not find(1) field {} on {}", node, f)),
                             }
                         }
                         Err(e) => Err(e),
@@ -586,7 +586,9 @@ fn resolve_expression(node: &ASTNode,
                                                                          ClassOrInterface::CLASS);
                                         Ok(Type::new(kind))
                                     }
-                                    None => Err(format!("could not find field {} on {}", node, f)),
+                                    None => {
+                                        Err(format!("could not find(2) field {} on {}", node, f))
+                                    }
                                 }
                             }
                             Err(e) => Err(e),
@@ -618,7 +620,9 @@ fn resolve_expression(node: &ASTNode,
                                                                      ClassOrInterface::CLASS);
                                         Ok(Type::new(kind))
                                     }
-                                    None => Err(format!("could not find field {} on {}", node, f)),
+                                    None => {
+                                        Err(format!("could not find(3) field {} on {}", node, f))
+                                    }
                                 }
                             }
                             Err(e) => Err(e),

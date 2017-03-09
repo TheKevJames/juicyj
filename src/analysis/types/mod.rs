@@ -8,21 +8,23 @@ use scanner::ASTNode;
 use scanner::Token;
 use scanner::TokenKind;
 
-pub fn verify(env: &Environment) -> Result<(), String> {
-    let modifier_abstract = ASTNode {
-        token: Token::new(TokenKind::Abstract, None),
-        children: Vec::new(),
-    };
+
+fn rebuild_env(env: &Environment) -> Result<Environment, String> {
+    let mut new = Environment { kinds: Vec::new() };
+
+    for current in &env.kinds {
+        match inheritance::verify(env, &current, &mut Vec::new()) {
+            Ok(inherit) => new.kinds.push(inherit),
+            Err(e) => return Err(e),
+        };
+    }
+
+    Ok(new)
+}
+
+fn verify_env_inheritable(env: &Environment) -> Result<(), String> {
     let modifier_final = ASTNode {
         token: Token::new(TokenKind::Final, None),
-        children: Vec::new(),
-    };
-    let modifier_native = ASTNode {
-        token: Token::new(TokenKind::Native, None),
-        children: Vec::new(),
-    };
-    let modifier_static = ASTNode {
-        token: Token::new(TokenKind::Static, None),
         children: Vec::new(),
     };
     let object = ASTNode {
@@ -116,13 +118,31 @@ pub fn verify(env: &Environment) -> Result<(), String> {
                 resolved.push(found.name);
             }
         }
+    }
 
-        let inherited = match inheritance::verify(env, &current, &mut Vec::new()) {
-            Ok(inherit) => inherit,
-            Err(e) => return Err(e),
-        };
+    Ok(())
+}
 
-        for constructor in &inherited.constructors {
+fn verify_env(env: &Environment) -> Result<(), String> {
+    let modifier_abstract = ASTNode {
+        token: Token::new(TokenKind::Abstract, None),
+        children: Vec::new(),
+    };
+    let modifier_final = ASTNode {
+        token: Token::new(TokenKind::Final, None),
+        children: Vec::new(),
+    };
+    let modifier_native = ASTNode {
+        token: Token::new(TokenKind::Native, None),
+        children: Vec::new(),
+    };
+    let modifier_static = ASTNode {
+        token: Token::new(TokenKind::Static, None),
+        children: Vec::new(),
+    };
+
+    for current in &env.kinds {
+        for constructor in &current.constructors {
             let mut params = Vec::new();
             for parameter in &constructor.parameters {
                 if params.contains(&parameter.name) {
@@ -131,7 +151,7 @@ pub fn verify(env: &Environment) -> Result<(), String> {
                 }
                 params.push(parameter.name.clone());
 
-                let result = check::verify(parameter.kind.clone(), &inherited, &env.kinds);
+                let result = check::verify(parameter.kind.clone(), &current, &env.kinds);
                 if result.is_err() {
                     return result;
                 }
@@ -141,11 +161,11 @@ pub fn verify(env: &Environment) -> Result<(), String> {
             for param in &constructor.parameters {
                 globals.push(param.clone());
             }
-            for field in &inherited.fields {
+            for field in &current.fields {
                 globals.push(field.to_variable());
             }
             match body::verify(&mut constructor.body.clone(),
-                               &inherited,
+                               &current,
                                &env.kinds,
                                &globals) {
                 Ok(_) => (),
@@ -161,8 +181,8 @@ pub fn verify(env: &Environment) -> Result<(), String> {
 
         // TODO: non-static fields must be initialized in order and without implicit `this`:
         // http://titanium.cs.berkeley.edu/doc/java-langspec-1.0/8.doc.html#38013
-        for field in &inherited.fields {
-            let result = check::verify(field.kind.clone(), &inherited, &env.kinds);
+        for field in &current.fields {
+            let result = check::verify(field.kind.clone(), &current, &env.kinds);
             if result.is_err() {
                 return result;
             }
@@ -170,7 +190,7 @@ pub fn verify(env: &Environment) -> Result<(), String> {
             // TODO: static fields can not use implicit `this`
         }
 
-        for method in &inherited.methods {
+        for method in &current.methods {
             if method.body.is_none() {
                 if !method.modifiers.contains(&modifier_abstract) &&
                    !method.modifiers.contains(&modifier_native) {
@@ -187,7 +207,7 @@ pub fn verify(env: &Environment) -> Result<(), String> {
                 params.push(parameter.name.clone());
             }
 
-            let result = check::verify(method.return_type.clone(), &inherited, &env.kinds);
+            let result = check::verify(method.return_type.clone(), &current, &env.kinds);
             if result.is_err() {
                 return result;
             }
@@ -197,11 +217,11 @@ pub fn verify(env: &Environment) -> Result<(), String> {
                 for param in &method.parameters {
                     globals.push(param.clone());
                 }
-                for field in &inherited.fields {
+                for field in &current.fields {
                     globals.push(field.to_variable());
                 }
                 match body::verify(&mut method.clone().body.unwrap().clone(),
-                                   &inherited,
+                                   &current,
                                    &env.kinds,
                                    &globals) {
                     Ok(_) => (),
@@ -234,4 +254,18 @@ pub fn verify(env: &Environment) -> Result<(), String> {
     }
 
     Ok(())
+}
+
+pub fn verify(env: Environment) -> Result<(), String> {
+    match verify_env_inheritable(&env) {
+        Ok(_) => (),
+        Err(e) => return Err(e),
+    }
+
+    let env = match rebuild_env(&env) {
+        Ok(e) => e,
+        Err(e) => return Err(e),
+    };
+
+    verify_env(&env)
 }

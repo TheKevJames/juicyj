@@ -30,7 +30,7 @@ pub fn analyze_or_exit(asts: &Vec<AST>) {
         }
     };
 
-    match verify(&env) {
+    match verify(env) {
         Ok(_) => (),
         Err(e) => {
             println!("{}", e);
@@ -61,7 +61,7 @@ pub mod tests {
             }
         };
 
-        match verify(&env) {
+        match verify(env) {
             Ok(_) => (),
             Err(e) => {
                 println!("Verification Error");
@@ -86,7 +86,7 @@ pub mod tests {
             }
         };
 
-        match verify(&env) {
+        match verify(env) {
             Ok(_) => (),
             Err(e) => {
                 println!("Verification Error");
