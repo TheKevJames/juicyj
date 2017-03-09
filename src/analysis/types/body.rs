@@ -371,7 +371,9 @@ fn resolve_expression(node: &ASTNode,
             }
         }
         Some(ref l) if l == "ClassInstanceCreationExpression" => {
-            match check::lookup(&node.children[0], current, kinds) {
+            let mut kind = node.children[0].clone();
+            kind.flatten();
+            match check::lookup(&kind, current, kinds) {
                 Ok(cls) => Ok(Type::new(cls)),
                 Err(e) => Err(e),
             }
@@ -382,14 +384,16 @@ fn resolve_expression(node: &ASTNode,
                 Err(e) => return Err(e),
             };
 
-            let cls = match check::lookup_or_primitive(&lhs.kind.name, current, kinds) {
+            let mut lhs_kind = lhs.kind.name.clone();
+            lhs_kind.flatten();
+            let cls = match check::lookup_or_primitive(&lhs_kind, current, kinds) {
                 Ok(cls) => cls,
                 Err(e) => return Err(e),
             };
 
             for field in &cls.fields {
                 if field.name == node.children[2] {
-                    match check::lookup_or_primitive(&field.kind, current, kinds) {
+                    match check::lookup_or_primitive(&field.to_variable().kind, current, kinds) {
                         Ok(cls) => return Ok(Type::new(cls)),
                         Err(_) => (),
                     }
@@ -405,7 +409,11 @@ fn resolve_expression(node: &ASTNode,
                 3 | 4 => {
                     let mut name = node.children[0].clone();
                     let lhs = match resolve_expression(&name, current, kinds, globals) {
-                        Ok(l) => check::lookup_or_primitive(&l.kind.name, current, kinds).ok(),
+                        Ok(l) => {
+                            let mut lhs_name = l.kind.name.clone();
+                            lhs_name.flatten();
+                            check::lookup_or_primitive(&lhs_name, current, kinds).ok()
+                        }
                         Err(_) => None,
                     };
 
@@ -455,7 +463,9 @@ fn resolve_expression(node: &ASTNode,
                         Err(e) => return Err(e),
                     };
 
-                    match check::lookup_or_primitive(&lhs.kind.name, current, kinds) {
+                    let mut lhs_name = lhs.kind.name.clone();
+                    lhs_name.flatten();
+                    match check::lookup_or_primitive(&lhs_name, current, kinds) {
                         Ok(cls) => Some((cls, node.children[2].clone())),
                         Err(e) => return Err(e),
                     }
@@ -522,7 +532,9 @@ fn resolve_expression(node: &ASTNode,
                    var.name == node.children[0] {
                     // at this point, var.name is other.
                     // lookup var.kind for a class, then find node.children[2]
-                    return match check::lookup(&var.kind, current, kinds) {
+                    let mut kind = var.kind.clone();
+                    kind.flatten();
+                    return match check::lookup(&kind, current, kinds) {
                         Ok(f) => {
                             let mut result = None;
 
@@ -551,7 +563,9 @@ fn resolve_expression(node: &ASTNode,
                 if field.is_some() {
                     // this.x.field
                     if var.name == node_fieldless {
-                        return match check::lookup(&var.kind, current, kinds) {
+                        let mut kind = var.kind.clone();
+                        kind.flatten();
+                        return match check::lookup(&kind, current, kinds) {
                             Ok(f) => {
                                 let mut result = None;
 
@@ -581,7 +595,9 @@ fn resolve_expression(node: &ASTNode,
                     if var.name.children.len() == 3 &&
                        var.name.children[0].clone().token.kind == TokenKind::This &&
                        var.name.children[2] == node_fieldless {
-                        return match check::lookup(&var.kind, current, kinds) {
+                        let mut kind = var.kind.clone();
+                        kind.flatten();
+                        return match check::lookup(&kind, current, kinds) {
                             Ok(f) => {
                                 let mut result = None;
 
@@ -838,7 +854,9 @@ fn verify_statement(node: &mut ASTNode,
         // TODO: verify CastExpression
         Some(ref l) if l == "ArrayCreationExpression" || l == "ClassInstanceCreationExpression" => {
             // TODO: ACE -> child1 may be expr, CICE -> child1 may be params
-            match check::lookup_or_primitive(&node.children[0], current, kinds) {
+            let mut kind = node.children[0].clone();
+            kind.flatten();
+            match check::lookup_or_primitive(&kind, current, kinds) {
                 Ok(ref k) if k.modifiers.contains(&modifier_abstract) => {
                     Err(format!("instantiated abstract class {}", k.name))
                 }

@@ -21,6 +21,8 @@ impl VariableEnvironment {
                 Some(ref l) if l == "ArrayType" => {
                     // Remove Dim or DimExpr
                     kind.children.truncate(1);
+                    // Flatten Name
+                    kind.children[0].flatten();
                     kind
                 }
                 _ => kind,
