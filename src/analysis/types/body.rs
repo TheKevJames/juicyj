@@ -31,11 +31,21 @@ impl Type {
                                                                  ClassOrInterface::CLASS)));
         }
 
+        let boolean = ASTNode {
+            token: Token::new(TokenKind::Boolean, None),
+            children: Vec::new(),
+        };
+        if self.kind.name == boolean.clone() && other.kind.name == boolean.clone() {
+            return Ok(Type::new(ClassOrInterfaceEnvironment::new(boolean.clone(),
+                                                                 ClassOrInterface::CLASS)));
+        }
+
         let byte = ASTNode {
             token: Token::new(TokenKind::Byte, None),
             children: Vec::new(),
         };
-        if self.kind.name == byte.clone() && other.kind.name == byte.clone() {
+        let mut primitives = vec![boolean.clone(), byte.clone()];
+        if primitives.contains(&self.kind.name) && primitives.contains(&other.kind.name) {
             return Ok(Type::new(ClassOrInterfaceEnvironment::new(byte.clone(),
                                                                  ClassOrInterface::CLASS)));
         }
@@ -44,7 +54,7 @@ impl Type {
             token: Token::new(TokenKind::Short, None),
             children: Vec::new(),
         };
-        let mut primitives = vec![byte.clone(), short.clone()];
+        primitives.push(short.clone());
         if primitives.contains(&self.kind.name) && primitives.contains(&other.kind.name) {
             return Ok(Type::new(ClassOrInterfaceEnvironment::new(short.clone(),
                                                                  ClassOrInterface::CLASS)));
@@ -618,15 +628,14 @@ fn resolve_expression(node: &ASTNode,
                         Err(e) => return Err(e),
                     }
 
-                    let boolean_node = ASTNode {
+                    let boolean = ASTNode {
                         token: Token::new(TokenKind::Boolean, None),
                         children: Vec::new(),
                     };
-                    let boolean =
-                        Type::new(ClassOrInterfaceEnvironment::new(boolean_node,
-                                                                   ClassOrInterface::CLASS));
+                    let boolean = ClassOrInterfaceEnvironment::new(boolean,
+                                                                   ClassOrInterface::CLASS);
+                    let boolean = Type::new(boolean);
 
-                    // TODO: always Ok?
                     Ok(boolean)
                 }
                 TokenKind::FSlash | TokenKind::Minus | TokenKind::Percent | TokenKind::Plus |
