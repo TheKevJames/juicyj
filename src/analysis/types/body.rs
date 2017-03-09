@@ -1,4 +1,3 @@
-// TODO: j1_forinitcast
 use analysis::environment::ClassOrInterface;
 use analysis::environment::ClassOrInterfaceEnvironment;
 use analysis::environment::VariableEnvironment;
@@ -81,59 +80,75 @@ impl Type {
                     other.kind.name))
     }
 
-    // TODO: j1_intcharinit ?
-    fn assignable(&self, other: &Type) -> bool {
-        if self == other {
-            return true;
-        }
-
+    fn assign(&self, other: &Type) -> Result<(), String> {
         // TODO: ArrayType? Name?
-        // can assign null to anything
-        let null = ASTNode {
-            token: Token::new(TokenKind::Null, None),
-            children: Vec::new(),
-        };
-        if other.kind.name == null {
-            return true;
+        if self == other {
+            return Ok(());
         }
-
-        // can assign any non-primitive to Object
-        let object = ASTNode {
-            token: Token::new(TokenKind::Identifier, Some("Object")),
-            children: Vec::new(),
-        };
-
-        let boolean = ASTNode {
-            token: Token::new(TokenKind::Boolean, None),
-            children: Vec::new(),
-        };
-
-        let byte = ASTNode {
-            token: Token::new(TokenKind::Byte, None),
-            children: Vec::new(),
-        };
 
         let charr = ASTNode {
             token: Token::new(TokenKind::Char, None),
             children: Vec::new(),
         };
+        if self.kind.name == charr.clone() && other.kind.name == charr.clone() {
+            return Ok(());
+        }
 
-        let int = ASTNode {
-            token: Token::new(TokenKind::Int, None),
+        let byte = ASTNode {
+            token: Token::new(TokenKind::Byte, None),
             children: Vec::new(),
         };
+        if self.kind.name == byte.clone() && other.kind.name == byte.clone() {
+            return Ok(());
+        }
 
         let short = ASTNode {
             token: Token::new(TokenKind::Short, None),
             children: Vec::new(),
         };
-
-        let primitives = vec![boolean, byte, charr.clone(), int, short];
-        if self.kind.name == object && !primitives.contains(&other.kind.name) {
-            return true;
+        let mut primitives = vec![byte.clone(), short.clone()];
+        if self.kind.name == short.clone() && primitives.contains(&other.kind.name) {
+            return Ok(());
         }
 
-        false
+        let int = ASTNode {
+            token: Token::new(TokenKind::Int, None),
+            children: Vec::new(),
+        };
+        primitives.push(charr.clone());
+        primitives.push(int.clone());
+        if self.kind.name == int.clone() && primitives.contains(&other.kind.name) {
+            return Ok(());
+        }
+
+        let boolean = ASTNode {
+            token: Token::new(TokenKind::Boolean, None),
+            children: Vec::new(),
+        };
+        primitives.push(boolean.clone());
+
+        // can assign any non-primitive to Object
+        let object = ASTNode {
+            token: Token::new(TokenKind::NonTerminal, Some("Name")),
+            children: vec![ASTNode {
+                               token: Token::new(TokenKind::Identifier, Some("Object")),
+                               children: Vec::new(),
+                           }],
+        };
+        if self.kind.name == object.clone() && !primitives.contains(&other.kind.name) {
+            return Ok(());
+        }
+
+        // can assign null to any non-primitive
+        let null = ASTNode {
+            token: Token::new(TokenKind::Null, None),
+            children: Vec::new(),
+        };
+        if !primitives.contains(&self.kind.name) && other.kind.name == null {
+            return Ok(());
+        }
+
+        Err(format!("can not assign {} to {}", other.kind.name, self.kind.name))
     }
 }
 
@@ -730,11 +745,7 @@ fn verify_statement(node: &mut ASTNode,
             };
 
             // TODO: canonical (j1_commentsinexp5)
-            if lhs.assignable(&rhs) {
-                Ok(())
-            } else {
-                Err(format!("can not assign {} to {}", rhs.kind.name, lhs.kind.name))
-            }
+            lhs.assign(&rhs)
         }
         Some(ref l) if l == "Block" && node.children.len() == 3 => {
             let mut block_globals = globals.clone();
@@ -870,8 +881,9 @@ fn verify_declaration(kinds: &Vec<ClassOrInterfaceEnvironment>,
             };
 
             // TODO: canonical (j1_commentsinexp5)
-            if !lhs.assignable(&rhs) {
-                return Err(format!("can not assign {} to {}", rhs.kind.name, lhs.kind.name));
+            match lhs.assign(&rhs) {
+                Ok(_) => (),
+                Err(e) => return Err(e),
             }
         }
         _ => (),
