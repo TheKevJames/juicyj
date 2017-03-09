@@ -647,7 +647,7 @@ fn resolve_expression(node: &ASTNode,
                 let field = field.unwrap();
                 for f in &cls.fields {
                     if &f.name == &field {
-                        match check::lookup_or_primitive(&f.to_variable().kind, current, kinds) {
+                        match check::lookup_or_primitive(&f.to_variable().kind, &cls, kinds) {
                             Ok(cls) => return Ok(Type::new(cls)),
                             Err(_) => (),
                         }
