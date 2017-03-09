@@ -395,7 +395,7 @@ fn resolve_expression(node: &ASTNode,
 
             for field in &cls.fields {
                 if field.name == node.children[2] {
-                    match check::lookup_or_primitive(&field.to_variable().kind, current, kinds) {
+                    match check::lookup_or_primitive(&field.to_variable().kind, &cls, kinds) {
                         Ok(cls) => return Ok(Type::new(cls)),
                         Err(_) => (),
                     }
