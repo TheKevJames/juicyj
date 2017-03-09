@@ -45,8 +45,8 @@ impl Type {
             token: Token::new(TokenKind::Short, None),
             children: Vec::new(),
         };
-        let shortables = vec![byte.clone(), short.clone()];
-        if shortables.contains(&self.kind.name) && shortables.contains(&other.kind.name) {
+        let mut primitives = vec![byte.clone(), short.clone()];
+        if primitives.contains(&self.kind.name) && primitives.contains(&other.kind.name) {
             return Ok(Type::new(ClassOrInterfaceEnvironment::new(short.clone(),
                                                                  ClassOrInterface::CLASS)));
         }
@@ -55,7 +55,8 @@ impl Type {
             token: Token::new(TokenKind::Int, None),
             children: Vec::new(),
         };
-        let primitives = vec![byte.clone(), charr.clone(), int.clone(), short.clone()];
+        primitives.push(charr.clone());
+        primitives.push(int.clone());
         if primitives.contains(&self.kind.name) && primitives.contains(&other.kind.name) {
             return Ok(Type::new(ClassOrInterfaceEnvironment::new(int.clone(),
                                                                  ClassOrInterface::CLASS)));
@@ -68,9 +69,8 @@ impl Type {
                                children: Vec::new(),
                            }],
         };
-
-        let stringable = vec![charr.clone(), string.clone()];
-        if stringable.contains(&self.kind.name) && stringable.contains(&other.kind.name) {
+        primitives.push(string.clone());
+        if primitives.contains(&self.kind.name) && primitives.contains(&other.kind.name) {
             return Ok(Type::new(ClassOrInterfaceEnvironment::new(string.clone(),
                                                                  ClassOrInterface::CLASS)));
         }
