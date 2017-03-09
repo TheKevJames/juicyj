@@ -68,9 +68,33 @@ impl Type {
                                children: Vec::new(),
                            }],
         };
+        let java_lang_string = ASTNode {
+            token: Token::new(TokenKind::NonTerminal, Some("Name")),
+            children: vec![ASTNode {
+                               token: Token::new(TokenKind::Identifier, Some("java")),
+                               children: Vec::new(),
+                           },
+                           ASTNode {
+                               token: Token::new(TokenKind::Dot, None),
+                               children: Vec::new(),
+                           },
+                           ASTNode {
+                               token: Token::new(TokenKind::Identifier, Some("lang")),
+                               children: Vec::new(),
+                           },
+                           ASTNode {
+                               token: Token::new(TokenKind::Dot, None),
+                               children: Vec::new(),
+                           },
+                           ASTNode {
+                               token: Token::new(TokenKind::Identifier, Some("String")),
+                               children: Vec::new(),
+                           }],
+        };
         primitives.push(string.clone());
+        primitives.push(java_lang_string.clone());
         if primitives.contains(&self.kind.name) && primitives.contains(&other.kind.name) {
-            return Ok(Type::new(ClassOrInterfaceEnvironment::new(string.clone(),
+            return Ok(Type::new(ClassOrInterfaceEnvironment::new(java_lang_string.clone(),
                                                                  ClassOrInterface::CLASS)));
         }
 
@@ -86,19 +110,25 @@ impl Type {
             return Ok(());
         }
 
-        let charr = ASTNode {
-            token: Token::new(TokenKind::Char, None),
+        // can assign null to anything
+        let null = ASTNode {
+            token: Token::new(TokenKind::Null, None),
             children: Vec::new(),
         };
-        if self.kind.name == charr.clone() && other.kind.name == charr.clone() {
+        if other.kind.name == null {
             return Ok(());
         }
 
+        let boolean = ASTNode {
+            token: Token::new(TokenKind::Boolean, None),
+            children: Vec::new(),
+        };
         let byte = ASTNode {
             token: Token::new(TokenKind::Byte, None),
             children: Vec::new(),
         };
-        if self.kind.name == byte.clone() && other.kind.name == byte.clone() {
+        let mut primitives = vec![boolean.clone(), byte.clone()];
+        if self.kind.name == byte.clone() && primitives.contains(&other.kind.name) {
             return Ok(());
         }
 
@@ -106,11 +136,15 @@ impl Type {
             token: Token::new(TokenKind::Short, None),
             children: Vec::new(),
         };
-        let mut primitives = vec![byte.clone(), short.clone()];
+        primitives.push(short.clone());
         if self.kind.name == short.clone() && primitives.contains(&other.kind.name) {
             return Ok(());
         }
 
+        let charr = ASTNode {
+            token: Token::new(TokenKind::Char, None),
+            children: Vec::new(),
+        };
         let int = ASTNode {
             token: Token::new(TokenKind::Int, None),
             children: Vec::new(),
@@ -121,12 +155,6 @@ impl Type {
             return Ok(());
         }
 
-        let boolean = ASTNode {
-            token: Token::new(TokenKind::Boolean, None),
-            children: Vec::new(),
-        };
-        primitives.push(boolean.clone());
-
         // can assign any non-primitive to Object
         let object = ASTNode {
             token: Token::new(TokenKind::NonTerminal, Some("Name")),
@@ -136,15 +164,6 @@ impl Type {
                            }],
         };
         if self.kind.name == object.clone() && !primitives.contains(&other.kind.name) {
-            return Ok(());
-        }
-
-        // can assign null to any non-primitive
-        let null = ASTNode {
-            token: Token::new(TokenKind::Null, None),
-            children: Vec::new(),
-        };
-        if !primitives.contains(&self.kind.name) && other.kind.name == null {
             return Ok(());
         }
 
@@ -649,8 +668,27 @@ fn resolve_expression(node: &ASTNode,
                 }
                 TokenKind::StrValue => {
                     let node = ASTNode {
-                        token: Token::new(TokenKind::Identifier, Some("String")),
-                        children: Vec::new(),
+                        token: Token::new(TokenKind::NonTerminal, Some("Name")),
+                        children: vec![ASTNode {
+                                           token: Token::new(TokenKind::Identifier, Some("java")),
+                                           children: Vec::new(),
+                                       },
+                                       ASTNode {
+                                           token: Token::new(TokenKind::Dot, None),
+                                           children: Vec::new(),
+                                       },
+                                       ASTNode {
+                                           token: Token::new(TokenKind::Identifier, Some("lang")),
+                                           children: Vec::new(),
+                                       },
+                                       ASTNode {
+                                           token: Token::new(TokenKind::Dot, None),
+                                           children: Vec::new(),
+                                       },
+                                       ASTNode {
+                                           token: Token::new(TokenKind::Identifier, Some("String")),
+                                           children: Vec::new(),
+                                       }],
                     };
                     Ok(Type::new(ClassOrInterfaceEnvironment::new(node, ClassOrInterface::CLASS)))
                 }
