@@ -290,6 +290,9 @@ pub fn verify_prefixes(kind: ASTNode,
                 Some(Ok(ref cls)) if cls.name != kind => {
                     return Err(format!("strict prefix {} resolves to local type", testable))
                 }
+                Some(Ok(_)) => {
+                    return Err(format!("strict prefix {} resolves to self", testable))
+                }
                 _ => (),
             }
         }
