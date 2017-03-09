@@ -744,7 +744,6 @@ fn verify_statement(node: &mut ASTNode,
                 Err(e) => return Err(e),
             };
 
-            // TODO: canonical (j1_commentsinexp5)
             lhs.assign(&rhs)
         }
         Some(ref l) if l == "Block" && node.children.len() == 3 => {
@@ -873,14 +872,15 @@ fn verify_declaration(kinds: &Vec<ClassOrInterfaceEnvironment>,
                 block_globals.push(local);
             }
 
-            let lhs = Type::new(ClassOrInterfaceEnvironment::new(new.kind.clone(),
-                                                                 ClassOrInterface::CLASS));
+            let lhs = match check::lookup_or_primitive(&new.kind, current, kinds) {
+                Ok(l) => Type::new(l),
+                Err(e) => return Err(e),
+            };
             let rhs = match resolve_expression(&rvalue, current, kinds, &block_globals) {
                 Ok(r) => r,
                 Err(e) => return Err(e),
             };
 
-            // TODO: canonical (j1_commentsinexp5)
             match lhs.assign(&rhs) {
                 Ok(_) => (),
                 Err(e) => return Err(e),
