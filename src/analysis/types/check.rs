@@ -280,7 +280,7 @@ pub fn verify_prefixes(kind: ASTNode,
             }
 
             match lookup_in_package(&testable, current, kinds) {
-                Some(Ok(_)) => {
+                Some(Ok(ref cls)) if cls.name != kind => {
                     return Err(format!("strict prefix {} resolves to local type", testable))
                 }
                 _ => (),
