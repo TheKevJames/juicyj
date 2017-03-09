@@ -25,7 +25,7 @@ pub fn verify(env: &Environment) -> Result<(), String> {
         token: Token::new(TokenKind::Static, None),
         children: Vec::new(),
     };
-    let object_name = ASTNode {
+    let object = ASTNode {
         token: Token::new(TokenKind::NonTerminal, Some("Name")),
         children: vec![ASTNode {
                            token: Token::new(TokenKind::Identifier, Some("java")),
@@ -68,7 +68,7 @@ pub fn verify(env: &Environment) -> Result<(), String> {
                     return Err(format!("class {} cannot extend interface {}", current, found));
                 }
 
-                if current.name != object_name {
+                if current.name != object {
                     let mut zero_argument_parent = false;
                     for constructor in found.constructors {
                         if constructor.parameters.is_empty() {
@@ -110,7 +110,7 @@ pub fn verify(env: &Environment) -> Result<(), String> {
                     return Err(format!("type {} must not be repeated in interface extends",
                                        found.name));
                 }
-                if found.kind == ClassOrInterface::CLASS && found.name != object_name {
+                if found.kind == ClassOrInterface::CLASS && found.name != object {
                     return Err(format!("interface {} cannot extend class {}", current, found));
                 }
                 resolved.push(found.name);

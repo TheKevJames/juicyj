@@ -16,7 +16,12 @@ impl Type {
         Type { kind: kind }
     }
 
-    fn apply_comparison(&self, operation: &TokenKind, other: &Type) -> Result<Type, String> {
+    fn apply_comparison(&self,
+                        operation: &TokenKind,
+                        other: &Type,
+                        current: &ClassOrInterfaceEnvironment,
+                        kinds: &Vec<ClassOrInterfaceEnvironment>)
+                        -> Result<Type, String> {
         let boolean = ASTNode {
             token: Token::new(TokenKind::Boolean, None),
             children: Vec::new(),
@@ -25,10 +30,10 @@ impl Type {
         let boolean = Type::new(boolean);
 
         // Anything assignable is comparable. Comparability, though, is reflexive
-        match self.assign(other) {
+        match self.assign(other, current, kinds) {
             Ok(_) => Ok(boolean),
             Err(_) => {
-                match other.assign(self) {
+                match other.assign(self, current, kinds) {
                     Ok(_) => Ok(boolean),
                     Err(_) => {
                         Err(format!("could not apply {:?} to {:?} and {:?}",
@@ -139,10 +144,22 @@ impl Type {
                     other.kind.name))
     }
 
-    fn assign(&self, other: &Type) -> Result<Type, String> {
-        // TODO: ArrayType? Name?
-        if self == other {
-            return Ok(self.clone());
+    fn assign(&self,
+              rhs: &Type,
+              current: &ClassOrInterfaceEnvironment,
+              kinds: &Vec<ClassOrInterfaceEnvironment>)
+              -> Result<Type, String> {
+        let lhs = match check::lookup_or_primitive(&self.kind.name, current, kinds) {
+            Ok(cls) => Type::new(cls),
+            Err(e) => return Err(e),
+        };
+        let rhs = match check::lookup_or_primitive(&rhs.kind.name, current, kinds) {
+            Ok(cls) => Type::new(cls),
+            Err(e) => return Err(e),
+        };
+
+        if lhs == rhs {
+            return Ok(lhs.clone());
         }
 
         // can assign null to anything
@@ -150,8 +167,8 @@ impl Type {
             token: Token::new(TokenKind::Null, None),
             children: Vec::new(),
         };
-        if other.kind.name == null {
-            return Ok(self.clone());
+        if rhs.kind.name == null {
+            return Ok(lhs.clone());
         }
 
         let boolean = ASTNode {
@@ -163,8 +180,8 @@ impl Type {
             children: Vec::new(),
         };
         let mut primitives = vec![boolean.clone(), byte.clone()];
-        if self.kind.name == byte.clone() && primitives.contains(&other.kind.name) {
-            return Ok(self.clone());
+        if lhs.kind.name == byte.clone() && primitives.contains(&rhs.kind.name) {
+            return Ok(lhs.clone());
         }
 
         let short = ASTNode {
@@ -172,8 +189,8 @@ impl Type {
             children: Vec::new(),
         };
         primitives.push(short.clone());
-        if self.kind.name == short.clone() && primitives.contains(&other.kind.name) {
-            return Ok(self.clone());
+        if lhs.kind.name == short.clone() && primitives.contains(&rhs.kind.name) {
+            return Ok(lhs.clone());
         }
 
         let charr = ASTNode {
@@ -186,47 +203,32 @@ impl Type {
         };
         primitives.push(charr.clone());
         primitives.push(int.clone());
-        if self.kind.name == int.clone() && primitives.contains(&other.kind.name) {
-            return Ok(self.clone());
+        if lhs.kind.name == int.clone() && primitives.contains(&rhs.kind.name) {
+            return Ok(lhs.clone());
         }
 
-        // can assign any non-primitive to Object
-        let object = ASTNode {
-            token: Token::new(TokenKind::NonTerminal, Some("Name")),
-            children: vec![ASTNode {
-                               token: Token::new(TokenKind::Identifier, Some("Object")),
-                               children: Vec::new(),
-                           }],
-        };
-        let java_lang_object = ASTNode {
-            token: Token::new(TokenKind::NonTerminal, Some("Name")),
-            children: vec![ASTNode {
-                               token: Token::new(TokenKind::Identifier, Some("java")),
-                               children: Vec::new(),
-                           },
-                           ASTNode {
-                               token: Token::new(TokenKind::Dot, None),
-                               children: Vec::new(),
-                           },
-                           ASTNode {
-                               token: Token::new(TokenKind::Identifier, Some("lang")),
-                               children: Vec::new(),
-                           },
-                           ASTNode {
-                               token: Token::new(TokenKind::Dot, None),
-                               children: Vec::new(),
-                           },
-                           ASTNode {
-                               token: Token::new(TokenKind::Identifier, Some("Object")),
-                               children: Vec::new(),
-                           }],
-        };
-        let objects = vec![object.clone(), java_lang_object.clone()];
-        if objects.contains(&self.kind.name) && !primitives.contains(&other.kind.name) {
-            return Ok(self.clone());
+        let mut parents = vec![rhs.kind.clone()];
+        while let Some(parent) = parents.pop() {
+            if parent.name == lhs.kind.name {
+                return Ok(lhs.clone());
+            }
+
+            // TODO: .chain()
+            for grandparent in &parent.extends {
+                match check::lookup(&grandparent, &parent, kinds) {
+                    Ok(cls) => parents.push(cls),
+                    Err(e) => return Err(e),
+                };
+            }
+            for grandparent in &parent.implements {
+                match check::lookup(&grandparent, &parent, kinds) {
+                    Ok(cls) => parents.push(cls),
+                    Err(e) => return Err(e),
+                };
+            }
         }
 
-        Err(format!("can not assign {} to {}", other.kind.name, self.kind.name))
+        Err(format!("can not assign {} to {}", rhs.kind.name, lhs.kind.name))
     }
 }
 
@@ -353,7 +355,7 @@ fn resolve_expression(node: &ASTNode,
                 Err(e) => return Err(e),
             };
 
-            lhs.assign(&rhs)
+            lhs.assign(&rhs, current, kinds)
         }
         Some(ref l) if l == "CastExpression" => {
             match resolve_expression(&node.children[1], current, kinds, globals) {
@@ -703,7 +705,7 @@ fn resolve_expression(node: &ASTNode,
                             Err(e) => return Err(e),
                         };
 
-                    lhs.apply_comparison(&node.token.kind, &rhs)
+                    lhs.apply_comparison(&node.token.kind, &rhs, current, kinds)
                 }
                 TokenKind::Instanceof => {
                     match resolve_expression(&node.children[0], current, kinds, globals) {
@@ -1011,7 +1013,7 @@ fn verify_declaration(kinds: &Vec<ClassOrInterfaceEnvironment>,
                 Err(e) => return Err(e),
             };
 
-            match lhs.assign(&rhs) {
+            match lhs.assign(&rhs, current, kinds) {
                 Ok(_) => (),
                 Err(e) => return Err(e),
             }

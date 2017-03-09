@@ -65,10 +65,30 @@ pub fn lookup(name: &ASTNode,
         if l == "ArrayType" {
             let mut array = ClassOrInterfaceEnvironment::new(name.clone(), ClassOrInterface::CLASS);
 
-            array.extends.push(ASTNode {
-                token: Token::new(TokenKind::Identifier, Some("Object")),
-                children: Vec::new(),
-            });
+            let object = ASTNode {
+                token: Token::new(TokenKind::NonTerminal, Some("Name")),
+                children: vec![ASTNode {
+                                   token: Token::new(TokenKind::Identifier, Some("java")),
+                                   children: Vec::new(),
+                               },
+                               ASTNode {
+                                   token: Token::new(TokenKind::Dot, None),
+                                   children: Vec::new(),
+                               },
+                               ASTNode {
+                                   token: Token::new(TokenKind::Identifier, Some("lang")),
+                                   children: Vec::new(),
+                               },
+                               ASTNode {
+                                   token: Token::new(TokenKind::Dot, None),
+                                   children: Vec::new(),
+                               },
+                               ASTNode {
+                                   token: Token::new(TokenKind::Identifier, Some("Object")),
+                                   children: Vec::new(),
+                               }],
+            };
+            array.extends.push(object);
 
             // array.fields clone is public
 

@@ -126,7 +126,7 @@ pub fn analyze_class_declaration(canonical: &ASTNode,
         }
     }
 
-    let object_name = ASTNode {
+    let object = ASTNode {
         token: Token::new(TokenKind::NonTerminal, Some("Name")),
         children: vec![ASTNode {
                            token: Token::new(TokenKind::Identifier, Some("java")),
@@ -149,11 +149,8 @@ pub fn analyze_class_declaration(canonical: &ASTNode,
                            children: Vec::new(),
                        }],
     };
-    if current.extends.is_empty() && current.name != object_name {
-        current.extends.push(ASTNode {
-            token: Token::new(TokenKind::Identifier, Some("Object")),
-            children: Vec::new(),
-        });
+    if current.extends.is_empty() && current.name != object {
+        current.extends.push(object);
     }
 
     kinds.push(current);

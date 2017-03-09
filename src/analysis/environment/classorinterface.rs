@@ -247,7 +247,7 @@ impl ClassOrInterfaceEnvironment {
             token: Token::new(TokenKind::Private, None),
             children: Vec::new(),
         };
-        let object_name = ASTNode {
+        let object = ASTNode {
             token: Token::new(TokenKind::NonTerminal, Some("Name")),
             children: vec![ASTNode {
                                token: Token::new(TokenKind::Identifier, Some("java")),
@@ -275,7 +275,7 @@ impl ClassOrInterfaceEnvironment {
             self.fields.push(field.clone());
         }
 
-        if self.kind == ClassOrInterface::INTERFACE && parent.name == object_name {
+        if self.kind == ClassOrInterface::INTERFACE && parent.name == object {
             for method in &parent.methods {
                 let mut new = method.clone();
                 new.modifiers.push(modifier_abstract.clone());
