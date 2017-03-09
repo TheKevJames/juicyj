@@ -585,7 +585,8 @@ fn resolve_expression(node: &ASTNode,
         _ => {
             match node.token.kind {
                 // Expressions
-                TokenKind::And | TokenKind::Or => {
+                TokenKind::And | TokenKind::BitAnd | TokenKind::Or | TokenKind::BitOr |
+                TokenKind::BitXor => {
                     let lhs =
                         match resolve_expression(&node.children[0], current, kinds, globals) {
                             Ok(l) => l,
@@ -597,13 +598,16 @@ fn resolve_expression(node: &ASTNode,
                             Err(e) => return Err(e),
                         };
 
+                    let bitwise = vec![TokenKind::BitAnd, TokenKind::BitOr, TokenKind::BitXor];
                     let boolean = ASTNode {
                         token: Token::new(TokenKind::Boolean, None),
                         children: Vec::new(),
                     };
 
-                    if lhs == rhs && lhs.kind.name == boolean {
+                    if lhs.kind.name == boolean && rhs.kind.name == boolean {
                         Ok(lhs)
+                    } else if bitwise.contains(&node.token.kind) {
+                        Err(format!("bitwise operations are not allowed"))
                     } else {
                         Err(format!("could not apply {:?} to {:?} and {:?}",
                                     node.token.kind,
@@ -630,12 +634,6 @@ fn resolve_expression(node: &ASTNode,
                                     node.token.kind,
                                     arg.kind.name))
                     }
-                }
-                TokenKind::BitAnd | TokenKind::BitOr | TokenKind::BitXor => {
-                    // TODO: wtf is a bitwise operation? (j1_eagerbooleanoperations)
-                    // TODO: non-booleans on each side?
-                    // these are allowed in grammar but not in type analysis
-                    Err(format!("bitwise operations are not allowed"))
                 }
                 TokenKind::Equality |
                 TokenKind::NotEqual |
