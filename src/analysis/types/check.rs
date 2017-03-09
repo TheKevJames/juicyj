@@ -217,6 +217,7 @@ pub fn lookup_or_primitive(kind: &ASTNode,
             TokenKind::Byte,
             TokenKind::Char,
             TokenKind::Int,
+            TokenKind::Null,
             TokenKind::Short,
             TokenKind::Void]
         .contains(&child_kind.token.kind) {
@@ -240,6 +241,7 @@ pub fn verify(kind: ASTNode,
             TokenKind::Byte,
             TokenKind::Char,
             TokenKind::Int,
+            TokenKind::Null,
             TokenKind::Short,
             TokenKind::Void]
         .contains(&kind.token.kind) {
@@ -270,6 +272,7 @@ pub fn verify_prefixes(kind: ASTNode,
                     TokenKind::Byte,
                     TokenKind::Char,
                     TokenKind::Int,
+                    TokenKind::Null,
                     TokenKind::Short,
                     TokenKind::Void]
                 .contains(&testable.token.kind) {
@@ -313,6 +316,7 @@ pub fn verify_package_prefixes(kind: ASTNode,
                     TokenKind::Byte,
                     TokenKind::Char,
                     TokenKind::Int,
+                    TokenKind::Null,
                     TokenKind::Short,
                     TokenKind::Void]
                 .contains(&testable.token.kind) {
