@@ -353,22 +353,26 @@ fn resolve_expression(node: &ASTNode,
             }
         }
         Some(ref l) if l == "FieldAccess" => {
-            // TODO: node can be MethodInvocation (j1_1_ambiguousname_accessresultfrommethod)
-            // TODO: node can be ClassInstanceCreationExpression (j1_classinstance)
-            let mut node = node.clone();
-            node.token.lexeme = Some("Name".to_owned());
+            let lhs = match resolve_expression(&node.children[0], current, kinds, globals) {
+                Ok(l) => l,
+                Err(e) => return Err(e),
+            };
 
-            for var in globals {
-                // this.thing
-                if var.name == node {
-                    return Ok(Type::new(ClassOrInterfaceEnvironment::new(var.kind.clone(),
-                                                                         ClassOrInterface::CLASS)));
+            let cls = match check::lookup_or_primitive(&lhs.kind.name, current, kinds) {
+                Ok(cls) => cls,
+                Err(e) => return Err(e),
+            };
+
+            for field in &cls.fields {
+                if field.name == node.children[2] {
+                    match check::lookup_or_primitive(&field.kind, current, kinds) {
+                        Ok(cls) => return Ok(Type::new(cls)),
+                        Err(_) => (),
+                    }
                 }
-
-                // TODO: other.thing
             }
 
-            Err(format!("incomplete FieldAccess for {}", node))
+            Err(format!("could not find field {} in class {}", node.children[2], cls.name))
         }
         Some(ref l) if l == "MethodInvocation" => {
             let lookup = match node.children.len() {
@@ -746,6 +750,7 @@ fn resolve_expression(node: &ASTNode,
                                                                   ClassOrInterface::CLASS)))
                 }
                 // Other
+                TokenKind::This => Ok(Type::new(current.clone())),
                 TokenKind::NonTerminal => {
                     Err(format!("unhandled resolve_expression NonTerminal {:?}",
                                 node.token.lexeme))
@@ -799,7 +804,7 @@ fn verify_statement(node: &mut ASTNode,
     match node.token.lexeme {
         // TODO: resolve_expression ....
         // TODO: UnaryExpression (Minus, Not)
-        // TODO: verfify CastExpression is castable
+        // TODO: verify CastExpression
         Some(ref l) if l == "ArrayCreationExpression" || l == "ClassInstanceCreationExpression" => {
             // TODO: ACE -> child1 may be expr, CICE -> child1 may be params
             match check::lookup_or_primitive(&node.children[0], current, kinds) {
