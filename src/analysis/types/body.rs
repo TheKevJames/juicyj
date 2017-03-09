@@ -634,6 +634,29 @@ fn resolve_expression(node: &ASTNode,
                 }
             }
 
+            loop {
+                if field.is_none() {
+                    break;
+                }
+
+                let cls = match check::lookup(&node_fieldless, current, kinds) {
+                    Ok(c) => c,
+                    Err(_) => break,
+                };
+
+                let field = field.unwrap();
+                for f in &cls.fields {
+                    if &f.name == &field {
+                        match check::lookup_or_primitive(&f.to_variable().kind, current, kinds) {
+                            Ok(cls) => return Ok(Type::new(cls)),
+                            Err(_) => (),
+                        }
+                    }
+                }
+
+                break;
+            }
+
             match check::lookup(&node, current, kinds) {
                 Ok(f) => Ok(Type::new(f)),
                 Err(e) => Err(e),
@@ -973,6 +996,8 @@ fn verify_statement(node: &mut ASTNode,
         // TODO: check expressions are correctly types (no narrowing conversions)
         Some(_) => {
             // TODO
+            // println!("uncaught {:?}", node);
+
             let mut block_globals = globals.clone();
             for local in locals {
                 block_globals.push(local.clone());

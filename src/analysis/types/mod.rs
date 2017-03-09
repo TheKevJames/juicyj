@@ -8,7 +8,6 @@ use scanner::ASTNode;
 use scanner::Token;
 use scanner::TokenKind;
 
-
 fn rebuild_env(env: &Environment) -> Result<Environment, String> {
     let mut new = Environment { kinds: Vec::new() };
 
