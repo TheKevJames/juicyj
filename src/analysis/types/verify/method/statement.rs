@@ -64,7 +64,6 @@ pub fn nonblock(node: &mut ASTNode,
         // TODO: check expressions are correctly types (no narrowing conversions)
         // TODO: ensure all expressions are resolved
         // TODO: handle UnaryExpression (Minus, Not)
-        // TODO: verify CastExpression
         Some(ref l) if l == "ArrayCreationExpression" || l == "ClassInstanceCreationExpression" => {
             // TODO: ACE -> child1 may be expr, CICE -> child1 may be params
             let mut kind = node.children[0].clone();
@@ -108,7 +107,11 @@ pub fn nonblock(node: &mut ASTNode,
             // is not update statement, this will be a semicolon.
             let mut update = node.children[node.children.len() - 3].clone();
             if update.token.kind != TokenKind::Semicolon {
-                match nonblock(&mut update, current, kinds, &block_globals, &mut block_locals) {
+                match nonblock(&mut update,
+                               current,
+                               kinds,
+                               &block_globals,
+                               &mut block_locals) {
                     Ok(_) => (),
                     Err(e) => return Err(e),
                 }

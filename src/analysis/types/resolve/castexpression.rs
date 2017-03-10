@@ -35,5 +35,5 @@ pub fn go(node: &ASTNode,
         Err(e) => return Err(e),
     };
 
-    lhs.assign(&rhs, current, kinds)
+    lhs.apply_cast(&rhs, current, kinds)
 }

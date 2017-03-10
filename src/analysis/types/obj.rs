@@ -79,6 +79,32 @@ impl Type {
         Type { kind: kind }
     }
 
+    pub fn apply_cast(&self,
+                      other: &Type,
+                      current: &ClassOrInterfaceEnvironment,
+                      kinds: &Vec<ClassOrInterfaceEnvironment>)
+                      -> Result<Type, String> {
+        // TODO: figure out these rules
+        let lhs = match lookup::class::in_env(&self.kind.name, current, kinds) {
+            Ok(cls) => Type::new(cls),
+            Err(e) => return Err(e),
+        };
+        let rhs = match lookup::class::in_env(&other.kind.name, current, kinds) {
+            Ok(cls) => Type::new(cls),
+            Err(e) => return Err(e),
+        };
+
+        let result = lhs.clone();
+
+        let lhs_array = lhs.kind.name.clone().token.lexeme.unwrap_or("".to_owned()) == "ArrayType";
+        let rhs_array = rhs.kind.name.clone().token.lexeme.unwrap_or("".to_owned()) == "ArrayType";
+        if lhs_array != rhs_array {
+            return Err(format!("cannot cast classes and arrays"));
+        }
+
+        Ok(result)
+    }
+
     pub fn apply_comparison(&self,
                             operation: &TokenKind,
                             other: &Type,
