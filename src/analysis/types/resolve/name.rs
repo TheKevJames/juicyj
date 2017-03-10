@@ -34,9 +34,12 @@ pub fn go(node: &ASTNode,
         Err(_) => (),
     }
 
+    match lookup::field::in_env(&node, &NAME.clone(), current, kinds) {
+        Ok(t) => return Ok(t),
+        Err(_) => (),
+    }
+
     // implicit `this`
-    // TODO: does non-implicit this make sense? what happens if node.starts_with
-    // non-instantiated class?
     // TODO: in_class would save some effort
     match lookup::field::in_env(&current.name, &node, current, kinds) {
         Ok(t) => return Ok(t),
