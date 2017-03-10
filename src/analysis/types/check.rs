@@ -38,6 +38,55 @@ fn into_array(name: &ASTNode) -> ClassOrInterfaceEnvironment {
     };
     array.extends.push(object);
 
+    let cloneable = ASTNode {
+        token: Token::new(TokenKind::NonTerminal, Some("Name")),
+        children: vec![ASTNode {
+                           token: Token::new(TokenKind::Identifier, Some("java")),
+                           children: Vec::new(),
+                       },
+                       ASTNode {
+                           token: Token::new(TokenKind::Dot, None),
+                           children: Vec::new(),
+                       },
+                       ASTNode {
+                           token: Token::new(TokenKind::Identifier, Some("lang")),
+                           children: Vec::new(),
+                       },
+                       ASTNode {
+                           token: Token::new(TokenKind::Dot, None),
+                           children: Vec::new(),
+                       },
+                       ASTNode {
+                           token: Token::new(TokenKind::Identifier, Some("Cloneable")),
+                           children: Vec::new(),
+                       }],
+    };
+    let serializeable = ASTNode {
+        token: Token::new(TokenKind::NonTerminal, Some("Name")),
+        children: vec![ASTNode {
+                           token: Token::new(TokenKind::Identifier, Some("java")),
+                           children: Vec::new(),
+                       },
+                       ASTNode {
+                           token: Token::new(TokenKind::Dot, None),
+                           children: Vec::new(),
+                       },
+                       ASTNode {
+                           token: Token::new(TokenKind::Identifier, Some("io")),
+                           children: Vec::new(),
+                       },
+                       ASTNode {
+                           token: Token::new(TokenKind::Dot, None),
+                           children: Vec::new(),
+                       },
+                       ASTNode {
+                           token: Token::new(TokenKind::Identifier, Some("Serializeable")),
+                           children: Vec::new(),
+                       }],
+    };
+    array.implements.push(cloneable);
+    array.implements.push(serializeable);
+
     // array.fields clone is public
 
     let length_name = ASTNode {
