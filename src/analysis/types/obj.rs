@@ -135,6 +135,13 @@ impl Type {
     }
 
     pub fn apply_math(&self, operation: &TokenKind, other: &Type) -> Result<Type, String> {
+        if *self == *VOID || *other == *VOID {
+            return Err(format!("could not apply {:?} to voids {:?} and {:?}",
+                               operation,
+                               self.kind.name,
+                               other.kind.name));
+        }
+
         if *self == *CHAR && *other == *CHAR {
             return Ok(CHAR.clone());
         }
