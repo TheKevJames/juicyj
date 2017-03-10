@@ -76,9 +76,9 @@ pub fn analyze_field_declaration(fields: &mut Vec<FieldEnvironment>,
         new.modifiers.push(child);
     }
 
-    if new.name.token.lexeme == None {
-        // if `name` is an Assignment rather than a Name
+    if new.name.token.kind == TokenKind::Assignment {
         new.name = new.name.children[0].clone();
+        // TODO: ensure new.name.children[1] has no forward references
     }
 
     for field in fields.clone() {
