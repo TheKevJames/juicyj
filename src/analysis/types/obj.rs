@@ -220,6 +220,11 @@ impl Type {
         let lhs_array = lhs.kind.name.clone().token.lexeme.unwrap_or("".to_owned()) == "ArrayType";
         let rhs_array = rhs.kind.name.clone().token.lexeme.unwrap_or("".to_owned()) == "ArrayType";
         if lhs_array {
+            // TODO: all arrays, or just non-primitive arrays?
+            if rhs == *NULL {
+                return Ok(result);
+            }
+
             if !rhs_array {
                 return Err(format!("cannot assign class {} to array {}",
                                    rhs.kind.name,
