@@ -68,6 +68,10 @@ fn get_method(node: &ASTNode,
             // TODO: resolve first? Might have to remove trailing "Dot Identifier"?
             let mut canonical = node.children[0].clone();
             canonical.flatten();
+            if modifiers.contains(&*STATIC) &&
+               canonical.children.first().unwrap().token.kind == TokenKind::This {
+                return Err(format!("can not use 'this' in static method"));
+            }
 
             let var_result = lookup::method::in_variables(&canonical,
                                                           &NAME.clone(),
@@ -106,6 +110,14 @@ fn get_method(node: &ASTNode,
         }
         // child[0] is class/field. child[2] is method on previous.
         5 | 6 => {
+            let mut name = NAME.clone();
+            name.children.push(node.children[2].clone());
+            name.flatten();
+            if modifiers.contains(&*STATIC) &&
+               name.children.first().unwrap().token.kind == TokenKind::This {
+                return Err(format!("can not use 'this' in static method"));
+            }
+
             let lhs = match resolve::expression::go(&node.children[0],
                                                     modifiers,
                                                     current,
@@ -114,10 +126,6 @@ fn get_method(node: &ASTNode,
                 Ok(t) => t,
                 Err(e) => return Err(e),
             };
-
-            let mut name = NAME.clone();
-            name.children.push(node.children[2].clone());
-            name.flatten();
 
             // TODO: in_class would save some effort
             match lookup::method::in_env(&lhs.kind.name, &name, &args, current, kinds) {

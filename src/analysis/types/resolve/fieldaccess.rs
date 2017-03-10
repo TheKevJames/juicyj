@@ -4,15 +4,24 @@ use analysis::types::lookup;
 use analysis::types::obj::Type;
 use analysis::types::resolve;
 use scanner::ASTNode;
+use scanner::Token;
 use scanner::TokenKind;
+
+lazy_static! {
+    static ref STATIC: ASTNode = {
+        ASTNode { token: Token::new(TokenKind::Static, None), children: Vec::new() }
+    };
+}
 
 // TODO: should it be more like this?
 // pub fn go(node: &ASTNode,
+//           modifiers: &Vec<ASTNode>,
 //           current: &ClassOrInterfaceEnvironment,
 //           kinds: &Vec<ClassOrInterfaceEnvironment>,
 //           globals: &Vec<VariableEnvironment>)
 //           -> Result<Type, String> {
-//     let lhs = match resolve::expression::go(&node.children[0], current, kinds, globals) {
+//     let lhs = match resolve::expression::go(&node.children[0],
+//                                             modifiers, current, kinds, globals) {
 //         Ok(t) => t,
 //         Err(e) => return Err(e),
 //     };
@@ -28,6 +37,9 @@ pub fn go(node: &ASTNode,
           globals: &Vec<VariableEnvironment>)
           -> Result<Type, String> {
     let cls = match node.children[0].token.kind {
+        TokenKind::This if modifiers.contains(&*STATIC) => {
+            return Err(format!("can not use 'this' in static method"));
+        }
         TokenKind::This => current.clone(),
         _ => {
             let lhs = match resolve::expression::go(&node.children[0],

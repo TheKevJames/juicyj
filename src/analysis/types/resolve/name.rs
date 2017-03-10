@@ -27,6 +27,10 @@ pub fn go(node: &ASTNode,
           -> Result<Type, String> {
     let mut node = node.clone();
     node.flatten();
+    if modifiers.contains(&*STATIC) &&
+       node.children.first().unwrap().token.kind == TokenKind::This {
+        return Err(format!("can not use 'this' in static method"));
+    }
 
     match lookup::field::in_variables(&node, &NAME.clone(), current, kinds, globals) {
         Ok(t) => return Ok(t),
