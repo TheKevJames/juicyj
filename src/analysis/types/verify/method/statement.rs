@@ -181,7 +181,7 @@ pub fn nonblock(node: &mut ASTNode,
                 TokenKind::CharValue | TokenKind::NumValue | TokenKind::StrValue => Ok(()),
                 TokenKind::True | TokenKind::False => Ok(()),
                 _ => {
-                    println!("defaulting on : {:?}", node);
+                    println!("defaulting on statement: {:?}", node);
                     let mut block_globals = globals.clone();
                     block_globals.extend(locals.clone());
 

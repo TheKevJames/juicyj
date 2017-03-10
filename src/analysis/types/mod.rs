@@ -159,13 +159,7 @@ fn verify_env(env: &Environment) -> Result<(), String> {
                 }
             }
 
-            let mut globals = Vec::new();
-            for param in &constructor.parameters {
-                globals.push(param.clone());
-            }
-            for field in &current.fields {
-                globals.push(field.to_variable());
-            }
+            let globals = constructor.parameters.clone();
             match statement::block(&mut constructor.body.clone(),
                                    &current,
                                    &env.kinds,
@@ -215,13 +209,7 @@ fn verify_env(env: &Environment) -> Result<(), String> {
             }
 
             if method.body.is_some() {
-                let mut globals = Vec::new();
-                for param in &method.parameters {
-                    globals.push(param.clone());
-                }
-                for field in &current.fields {
-                    globals.push(field.to_variable());
-                }
+                let globals = method.parameters.clone();
                 match statement::block(&mut method.clone().body.unwrap().clone(),
                                        &current,
                                        &env.kinds,

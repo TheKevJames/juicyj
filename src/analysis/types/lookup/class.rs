@@ -1,5 +1,6 @@
 use analysis::environment::ClassOrInterface;
 use analysis::environment::ClassOrInterfaceEnvironment;
+use analysis::environment::VariableEnvironment;
 use analysis::types::lookup::array;
 use analysis::types::verify;
 use scanner::ASTNode;
@@ -44,6 +45,21 @@ pub fn in_env(name: &ASTNode,
     }
 
     lookup(&name, current, kinds)
+}
+
+pub fn in_variables(name: &ASTNode,
+                    current: &ClassOrInterfaceEnvironment,
+                    kinds: &Vec<ClassOrInterfaceEnvironment>,
+                    variables: &Vec<VariableEnvironment>)
+                    -> Result<ClassOrInterfaceEnvironment, String> {
+    for var in variables {
+        if &var.name == name {
+            return in_env(&var.kind, current, kinds);
+        }
+    }
+
+    // TODO: list variables? print current class?
+    Err(format!("could not lookup kind {:?} in variables", name))
 }
 
 pub fn lookup_step0_canonical(name: &ASTNode,
