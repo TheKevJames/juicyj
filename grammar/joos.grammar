@@ -121,15 +121,12 @@ ClassBodyDeclaration:
 
 ClassMemberDeclaration:
 	FieldDeclaration
+	ConstantDeclaration
 	MethodDeclaration
 	AbstractMethodDeclaration
 
 FieldDeclaration:
-	Modifiers Type VariableDeclarator SEMICOLON
-
-VariableDeclarator:
-	IDENTIFIER
-	IDENTIFIER = Expression
+	Modifiers Type IDENTIFIER SEMICOLON
 
 MethodDeclaration:
 	MethodHeader MethodBody

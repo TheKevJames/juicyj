@@ -1,6 +1,7 @@
 use analysis::environment::classorinterface::ClassOrInterface;
 use analysis::environment::classorinterface::ClassOrInterfaceEnvironment;
 use analysis::environment::constructor::analyze_constructor_declaration;
+use analysis::environment::field::analyze_constant_declaration;
 use analysis::environment::field::analyze_field_declaration;
 use analysis::environment::method::analyze_abstract_method_declaration;
 use analysis::environment::method::analyze_method_declaration;
@@ -97,6 +98,9 @@ pub fn analyze_class_declaration(canonical: &ASTNode,
                     let result = match decl.token.lexeme {
                         Some(ref lex) if lex == "AbstractMethodDeclaration" => {
                             analyze_abstract_method_declaration(&mut current, &decl.children[0])
+                        }
+                        Some(ref lex) if lex == "ConstantDeclaration" => {
+                            analyze_constant_declaration(&mut current, &decl)
                         }
                         Some(ref lex) if lex == "ConstructorDeclaration" => {
                             analyze_constructor_declaration(&mut current,

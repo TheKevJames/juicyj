@@ -198,12 +198,31 @@ fn verify_env(env: &Environment) -> Result<(), String> {
             }
         }
 
-        // TODO: non-static fields must be initialized in order and without implicit `this`:
-        // http://titanium.cs.berkeley.edu/doc/java-langspec-1.0/8.doc.html#38013
         for field in &current.fields {
             let result = verify::prefixes::canonical(&field.kind, &current, &env.kinds);
             if result.is_err() {
                 return result;
+            }
+
+            if field.value.is_none() {
+                continue;
+            }
+
+            // TODO: current subset (forward declarations)
+            let rexpr = field.clone().value.unwrap();
+            let rvalue = match resolve::expression::go(&rexpr, &current, &env.kinds, &Vec::new()) {
+                Ok(t) => t,
+                Err(e) => return Err(e),
+            };
+
+            let lvalue = match lookup::class::in_env(&field.kind, &current, &env.kinds) {
+                Ok(c) => Type::new(c),
+                Err(e) => return Err(e),
+            };
+
+            match lvalue.assign(&rvalue, &current, &env.kinds) {
+                Ok(_) => (),
+                Err(e) => return Err(e),
             }
 
             // TODO: static fields can not use implicit `this`

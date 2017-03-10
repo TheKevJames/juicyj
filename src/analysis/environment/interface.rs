@@ -87,7 +87,7 @@ pub fn analyze_interface_declaration(canonical: &ASTNode,
                             analyze_abstract_method_declaration(&mut current, &decl.children[0])
                         }
                         Some(ref lex) if lex == "ConstantDeclaration" => {
-                            analyze_constant_declaration(&mut current.fields, &decl)
+                            analyze_constant_declaration(&mut current, &decl)
                         }
                         Some(ref lex) => {
                             return Err(format!("no InterfaceBody analyzer for {}", lex));
