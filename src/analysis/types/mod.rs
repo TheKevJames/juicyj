@@ -210,26 +210,20 @@ fn verify_env(env: &Environment) -> Result<(), String> {
                 continue;
             }
 
-            // TODO: should this still include other classes?
-            // Answer: Holy fucking shit yes.
-            // let env_builder = vec![current_builder.clone()];
-            let env_builder = env.kinds.clone();
-
+            // TODO: allow qualified names to be resolved to future fields
             let rexpr = field.clone().value.unwrap();
-            let rvalue = match resolve::expression::go(&rexpr,
-                                                       &current_builder,
-                                                       &env_builder,
-                                                       &Vec::new()) {
-                Ok(t) => t,
-                Err(e) => return Err(e),
-            };
+            let rvalue =
+                match resolve::expression::go(&rexpr, &current_builder, &env.kinds, &Vec::new()) {
+                    Ok(t) => t,
+                    Err(e) => return Err(e),
+                };
 
-            let lvalue = match lookup::class::in_env(&field.kind, &current_builder, &env_builder) {
+            let lvalue = match lookup::class::in_env(&field.kind, &current_builder, &env.kinds) {
                 Ok(c) => Type::new(c),
                 Err(e) => return Err(e),
             };
 
-            match lvalue.assign(&rvalue, &current_builder, &env_builder) {
+            match lvalue.assign(&rvalue, &current_builder, &env.kinds) {
                 Ok(_) => (),
                 Err(e) => return Err(e),
             }

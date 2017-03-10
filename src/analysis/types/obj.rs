@@ -104,7 +104,7 @@ impl Type {
         // plus primitives? (stdlib)
         //   no, but maybe backwards + forwards?
         //   also needs Short<-Char and Byte<-Char
-        let mut primitives = vec![BYTE.clone(), CHAR.clone(), INTEGER.clone(), SHORT.clone()];
+        let primitives = vec![BYTE.clone(), CHAR.clone(), INTEGER.clone(), SHORT.clone()];
         if primitives.contains(&lhs) && primitives.contains(&rhs) {
             return Ok(result);
         }
