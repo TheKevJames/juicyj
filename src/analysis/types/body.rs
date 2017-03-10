@@ -381,16 +381,25 @@ fn resolve_expression(node: &ASTNode,
             }
         }
         Some(ref l) if l == "FieldAccess" => {
-            let lhs = match resolve_expression(&node.children[0], current, kinds, globals) {
-                Ok(l) => l,
-                Err(e) => return Err(e),
-            };
+            let cls = match node.children[0].token.kind {
+                TokenKind::This => current.clone(),
+                _ => {
+                    let lhs = match resolve_expression(&node.children[0], current, kinds, globals) {
+                        Ok(l) => l,
+                        Err(e) => return Err(e),
+                    };
 
-            let mut lhs_kind = lhs.kind.name.clone();
-            lhs_kind.flatten();
-            let cls = match check::lookup_or_primitive(&lhs_kind, current, kinds) {
-                Ok(cls) => cls,
-                Err(e) => return Err(e),
+                    let mut lhs_kind = lhs.kind.name.clone();
+                    lhs_kind.flatten();
+                    if lhs_kind == current.name {
+                        current.clone()
+                    } else {
+                        match check::lookup_or_primitive(&lhs_kind, current, kinds) {
+                            Ok(cls) => cls,
+                            Err(e) => return Err(e),
+                        }
+                    }
+                }
             };
 
             for field in &cls.fields {
