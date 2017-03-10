@@ -1,9 +1,9 @@
 use analysis::environment::classorinterface::ClassOrInterface;
 use analysis::environment::classorinterface::ClassOrInterfaceEnvironment;
-use analysis::environment::constructor::analyze_constructor_declaration;
 use analysis::environment::field::analyze_constant_declaration;
 use analysis::environment::field::analyze_field_declaration;
 use analysis::environment::method::analyze_abstract_method_declaration;
+use analysis::environment::method::analyze_constructor_declaration;
 use analysis::environment::method::analyze_method_declaration;
 use scanner::ASTNode;
 use scanner::ASTNodeImport;

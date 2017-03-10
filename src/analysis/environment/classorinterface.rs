@@ -1,6 +1,5 @@
 use std::fmt;
 
-use analysis::environment::constructor::ConstructorEnvironment;
 use analysis::environment::field::FieldEnvironment;
 use analysis::environment::method::MethodEnvironment;
 use analysis::types::lookup;
@@ -17,7 +16,7 @@ pub enum ClassOrInterface {
 
 #[derive(Clone,Debug)]
 pub struct ClassOrInterfaceEnvironment {
-    pub constructors: Vec<ConstructorEnvironment>,
+    pub constructors: Vec<MethodEnvironment>,
     pub extends: Vec<ASTNode>,
     pub fields: Vec<FieldEnvironment>,
     pub implements: Vec<ASTNode>,

@@ -169,14 +169,15 @@ fn verify_env(env: &Environment) -> Result<(), String> {
             }
 
             let globals = constructor.parameters.clone();
-            let return_types = match statement::block(&mut constructor.body.clone(),
-                                                      &constructor.modifiers,
-                                                      &current,
-                                                      &env.kinds,
-                                                      &globals) {
-                Ok(rts) => rts,
-                Err(e) => return Err(e),
-            };
+            let return_types =
+                match statement::block(&mut constructor.clone().body.unwrap().clone(),
+                                       &constructor.modifiers,
+                                       &current,
+                                       &env.kinds,
+                                       &globals) {
+                    Ok(rts) => rts,
+                    Err(e) => return Err(e),
+                };
 
             let constructor_return_type = Type::new(current.clone());
             for return_type in return_types {

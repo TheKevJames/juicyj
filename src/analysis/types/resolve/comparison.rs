@@ -110,14 +110,16 @@ pub fn twoarg_instanceof(node: &ASTNode,
                          globals: &Vec<VariableEnvironment>)
                          -> Result<Type, String> {
     // TODO: do these need to resolve to anything special?
-    let lhs = match resolve::expression::go(&node.children[0], modifiers, current, kinds, globals) {
-        Ok(t) => t,
-        Err(e) => return Err(e),
-    };
-    let rhs = match resolve::expression::go(&node.children[1], modifiers, current, kinds, globals) {
-        Ok(t) => t,
-        Err(e) => return Err(e),
-    };
+    let lhs =
+        match resolve::expression::go(&node.children[0], modifiers, current, kinds, globals) {
+            Ok(t) => t,
+            Err(e) => return Err(e),
+        };
+    let rhs =
+        match resolve::expression::go(&node.children[1], modifiers, current, kinds, globals) {
+            Ok(t) => t,
+            Err(e) => return Err(e),
+        };
 
     if PRIMITIVES.contains(&lhs) || PRIMITIVES.contains(&rhs) {
         return Err(format!("can not apply instanceof to primitive types"));

@@ -1,6 +1,5 @@
 mod class;
 mod classorinterface;
-mod constructor;
 mod field;
 mod interface;
 mod method;

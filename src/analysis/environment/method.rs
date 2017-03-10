@@ -94,6 +94,48 @@ pub fn analyze_abstract_method_declaration(current: &mut ClassOrInterfaceEnviron
     Ok(())
 }
 
+pub fn analyze_constructor_declaration(current: &mut ClassOrInterfaceEnvironment,
+                                       modifiers: &ASTNode,
+                                       declarator: &ASTNode,
+                                       body: &ASTNode)
+                                       -> Result<(), String> {
+    let mut new = MethodEnvironment::new(declarator.children[0].clone(), current.name.clone());
+
+    for child in modifiers.clone().children {
+        new.modifiers.push(child);
+    }
+
+    if declarator.children.len() == 4 {
+        let mut params = declarator.children[2].clone();
+        let params = match params.clone().token.lexeme {
+            Some(ref l) if l == "ParameterList" => params.flatten().clone(),
+            _ => {
+                ASTNode {
+                    token: Token::new(TokenKind::NonTerminal, Some("ParameterList")),
+                    children: vec![params],
+                }
+            }
+        };
+        for param in &params.children {
+            if param.token.kind == TokenKind::Comma {
+                continue;
+            }
+            new.parameters.push(VariableEnvironment::new(param.clone()));
+        }
+    }
+
+    new.body = Some(body.clone());
+
+    for constructor in &current.constructors {
+        if constructor.parameters == new.parameters {
+            return Err("constructors must have unique signatures".to_owned());
+        }
+    }
+
+    current.constructors.push(new);
+    Ok(())
+}
+
 pub fn analyze_method_declaration(current: &mut ClassOrInterfaceEnvironment,
                                   header: &ASTNode,
                                   body: &ASTNode)
