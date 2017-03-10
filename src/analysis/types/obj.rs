@@ -216,8 +216,8 @@ impl Type {
         let lhs_array = lhs.kind.name.clone().token.lexeme.unwrap_or("".to_owned()) == "ArrayType";
         let rhs_array = rhs.kind.name.clone().token.lexeme.unwrap_or("".to_owned()) == "ArrayType";
         if lhs_array {
-            // TODO: all arrays, or just non-primitive arrays?
-            if rhs == *NULL {
+            // TODO: null works for all arrays, or just non-primitive arrays?
+            if lhs == rhs || rhs == *NULL {
                 return Ok(result);
             }
 
@@ -227,15 +227,9 @@ impl Type {
                                    lhs.kind.name));
             }
 
-            // TODO: while ArrayType? nested!
-            lhs = match lookup::class::in_env(&lhs.kind.name.children[0], current, kinds) {
-                Ok(cls) => Type::new(cls),
-                Err(e) => return Err(e),
-            };
-            rhs = match lookup::class::in_env(&rhs.kind.name.children[0], current, kinds) {
-                Ok(cls) => Type::new(cls),
-                Err(e) => return Err(e),
-            };
+            return Err(format!("cannot assign non-equivalent array {} to {}",
+                               rhs.kind.name,
+                               lhs.kind.name));
         }
 
         if lhs == rhs {
@@ -243,18 +237,18 @@ impl Type {
         }
 
         let mut primitives = vec![BYTE.clone()];
-        if primitives.contains(&lhs) && primitives.contains(&rhs) {
+        if lhs == *BYTE && primitives.contains(&rhs) {
             return Ok(result);
         }
 
         primitives.push(SHORT.clone());
-        if primitives.contains(&lhs) && primitives.contains(&rhs) {
+        if lhs == *SHORT && primitives.contains(&rhs) {
             return Ok(result);
         }
 
         primitives.push(CHAR.clone());
         primitives.push(INTEGER.clone());
-        if primitives.contains(&lhs) && primitives.contains(&rhs) {
+        if lhs == *INTEGER && primitives.contains(&rhs) {
             return Ok(INTEGER.clone());
         }
 
