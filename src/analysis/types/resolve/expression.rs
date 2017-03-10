@@ -57,8 +57,11 @@ pub fn go(node: &ASTNode,
                 }
                 TokenKind::FSlash | TokenKind::Minus | TokenKind::Percent | TokenKind::Plus |
                 TokenKind::Star => resolve::math::go(node, current, kinds, globals),
-                TokenKind::Boolean | TokenKind::Byte | TokenKind::Char | TokenKind::Int |
-                TokenKind::Null | TokenKind::Short => resolve::primitive::go(node),
+                TokenKind::Boolean | TokenKind::Byte | TokenKind::Char | TokenKind::CharValue |
+                TokenKind::False | TokenKind::Int | TokenKind::Null | TokenKind::NumValue |
+                TokenKind::Short | TokenKind::StrValue | TokenKind::True => {
+                    resolve::primitive::go(node)
+                }
                 TokenKind::This => Ok(Type::new(current.clone())),
                 _ => Err(format!("could not resolve expression {:?}", node)),
             }

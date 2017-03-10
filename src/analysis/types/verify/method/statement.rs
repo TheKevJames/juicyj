@@ -170,17 +170,16 @@ pub fn nonblock(node: &mut ASTNode,
             let mut expr = node.children[1].clone();
             nonblock(&mut expr, current, kinds, &globals, &mut locals.clone())
         }
-        // Some(_) => {
-        //     let mut block_globals = globals.clone();
-        //     for local in locals {
-        //         block_globals.push(local.clone());
-        //     }
+        // TODO: should be much more fine-grained
+        // _ => Err(format!("could not verify statement {:?}", node)),
+        _ => {
+            let mut block_globals = globals.clone();
+            block_globals.extend(locals.clone());
 
-        //     match resolve::expression::go(node, current, kinds, &block_globals) {
-        //         Ok(_) => Ok(()),
-        //         Err(e) => Err(e),
-        //     }
-        // }
-        _ => Err(format!("could not verify statement {:?}", node)),
+            match resolve::expression::go(node, current, kinds, &block_globals) {
+                Ok(_) => Ok(()),
+                Err(e) => Err(e),
+            }
+        }
     }
 }

@@ -19,7 +19,18 @@ pub fn canonical(canonical: &ASTNode,
                  current: &ClassOrInterfaceEnvironment,
                  kinds: &Vec<ClassOrInterfaceEnvironment>)
                  -> Result<(), String> {
-    if !canonical.children.is_empty() && PRIMITIVES.contains(&canonical.children[0].token.kind) {
+    let mut canonical = canonical.clone();
+    if let Some(l) = canonical.clone().token.lexeme {
+        if l == "ArrayType" {
+            canonical = canonical.children[0].clone();
+        }
+    }
+
+    if canonical.children.len() <= 1 {
+        return Ok(())
+    }
+
+    if PRIMITIVES.contains(&canonical.children[0].token.kind) {
         return Err(format!("strict prefix of {:?} resolves to primitive type",
                            canonical));
     }
@@ -36,7 +47,7 @@ pub fn canonical(canonical: &ASTNode,
             token: NAME.clone(),
             children: prefix.clone(),
         };
-        if &name == canonical {
+        if name == canonical {
             break;
         }
 
