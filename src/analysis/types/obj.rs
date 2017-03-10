@@ -66,6 +66,10 @@ lazy_static! {
         };
         Type::new(ClassOrInterfaceEnvironment::new(node, ClassOrInterface::CLASS))
     };
+    static ref VOID: Type = {
+        let node = ASTNode { token: Token::new(TokenKind::Void, None), children: Vec::new() };
+        Type::new(ClassOrInterfaceEnvironment::new(node, ClassOrInterface::CLASS))
+    };
 }
 
 #[derive(Debug,Clone)]
@@ -191,6 +195,11 @@ impl Type {
         // can assign null to anything
         if rhs == *NULL {
             return Ok(result);
+        }
+
+        // can not assign anything to voids (except nulls as returns...)
+        if lhs == *VOID {
+            return Err(format!("cannot assign {} to void", rhs.kind.name));
         }
 
         // can't assign classes to arrays, but can assign arrays to Object

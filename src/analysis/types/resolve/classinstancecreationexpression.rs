@@ -8,7 +8,10 @@ pub fn go(node: &ASTNode,
           kinds: &Vec<ClassOrInterfaceEnvironment>)
           -> Result<Type, String> {
     match lookup::class::in_env(&node.children[0], current, kinds) {
-        Ok(cls) => Ok(Type::new(cls)),
+        Ok(cls) => {
+            // TODO: ensure a constructor with these arguments exists
+            Ok(Type::new(cls))
+        },
         Err(e) => Err(e),
     }
 }
