@@ -1,5 +1,5 @@
-// TODO: rename? this is currently find_method_and_get_return_type...
 use analysis::environment::ClassOrInterfaceEnvironment;
+use analysis::environment::MethodEnvironment;
 use analysis::environment::VariableEnvironment;
 use analysis::types::lookup;
 use analysis::types::obj::Type;
@@ -32,12 +32,73 @@ fn move_two(cls: &mut ASTNode, method: &mut ASTNode) -> Result<(), ()> {
     Ok(())
 }
 
+fn select_method(methods: &Vec<MethodEnvironment>,
+                 args: &Vec<Type>,
+                 cls: &ClassOrInterfaceEnvironment,
+                 kinds: &Vec<ClassOrInterfaceEnvironment>)
+                 -> Result<MethodEnvironment, String> {
+    let mut best: Option<MethodEnvironment> = None;
+    let mut distance = <u32>::max_value();
+
+    for method in methods {
+        if method.parameters.len() != args.len() {
+            continue;
+        }
+
+        if method.parameters.is_empty() {
+            if distance == 0 {
+                best = None;
+            } else {
+                best = Some(method.clone());
+                distance = 0;
+            }
+
+            continue;
+        }
+
+        let mut method_distance = 0;
+        for (param, arg) in method.parameters.iter().zip(args.iter()) {
+            let found_param = match lookup::class::in_env(&param.kind, cls, kinds) {
+                Ok(fp) => Type::new(fp),
+                Err(e) => return Err(e),
+            };
+
+            match found_param.edit_distance(&arg, cls, kinds) {
+                Ok(ed) if ed == <u32>::max_value() => method_distance = ed,
+                Ok(ed) => method_distance += ed,
+                Err(e) => return Err(e),
+            }
+        }
+
+        match method_distance {
+            md if md == <u32>::max_value() => (),
+            md if md == distance => best = None,
+            md if md < distance => {
+                best = Some(method.clone());
+                distance = md;
+            }
+            _ => (),
+        }
+    }
+
+    if distance == <u32>::max_value() {
+        return Err(format!("no method matching parameters was found"));
+    }
+
+    if best.is_none() {
+        return Err(format!("ambiguous methods were found with distance {}", distance));
+    }
+
+    Ok(best.unwrap())
+}
+
 // TODO: this has reversed args from class::in_env...
 pub fn in_env(canonical: &ASTNode,
               method: &ASTNode,
+              args: &Vec<Type>,
               current: &ClassOrInterfaceEnvironment,
               kinds: &Vec<ClassOrInterfaceEnvironment>)
-              -> Result<Type, String> {
+              -> Result<(ClassOrInterfaceEnvironment, MethodEnvironment), String> {
     loop {
         let cls = match lookup::class::in_env(&canonical, current, kinds) {
             Ok(cls) => cls,
@@ -54,6 +115,7 @@ pub fn in_env(canonical: &ASTNode,
                 continue;
             }
 
+            let mut methods = Vec::new();
             for m in &cls.methods {
                 if m.name != potential_method {
                     continue;
@@ -64,12 +126,13 @@ pub fn in_env(canonical: &ASTNode,
                     return Err(format!("TODO: clearly, I do not understand methods"));
                 }
 
-                let kind = m.return_type.clone();
-                return match lookup::class::in_env(&kind, &cls, kinds) {
-                    Ok(cls) => Ok(Type::new(cls)),
-                    Err(_) => {
-                        Err(format!("could not lookup kind {} of method in class {}", kind, cls))
-                    }
+                methods.push(m.clone());
+            }
+
+            if !methods.is_empty() {
+                return match select_method(&methods, args, &cls, kinds) {
+                    Ok(m) => Ok((cls.clone(), m)),
+                    Err(e) => Err(e),
                 };
             }
 
@@ -88,7 +151,7 @@ pub fn in_env(canonical: &ASTNode,
                     Ok(cls) => {
                         remaining_method.children.remove(0);
                         // cls is now kind or A.B.C.f.g, remaining_method is h.i()
-                        in_env(&cls.name, &remaining_method, &cls, kinds)
+                        in_env(&cls.name, &remaining_method, args, &cls, kinds)
                     }
                     Err(_) => {
                         Err(format!("could not lookup kind {} of field in class {}", f.kind, cls))
@@ -105,7 +168,7 @@ pub fn in_env(canonical: &ASTNode,
     let mut canonical = canonical.clone();
     let mut method = method.clone();
     match move_two(&mut canonical, &mut method) {
-        Ok(()) => in_env(&canonical, &method, current, kinds),
+        Ok(()) => in_env(&canonical, &method, args, current, kinds),
         // TODO: better error message
         Err(()) => Err(format!("could not lookup method in environment")),
     }
@@ -113,21 +176,22 @@ pub fn in_env(canonical: &ASTNode,
 
 pub fn in_variables(canonical: &ASTNode,
                     method: &ASTNode,
+                    args: &Vec<Type>,
                     current: &ClassOrInterfaceEnvironment,
                     kinds: &Vec<ClassOrInterfaceEnvironment>,
                     variables: &Vec<VariableEnvironment>)
-                    -> Result<Type, String> {
+                    -> Result<(ClassOrInterfaceEnvironment, MethodEnvironment), String> {
     let mut canonical = canonical.clone();
     let mut method = method.clone();
 
     for var in variables {
         if var.name == canonical {
-            return in_env(&var.kind, &method, current, kinds);
+            return in_env(&var.kind, &method, args, current, kinds);
         }
     }
 
     match move_two(&mut canonical, &mut method) {
-        Ok(()) => in_variables(&canonical, &method, current, kinds, variables),
+        Ok(()) => in_variables(&canonical, &method, args, current, kinds, variables),
         // TODO: better error message
         Err(()) => Err(format!("could not lookup method in variables")),
     }

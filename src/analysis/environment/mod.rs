@@ -16,6 +16,7 @@ pub use self::classorinterface::ClassOrInterface;
 pub use self::classorinterface::ClassOrInterfaceEnvironment;
 pub use self::field::FieldEnvironment;
 use self::interface::analyze_interface_declaration;
+pub use self::method::MethodEnvironment;
 pub use self::variable::VariableEnvironment;
 
 #[derive(Clone,Debug)]

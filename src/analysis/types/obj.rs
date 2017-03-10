@@ -287,6 +287,128 @@ impl Type {
         Err(format!("can not assign {} to {}", rhs.kind.name, lhs.kind.name))
     }
 
+    // TODO: dedup with assign
+    pub fn edit_distance(&self,
+                         rhs: &Type,
+                         current: &ClassOrInterfaceEnvironment,
+                         kinds: &Vec<ClassOrInterfaceEnvironment>)
+                         -> Result<u32, String> {
+        let mut lhs = match lookup::class::in_env(&self.kind.name, current, kinds) {
+            Ok(cls) => Type::new(cls),
+            Err(e) => return Err(e),
+        };
+        let mut rhs = match lookup::class::in_env(&rhs.kind.name, current, kinds) {
+            Ok(cls) => Type::new(cls),
+            Err(e) => return Err(e),
+        };
+
+        // can not assign anything to voids (except nulls as returns...)
+        if lhs == *VOID && rhs != *NULL {
+            return Ok(<u32>::max_value());
+        }
+
+        // can't assign classes to arrays, but can assign arrays to Object
+        // can assign arrays to each other with rules equal to child kinds
+        let lhs_array = lhs.kind.name.clone().token.lexeme.unwrap_or("".to_owned()) == "ArrayType";
+        let rhs_array = rhs.kind.name.clone().token.lexeme.unwrap_or("".to_owned()) == "ArrayType";
+        if lhs_array {
+            // TODO: null works for all arrays, or just non-primitive arrays?
+            if lhs == rhs || rhs == *NULL {
+                return Ok(0);
+            }
+
+            if !rhs_array {
+                return Ok(<u32>::max_value());
+            }
+
+            lhs = match lookup::class::in_env(&lhs.kind.name.children[0], current, kinds) {
+                Ok(cls) => Type::new(cls),
+                Err(e) => return Err(e),
+            };
+            rhs = match lookup::class::in_env(&rhs.kind.name.children[0], current, kinds) {
+                Ok(cls) => Type::new(cls),
+                Err(e) => return Err(e),
+            };
+
+            match lhs.inherit_distance(&rhs, kinds) {
+                Ok(d) if d == <u32>::max_value() => (),
+                Ok(d) => return Ok(d),
+                Err(e) => return Err(e),
+            }
+
+            return Ok(<u32>::max_value());
+        }
+
+        if lhs == rhs {
+            return Ok(0);
+        }
+
+        let mut primitives = vec![BYTE.clone()];
+        if lhs == *BYTE && primitives.contains(&rhs) {
+            return Ok(0);
+        }
+
+        primitives.push(SHORT.clone());
+        if lhs == *SHORT && primitives.contains(&rhs) {
+            return Ok(1);
+        }
+        if lhs == *INTEGER && rhs == *SHORT {
+            return Ok(1);
+        }
+
+        primitives.push(CHAR.clone());
+        primitives.push(INTEGER.clone());
+        if lhs == *INTEGER && primitives.contains(&rhs) {
+            return Ok(2);
+        }
+
+        // can assign null to anything non-primitive
+        if !primitives.contains(&lhs) && rhs == *NULL {
+            return Ok(1);
+        }
+
+        match lhs.inherit_distance(&rhs, kinds) {
+            Ok(d) if d == <u32>::max_value() => (),
+            Ok(d) => return Ok(d),
+            Err(e) => return Err(e),
+        }
+
+        Ok(<u32>::max_value())
+    }
+
+    // TODO: dedup with is_parent
+    fn inherit_distance(&self,
+                        child: &Type,
+                        kinds: &Vec<ClassOrInterfaceEnvironment>)
+                        -> Result<u32, String> {
+        let mut distance = 0;
+
+        let mut parents = vec![child.kind.clone()];
+        while let Some(parent) = parents.pop() {
+            if parent.name == self.kind.name {
+                return Ok(distance);
+            }
+
+            // TODO: .chain()
+            for grandparent in &parent.extends {
+                match lookup::class::in_env(&grandparent, &parent, kinds) {
+                    Ok(cls) => parents.push(cls),
+                    Err(e) => return Err(e),
+                };
+            }
+            for grandparent in &parent.implements {
+                match lookup::class::in_env(&grandparent, &parent, kinds) {
+                    Ok(cls) => parents.push(cls),
+                    Err(e) => return Err(e),
+                };
+            }
+
+            distance += 1;
+        }
+
+        Ok(<u32>::max_value())
+    }
+
     pub fn is_coercible_to_int(&self) -> bool {
         let primitives = vec![BYTE.clone(), CHAR.clone(), INTEGER.clone(), SHORT.clone()];
         primitives.contains(&self)
