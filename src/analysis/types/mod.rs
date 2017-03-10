@@ -211,7 +211,9 @@ fn verify_env(env: &Environment) -> Result<(), String> {
             }
 
             // TODO: should this still include other classes?
-            let env_builder = vec![current_builder.clone()];
+            // Answer: Holy fucking shit yes.
+            // let env_builder = vec![current_builder.clone()];
+            let env_builder = env.kinds.clone();
 
             let rexpr = field.clone().value.unwrap();
             let rvalue = match resolve::expression::go(&rexpr,
