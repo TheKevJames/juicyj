@@ -254,6 +254,33 @@ impl Type {
 
         Err(format!("can not assign {} to {}", rhs.kind.name, lhs.kind.name))
     }
+
+    fn intable(&self) -> bool {
+        let boolean = ASTNode {
+            token: Token::new(TokenKind::Boolean, None),
+            children: Vec::new(),
+        };
+        let byte = ASTNode {
+            token: Token::new(TokenKind::Byte, None),
+            children: Vec::new(),
+        };
+        let charr = ASTNode {
+            token: Token::new(TokenKind::Char, None),
+            children: Vec::new(),
+        };
+        let int = ASTNode {
+            token: Token::new(TokenKind::Int, None),
+            children: Vec::new(),
+        };
+        let short = ASTNode {
+            token: Token::new(TokenKind::Short, None),
+            children: Vec::new(),
+        };
+
+        let primitives =
+            vec![boolean.clone(), byte.clone(), charr.clone(), int.clone(), short.clone()];
+        primitives.contains(&self.kind.name)
+    }
 }
 
 impl PartialEq for Type {
@@ -328,29 +355,13 @@ fn resolve_expression(node: &ASTNode,
                 return Err(format!("got invalid array type {:?}", array));
             }
 
-            let integer =
-                Type::new(ClassOrInterfaceEnvironment::new(ASTNode {
-                                                               token: Token::new(TokenKind::Int,
-                                                                                 None),
-                                                               children: Vec::new(),
-                                                           },
-                                                           ClassOrInterface::CLASS));
-
-            // TODO: look up nth item
             match resolve_expression(&node.children[2], current, kinds, globals) {
-                // Ok(idx) if idx == &integer => idx.clone(),
-                // Ok(idx) => return Err(format!("got invalid index type {:?}", idx)),
-                Ok(idx) => {
-                    if idx == integer {
-                        // idx
-                        ()
-                    } else {
-                        return Err(format!("got invalid index type {:?}", idx));
-                    }
-                }
+                Ok(ref idx) if idx.intable() => (),
+                Ok(idx) => return Err(format!("got invalid index type {:?}", idx.kind.name)),
                 Err(e) => return Err(e),
             }
 
+            // TODO: NO! need to lookup child
             let mut kind = array.kind;
             kind.name = kind.name.children[0].clone();
             Ok(Type::new(kind))
