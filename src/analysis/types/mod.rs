@@ -19,6 +19,13 @@ lazy_static! {
     static ref FINAL: ASTNode = {
         ASTNode { token: Token::new(TokenKind::Final, None), children: Vec::new() }
     };
+    static ref GETCLASS: ASTNode = ASTNode {
+        token: Token::new(TokenKind::NonTerminal, Some("Name")),
+        children: vec![ASTNode {
+                           token: Token::new(TokenKind::Identifier, Some("getClass")),
+                           children: Vec::new(),
+                       }],
+    };
     static ref NATIVE: ASTNode = {
         ASTNode { token: Token::new(TokenKind::Native, None), children: Vec::new() }
     };
@@ -277,15 +284,7 @@ fn verify_env(env: &Environment) -> Result<(), String> {
 
             if method.modifiers.contains(&*ABSTRACT) {
                 if method.modifiers.contains(&*FINAL) {
-                    let node_get_class = ASTNode {
-                        token: Token::new(TokenKind::NonTerminal, Some("Name")),
-                        children: vec![ASTNode {
-                                           token: Token::new(TokenKind::Identifier,
-                                                             Some("getClass")),
-                                           children: Vec::new(),
-                                       }],
-                    };
-                    if method.name != node_get_class {
+                    if method.name != *GETCLASS {
                         return Err(format!("final method {} is abstract", method));
                     }
                 }
