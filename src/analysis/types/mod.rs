@@ -13,30 +13,19 @@ use scanner::Token;
 use scanner::TokenKind;
 
 lazy_static! {
+    static ref ABSTRACT: ASTNode = {
+        ASTNode { token: Token::new(TokenKind::Abstract, None), children: Vec::new() }
+    };
+    static ref FINAL: ASTNode = {
+        ASTNode { token: Token::new(TokenKind::Final, None), children: Vec::new() }
+    };
+    static ref NATIVE: ASTNode = {
+        ASTNode { token: Token::new(TokenKind::Native, None), children: Vec::new() }
+    };
     static ref NULL: ASTNode = {
         ASTNode { token: Token::new(TokenKind::Null, None), children: Vec::new() }
     };
-}
-
-fn rebuild_env(env: &Environment) -> Result<Environment, String> {
-    let mut new = Environment { kinds: Vec::new() };
-
-    for current in &env.kinds {
-        match inheritance::verify(env, &current, &mut Vec::new()) {
-            Ok(inherit) => new.kinds.push(inherit),
-            Err(e) => return Err(e),
-        };
-    }
-
-    Ok(new)
-}
-
-fn verify_env_inheritable(env: &Environment) -> Result<(), String> {
-    let modifier_final = ASTNode {
-        token: Token::new(TokenKind::Final, None),
-        children: Vec::new(),
-    };
-    let object = ASTNode {
+    static ref OBJECT: ASTNode = ASTNode {
         token: Token::new(TokenKind::NonTerminal, Some("Name")),
         children: vec![ASTNode {
                            token: Token::new(TokenKind::Identifier, Some("java")),
@@ -59,7 +48,25 @@ fn verify_env_inheritable(env: &Environment) -> Result<(), String> {
                            children: Vec::new(),
                        }],
     };
+    static ref STATIC: ASTNode = {
+        ASTNode { token: Token::new(TokenKind::Static, None), children: Vec::new() }
+    };
+}
 
+fn rebuild_env(env: &Environment) -> Result<Environment, String> {
+    let mut new = Environment { kinds: Vec::new() };
+
+    for current in &env.kinds {
+        match inheritance::verify(env, &current, &mut Vec::new()) {
+            Ok(inherit) => new.kinds.push(inherit),
+            Err(e) => return Err(e),
+        };
+    }
+
+    Ok(new)
+}
+
+fn verify_env_inheritable(env: &Environment) -> Result<(), String> {
     for current in &env.kinds {
         match verify::prefixes::package(&current.name, &current, &env.kinds) {
             Ok(_) => (),
@@ -72,14 +79,13 @@ fn verify_env_inheritable(env: &Environment) -> Result<(), String> {
                     Ok(f) => f,
                     Err(e) => return Err(e),
                 };
-                if found.kind == ClassOrInterface::CLASS &&
-                   found.modifiers.contains(&modifier_final) {
+                if found.kind == ClassOrInterface::CLASS && found.modifiers.contains(&*FINAL) {
                     return Err(format!("class {} cannot extend final class {}", current, found));
                 } else if found.kind == ClassOrInterface::INTERFACE {
                     return Err(format!("class {} cannot extend interface {}", current, found));
                 }
 
-                if current.name != object {
+                if current.name != *OBJECT {
                     let mut zero_argument_parent = false;
                     for constructor in found.constructors {
                         if constructor.parameters.is_empty() {
@@ -121,7 +127,7 @@ fn verify_env_inheritable(env: &Environment) -> Result<(), String> {
                     return Err(format!("type {} must not be repeated in interface extends",
                                        found.name));
                 }
-                if found.kind == ClassOrInterface::CLASS && found.name != object {
+                if found.kind == ClassOrInterface::CLASS && found.name != *OBJECT {
                     return Err(format!("interface {} cannot extend class {}", current, found));
                 }
                 resolved.push(found.name);
@@ -133,23 +139,6 @@ fn verify_env_inheritable(env: &Environment) -> Result<(), String> {
 }
 
 fn verify_env(env: &Environment) -> Result<(), String> {
-    let modifier_abstract = ASTNode {
-        token: Token::new(TokenKind::Abstract, None),
-        children: Vec::new(),
-    };
-    let modifier_final = ASTNode {
-        token: Token::new(TokenKind::Final, None),
-        children: Vec::new(),
-    };
-    let modifier_native = ASTNode {
-        token: Token::new(TokenKind::Native, None),
-        children: Vec::new(),
-    };
-    let modifier_static = ASTNode {
-        token: Token::new(TokenKind::Static, None),
-        children: Vec::new(),
-    };
-
     for current in &env.kinds {
         for constructor in &current.constructors {
             let mut params = Vec::new();
@@ -211,6 +200,7 @@ fn verify_env(env: &Environment) -> Result<(), String> {
             }
 
             // TODO: allow qualified names to be resolved to future fields
+            // TODO: static fields can not use implicit `this`
             let rexpr = field.clone().value.unwrap();
             let rvalue =
                 match resolve::expression::go(&rexpr, &current_builder, &env.kinds, &Vec::new()) {
@@ -229,13 +219,11 @@ fn verify_env(env: &Environment) -> Result<(), String> {
             }
 
             current_builder.fields.push(field.clone());
-            // TODO: static fields can not use implicit `this`
         }
 
         for method in &current.methods {
             if method.body.is_none() {
-                if !method.modifiers.contains(&modifier_abstract) &&
-                   !method.modifiers.contains(&modifier_native) {
+                if !method.modifiers.contains(&*ABSTRACT) && !method.modifiers.contains(&*NATIVE) {
                     return Err(format!("concrete method {} has no body", method));
                 }
             }
@@ -287,8 +275,8 @@ fn verify_env(env: &Environment) -> Result<(), String> {
                 }
             }
 
-            if method.modifiers.contains(&modifier_abstract) {
-                if method.modifiers.contains(&modifier_final) {
+            if method.modifiers.contains(&*ABSTRACT) {
+                if method.modifiers.contains(&*FINAL) {
                     let node_get_class = ASTNode {
                         token: Token::new(TokenKind::NonTerminal, Some("Name")),
                         children: vec![ASTNode {
@@ -302,7 +290,7 @@ fn verify_env(env: &Environment) -> Result<(), String> {
                     }
                 }
 
-                if method.modifiers.contains(&modifier_static) {
+                if method.modifiers.contains(&*STATIC) {
                     return Err(format!("static method {} is abstract", method));
                 }
             }
