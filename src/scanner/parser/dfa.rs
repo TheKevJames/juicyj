@@ -62,15 +62,18 @@ impl DFA {
 
         let kinds_terminal = terminals.clone().into_iter().map(|t| t.token.kind).collect();
 
-        let start =
-            match Symbol::new_from_terminals(&kinds_terminal,
-                                             file.by_ref().lines().next().unwrap().unwrap()) {
-                Ok(s) => s,
-                Err(e) => {
-                    println!("{}", e);
-                    std::process::exit(1);
-                }
-            };
+        let start = match Symbol::new_from_terminals(&kinds_terminal,
+                                                     file.by_ref()
+                                                         .lines()
+                                                         .next()
+                                                         .unwrap()
+                                                         .unwrap()) {
+            Ok(s) => s,
+            Err(e) => {
+                println!("{}", e);
+                std::process::exit(1);
+            }
+        };
 
         let mut rules = Vec::new();
         for _ in 0..file.by_ref().lines().next().unwrap().unwrap().parse().unwrap() {
@@ -78,7 +81,7 @@ impl DFA {
             let mut sides = rule.splitn(2, " ");
 
             let lhs = match Symbol::new(Terminality::NonTerminal,
-                                        sides.next().unwrap().to_string()) {
+                                        sides.next().unwrap().to_owned()) {
                 Ok(s) => s,
                 Err(e) => {
                     println!("{}", e);
@@ -89,7 +92,7 @@ impl DFA {
             let rhs = match sides.next() {
                 Some(side) => {
                     side.split_whitespace()
-                        .map(|s| match Symbol::new_from_terminals(&kinds_terminal, s.to_string()) {
+                        .map(|s| match Symbol::new_from_terminals(&kinds_terminal, s.to_owned()) {
                             Ok(s) => s,
                             Err(e) => {
                                 println!("{}", e);
@@ -124,7 +127,7 @@ impl DFA {
                 value: value,
                 function: function,
                 start_state: start_state,
-                symbol: match Symbol::new_from_terminals(&kinds_terminal, symbol.to_string()) {
+                symbol: match Symbol::new_from_terminals(&kinds_terminal, symbol.to_owned()) {
                     Ok(s) => s,
                     Err(e) => {
                         println!("{}", e);

@@ -44,12 +44,12 @@ impl ASTNode {
                             }
                         }
 
-                        if node.children[1].token.lexeme == Some("Expression".to_string()) {
+                        if node.children[1].token.lexeme == Some("Expression".to_owned()) {
                             match children[1].token.kind {
                                 TokenKind::Dot => (),
                                 TokenKind::Identifier => (),
                                 TokenKind::NonTerminal => {
-                                    if children[1].token.lexeme != Some("Name".to_string()) {
+                                    if children[1].token.lexeme != Some("Name".to_owned()) {
                                         return Err(ASTError::new(ErrorMessage::InvalidCast,
                                                                  &children[1]));
                                     }
@@ -153,7 +153,7 @@ impl ASTNode {
                         children.push(ASTNode {
                             token: Token {
                                 kind: TokenKind::NumValue,
-                                lexeme: Some("0".to_string()),
+                                lexeme: Some("0".to_owned()),
                             },
                             children: Vec::new(),
                         });
@@ -288,7 +288,7 @@ impl ASTNode {
         let mut children = Vec::new();
         for child in &self.children {
             if &child.clone().token.lexeme.unwrap_or("".to_owned()) == flattenable {
-                children.extend(child.get_flattened_children(&flattenable));
+                children.extend(child.get_flattened_children(flattenable));
             } else {
                 children.push(child.clone());
             }

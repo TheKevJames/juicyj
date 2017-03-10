@@ -49,7 +49,7 @@ impl<'filename, 'tree> Weeder<'filename, 'tree> {
                 match node.token.lexeme {
                     Some(ref l) if l == "MethodDeclaration" &&
                                    node.children[1].token.lexeme ==
-                                   Some("MethodBody".to_string()) => {
+                                   Some("MethodBody".to_owned()) => {
                         if node.children[0].clone().has_child_kind(&TokenKind::Abstract) {
                             return self.error(ErrorMessage::AbstractBody, &node);
                         }
