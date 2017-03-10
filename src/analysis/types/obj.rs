@@ -219,7 +219,7 @@ impl Type {
             return Ok(result);
         }
 
-        let mut primitives = vec![BOOLEAN.clone(), BYTE.clone()];
+        let mut primitives = vec![BYTE.clone()];
         if lhs == *BYTE && primitives.contains(&rhs) {
             return Ok(result);
         }
