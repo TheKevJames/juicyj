@@ -1020,21 +1020,34 @@ fn verify_statement(node: &mut ASTNode,
             verify_declaration(kinds, current, globals, locals, &node)
         }
         Some(ref l) if l == "MethodInvocation" => {
-            // TODO: check method calls Primary.Identifier and Name
-            match node.children.len() {
-                // "Name ..."
-                3 | 4 => Ok(()),
-                // "Primary Dot Identifier ..."
-                5 | 6 => {
-                    let primary = node.children[0].clone();
-                    verify_statement(&mut primary.clone(),
-                                     current,
-                                     kinds,
-                                     &globals,
-                                     &mut locals.clone())
-                }
-                _ => Ok(()),
+            // TODO: calling resolve_expression here is mostly a hack, since it
+            // does the type lookup accidentally
+            let mut block_globals = globals.clone();
+            for local in locals.clone() {
+                block_globals.push(local.clone());
             }
+
+            match resolve_expression(&node, current, kinds, &block_globals) {
+                Ok(_) => (),
+                Err(e) => return Err(e),
+            }
+
+            if node.children.len() >= 5 {
+                // Primary Dot Identifier ( Args )
+                let primary = node.children[0].clone();
+                match verify_statement(&mut primary.clone(),
+                                 current,
+                                 kinds,
+                                 &globals,
+                                 &mut locals.clone()) {
+                    Ok(_) => (),
+                    Err(e) => return Err(e),
+                }
+            }
+
+            // TODO: verify args are same as params of method
+
+            Ok(())
         }
         Some(ref l) if l == "PrimaryNoNewArray" || l == "ReturnStatement" => {
             let mut expr = node.children[1].clone();
