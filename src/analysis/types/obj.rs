@@ -227,7 +227,38 @@ impl Type {
                                    lhs.kind.name));
             }
 
-            return Err(format!("cannot assign non-equivalent array {} to {}",
+            lhs = match lookup::class::in_env(&lhs.kind.name.children[0], current, kinds) {
+                Ok(cls) => Type::new(cls),
+                Err(e) => return Err(e),
+            };
+            rhs = match lookup::class::in_env(&rhs.kind.name.children[0], current, kinds) {
+                Ok(cls) => Type::new(cls),
+                Err(e) => return Err(e),
+            };
+
+            let mut parents = vec![rhs.kind.clone()];
+            while let Some(parent) = parents.pop() {
+                if parent.name == lhs.kind.name {
+                    return Ok(result);
+                }
+
+                // TODO: .chain()
+                for grandparent in &parent.extends {
+                    match lookup::class::in_env(&grandparent, &parent, kinds) {
+                        Ok(cls) => parents.push(cls),
+                        Err(e) => return Err(e),
+                    };
+                }
+                for grandparent in &parent.implements {
+                    match lookup::class::in_env(&grandparent, &parent, kinds) {
+                        Ok(cls) => parents.push(cls),
+                        Err(e) => return Err(e),
+                    };
+                }
+            }
+
+            // TODO: inheritance only
+            return Err(format!("cannot assign non-subtype array {} to {}",
                                rhs.kind.name,
                                lhs.kind.name));
         }
