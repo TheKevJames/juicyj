@@ -236,28 +236,12 @@ impl Type {
                 Err(e) => return Err(e),
             };
 
-            let mut parents = vec![rhs.kind.clone()];
-            while let Some(parent) = parents.pop() {
-                if parent.name == lhs.kind.name {
-                    return Ok(result);
-                }
-
-                // TODO: .chain()
-                for grandparent in &parent.extends {
-                    match lookup::class::in_env(&grandparent, &parent, kinds) {
-                        Ok(cls) => parents.push(cls),
-                        Err(e) => return Err(e),
-                    };
-                }
-                for grandparent in &parent.implements {
-                    match lookup::class::in_env(&grandparent, &parent, kinds) {
-                        Ok(cls) => parents.push(cls),
-                        Err(e) => return Err(e),
-                    };
-                }
+            match lhs.is_parent(&rhs) {
+                Some(Ok(_)) => return Ok(result),
+                Some(Err(e)) => return Err(e),
+                None => (),
             }
 
-            // TODO: inheritance only
             return Err(format!("cannot assign non-subtype array {} to {}",
                                rhs.kind.name,
                                lhs.kind.name));
@@ -288,25 +272,10 @@ impl Type {
             return Ok(result);
         }
 
-        let mut parents = vec![rhs.kind.clone()];
-        while let Some(parent) = parents.pop() {
-            if parent.name == lhs.kind.name {
-                return Ok(result);
-            }
-
-            // TODO: .chain()
-            for grandparent in &parent.extends {
-                match lookup::class::in_env(&grandparent, &parent, kinds) {
-                    Ok(cls) => parents.push(cls),
-                    Err(e) => return Err(e),
-                };
-            }
-            for grandparent in &parent.implements {
-                match lookup::class::in_env(&grandparent, &parent, kinds) {
-                    Ok(cls) => parents.push(cls),
-                    Err(e) => return Err(e),
-                };
-            }
+        match lhs.is_parent(&rhs) {
+            Some(Ok(_)) => return Ok(result),
+            Some(Err(e)) => return Err(e),
+            None => (),
         }
 
         Err(format!("can not assign {} to {}", rhs.kind.name, lhs.kind.name))
@@ -315,6 +284,31 @@ impl Type {
     pub fn is_coercible_to_int(&self) -> bool {
         let primitives = vec![BYTE.clone(), CHAR.clone(), INTEGER.clone(), SHORT.clone()];
         primitives.contains(&self)
+    }
+
+    fn is_parent(&self, child: &Type) -> Option<Result<(), String>> {
+        let mut parents = vec![child.kind.clone()];
+        while let Some(parent) = parents.pop() {
+            if parent.name == self.kind.name {
+                return Some(Ok(()));
+            }
+
+            // TODO: .chain()
+            for grandparent in &parent.extends {
+                match lookup::class::in_env(&grandparent, &parent, kinds) {
+                    Ok(cls) => parents.push(cls),
+                    Err(e) => return Some(Err(e)),
+                };
+            }
+            for grandparent in &parent.implements {
+                match lookup::class::in_env(&grandparent, &parent, kinds) {
+                    Ok(cls) => parents.push(cls),
+                    Err(e) => return Some(Err(e)),
+                };
+            }
+        }
+
+        None
     }
 }
 
