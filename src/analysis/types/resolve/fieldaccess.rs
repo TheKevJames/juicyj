@@ -6,6 +6,21 @@ use analysis::types::resolve;
 use scanner::ASTNode;
 use scanner::TokenKind;
 
+// TODO: should it be more like this?
+// pub fn go(node: &ASTNode,
+//           current: &ClassOrInterfaceEnvironment,
+//           kinds: &Vec<ClassOrInterfaceEnvironment>,
+//           globals: &Vec<VariableEnvironment>)
+//           -> Result<Type, String> {
+//     let lhs = match resolve::expression::go(&node.children[0], current, kinds, globals) {
+//         Ok(t) => t,
+//         Err(e) => return Err(e),
+//     };
+
+//     // TODO: in_class would save some effort
+//     lookup::field::in_env(&lhs.kind.name, &node.children[2], current, kinds)
+// }
+
 pub fn go(node: &ASTNode,
           current: &ClassOrInterfaceEnvironment,
           kinds: &Vec<ClassOrInterfaceEnvironment>,

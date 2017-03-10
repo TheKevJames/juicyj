@@ -32,6 +32,7 @@ fn move_two(cls: &mut ASTNode, field: &mut ASTNode) -> Result<(), ()> {
     Ok(())
 }
 
+// TODO: this has reversed args from class::in_env...
 pub fn in_env(canonical: &ASTNode,
               field: &ASTNode,
               current: &ClassOrInterfaceEnvironment,
@@ -62,7 +63,11 @@ pub fn in_env(canonical: &ASTNode,
                 let kind = f.to_variable().kind.clone();
                 let result = match lookup::class::in_env(&kind, &cls, kinds) {
                     Ok(cls) => cls,
-                    Err(_) => return Err(format!("could not lookup kind {} of field in class {}", kind, cls)),
+                    Err(_) => {
+                        return Err(format!("could not lookup kind {} of field in class {}",
+                                           kind,
+                                           cls))
+                    }
                 };
 
                 if remaining_field.children.is_empty() {
@@ -73,7 +78,7 @@ pub fn in_env(canonical: &ASTNode,
                 // result = kind of A.B.C.f.g, remaining_field = .h
                 remaining_field.children.remove(0);
                 // TODO: in_class would save some effort
-                return in_env(&result.name, &remaining_field, current, kinds);
+                return in_env(&result.name, &remaining_field, &cls, kinds);
             }
         }
 
