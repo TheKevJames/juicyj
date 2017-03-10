@@ -72,6 +72,9 @@ pub fn nonblock(node: &mut ASTNode,
                 Ok(ref k) if k.modifiers.contains(&*ABSTRACT) => {
                     Err(format!("instantiated abstract class {}", k.name))
                 }
+                Ok(ref k) if k.kind == ClassOrInterface::INTERFACE => {
+                    Err(format!("instantiated interface {}", k.name))
+                }
                 Ok(_) => Ok(()),
                 Err(e) => Err(e),
             }
