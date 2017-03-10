@@ -6,10 +6,17 @@ pub mod verify;
 
 use analysis::environment::ClassOrInterface;
 use analysis::environment::Environment;
+use analysis::types::obj::Type;
 use analysis::types::verify::method::statement;
 use scanner::ASTNode;
 use scanner::Token;
 use scanner::TokenKind;
+
+lazy_static! {
+    static ref NULL: ASTNode = {
+        ASTNode { token: Token::new(TokenKind::Null, None), children: Vec::new() }
+    };
+}
 
 fn rebuild_env(env: &Environment) -> Result<Environment, String> {
     let mut new = Environment { kinds: Vec::new() };
@@ -159,19 +166,35 @@ fn verify_env(env: &Environment) -> Result<(), String> {
                 }
             }
 
-            let globals = constructor.parameters.clone();
-            match statement::block(&mut constructor.body.clone(),
-                                   &current,
-                                   &env.kinds,
-                                   &globals) {
-                Ok(_) => (),
-                Err(e) => return Err(e),
-            }
-
             if &constructor.name != current.name.children.last().unwrap() {
                 return Err(format!("constructor {} does not share class name {}",
                                    constructor.name,
                                    current.name));
+            }
+
+            let globals = constructor.parameters.clone();
+            let return_types = match statement::block(&mut constructor.body.clone(),
+                                                      &current,
+                                                      &env.kinds,
+                                                      &globals) {
+                Ok(rts) => rts,
+                Err(e) => return Err(e),
+            };
+
+            let constructor_return_type = Type::new(current.clone());
+            for return_type in return_types {
+                if return_type.kind.name == *NULL {
+                    continue;
+                }
+
+                match constructor_return_type.assign(&return_type, current, &env.kinds) {
+                    Ok(_) => (),
+                    Err(e) => {
+                        return Err(format!("constructor {} has invalid return type\nerror: {:?}",
+                                           current.name,
+                                           e))
+                    }
+                }
             }
         }
 
@@ -210,12 +233,34 @@ fn verify_env(env: &Environment) -> Result<(), String> {
 
             if method.body.is_some() {
                 let globals = method.parameters.clone();
-                match statement::block(&mut method.clone().body.unwrap().clone(),
-                                       &current,
-                                       &env.kinds,
-                                       &globals) {
-                    Ok(_) => (),
-                    Err(e) => return Err(e),
+                let return_types =
+                    match statement::block(&mut method.clone().body.unwrap().clone(),
+                                           &current,
+                                           &env.kinds,
+                                           &globals) {
+                        Ok(rts) => rts,
+                        Err(e) => return Err(e),
+                    };
+
+                let method_return_type =
+                    match lookup::class::in_env(&method.return_type, current, &env.kinds) {
+                        Ok(rt) => Type::new(rt),
+                        Err(e) => return Err(e),
+                    };
+
+                for return_type in return_types {
+                    if return_type.kind.name == *NULL {
+                        continue;
+                    }
+
+                    match method_return_type.assign(&return_type, current, &env.kinds) {
+                        Ok(_) => (),
+                        Err(e) => {
+                            return Err(format!("method {} has invalid return type\nerror: {:?}",
+                                               method.name,
+                                               e))
+                        }
+                    }
                 }
             }
 
