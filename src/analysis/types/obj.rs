@@ -236,7 +236,7 @@ impl Type {
                 Err(e) => return Err(e),
             };
 
-            match lhs.is_parent(&rhs) {
+            match lhs.is_parent(&rhs, kinds) {
                 Some(Ok(_)) => return Ok(result),
                 Some(Err(e)) => return Err(e),
                 None => (),
@@ -272,7 +272,7 @@ impl Type {
             return Ok(result);
         }
 
-        match lhs.is_parent(&rhs) {
+        match lhs.is_parent(&rhs, kinds) {
             Some(Ok(_)) => return Ok(result),
             Some(Err(e)) => return Err(e),
             None => (),
@@ -286,7 +286,10 @@ impl Type {
         primitives.contains(&self)
     }
 
-    fn is_parent(&self, child: &Type) -> Option<Result<(), String>> {
+    fn is_parent(&self,
+                 child: &Type,
+                 kinds: &Vec<ClassOrInterfaceEnvironment>)
+                 -> Option<Result<(), String>> {
         let mut parents = vec![child.kind.clone()];
         while let Some(parent) = parents.pop() {
             if parent.name == self.kind.name {
