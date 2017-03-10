@@ -98,6 +98,16 @@ pub fn nonblock(node: &mut ASTNode,
                 Err(e) => return Err(e),
             }
 
+            // Update statement is always 2 children before last child. If there
+            // is not update statement, this will be a semicolon.
+            let mut update = node.children[node.children.len() - 3].clone();
+            if update.token.kind != TokenKind::Semicolon {
+                match nonblock(&mut update, current, kinds, &block_globals, &mut block_locals) {
+                    Ok(_) => (),
+                    Err(e) => return Err(e),
+                }
+            }
+
             let mut block = node.children.last().unwrap().clone();
             nonblock(&mut block,
                      current,
