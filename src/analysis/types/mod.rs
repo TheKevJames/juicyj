@@ -1,10 +1,12 @@
-mod body;
 mod inheritance;
 pub mod lookup;
+mod obj;
+mod resolve;
 pub mod verify;
 
 use analysis::environment::ClassOrInterface;
 use analysis::environment::Environment;
+use analysis::types::verify::method::statement;
 use scanner::ASTNode;
 use scanner::Token;
 use scanner::TokenKind;
@@ -164,7 +166,7 @@ fn verify_env(env: &Environment) -> Result<(), String> {
             for field in &current.fields {
                 globals.push(field.to_variable());
             }
-            match body::verifybody(&mut constructor.body.clone(),
+            match statement::block(&mut constructor.body.clone(),
                                    &current,
                                    &env.kinds,
                                    &globals) {
@@ -220,7 +222,7 @@ fn verify_env(env: &Environment) -> Result<(), String> {
                 for field in &current.fields {
                     globals.push(field.to_variable());
                 }
-                match body::verifybody(&mut method.clone().body.unwrap().clone(),
+                match statement::block(&mut method.clone().body.unwrap().clone(),
                                        &current,
                                        &env.kinds,
                                        &globals) {

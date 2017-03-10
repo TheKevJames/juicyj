@@ -2,6 +2,8 @@
 //! Compiler for JOOS 1W.
 
 #[macro_use]
+extern crate lazy_static;
+#[macro_use]
 extern crate log;
 
 pub mod analysis;

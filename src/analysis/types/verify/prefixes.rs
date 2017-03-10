@@ -4,26 +4,22 @@ use scanner::ASTNode;
 use scanner::Token;
 use scanner::TokenKind;
 
-// const PRIMITIVES = vec![TokenKind::Boolean,
-//                           TokenKind::Byte,
-//                           TokenKind::Char,
-//                           TokenKind::Int,
-//                           TokenKind::Null,
-//                           TokenKind::Short,
-//                           TokenKind::Void];
+lazy_static! {
+    static ref NAME: Token = Token::new(TokenKind::NonTerminal, Some("Name"));
+}
+const PRIMITIVES: [TokenKind; 7] = [TokenKind::Boolean,
+                                    TokenKind::Byte,
+                                    TokenKind::Char,
+                                    TokenKind::Int,
+                                    TokenKind::Null,
+                                    TokenKind::Short,
+                                    TokenKind::Void];
 
 pub fn canonical(canonical: &ASTNode,
                  current: &ClassOrInterfaceEnvironment,
                  kinds: &Vec<ClassOrInterfaceEnvironment>)
                  -> Result<(), String> {
-    let primitives = vec![TokenKind::Boolean,
-                          TokenKind::Byte,
-                          TokenKind::Char,
-                          TokenKind::Int,
-                          TokenKind::Null,
-                          TokenKind::Short,
-                          TokenKind::Void];
-    if !canonical.children.is_empty() && primitives.contains(&canonical.children[0].token.kind) {
+    if !canonical.children.is_empty() && PRIMITIVES.contains(&canonical.children[0].token.kind) {
         return Err(format!("strict prefix of {:?} resolves to primitive type",
                            canonical));
     }
@@ -37,7 +33,7 @@ pub fn canonical(canonical: &ASTNode,
         }
 
         let name = ASTNode {
-            token: Token::new(TokenKind::NonTerminal, Some("Name")),
+            token: NAME.clone(),
             children: prefix.clone(),
         };
         if &name == canonical {
@@ -63,14 +59,7 @@ pub fn package(canonical: &ASTNode,
                current: &ClassOrInterfaceEnvironment,
                kinds: &Vec<ClassOrInterfaceEnvironment>)
                -> Result<(), String> {
-    let primitives = vec![TokenKind::Boolean,
-                          TokenKind::Byte,
-                          TokenKind::Char,
-                          TokenKind::Int,
-                          TokenKind::Null,
-                          TokenKind::Short,
-                          TokenKind::Void];
-    if !canonical.children.is_empty() && primitives.contains(&canonical.children[0].token.kind) {
+    if !canonical.children.is_empty() && PRIMITIVES.contains(&canonical.children[0].token.kind) {
         return Err(format!("strict prefix of {:?} resolves to primitive type",
                            canonical));
     }
@@ -84,7 +73,7 @@ pub fn package(canonical: &ASTNode,
         }
 
         let name = ASTNode {
-            token: Token::new(TokenKind::NonTerminal, Some("Name")),
+            token: NAME.clone(),
             children: prefix.clone(),
         };
         if &name == canonical {

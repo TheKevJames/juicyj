@@ -6,6 +6,15 @@ use scanner::ASTNode;
 use scanner::Token;
 use scanner::TokenKind;
 
+lazy_static! {
+    static ref ABSTRACT: ASTNode = {
+        ASTNode {
+            token: Token::new(TokenKind::Abstract, None),
+            children: Vec::new(),
+        }
+    };
+}
+
 pub fn verify(env: &Environment,
               current: &ClassOrInterfaceEnvironment,
               visited: &mut Vec<ASTNode>)
@@ -53,13 +62,9 @@ pub fn verify(env: &Environment,
         Err(e) => return Err(e),
     }
 
-    let modifier_abstract = ASTNode {
-        token: Token::new(TokenKind::Abstract, None),
-        children: Vec::new(),
-    };
-    if child.kind == ClassOrInterface::CLASS && !child.modifiers.contains(&modifier_abstract) {
+    if child.kind == ClassOrInterface::CLASS && !child.modifiers.contains(&*ABSTRACT) {
         for method in &child.methods {
-            if method.modifiers.contains(&modifier_abstract) {
+            if method.modifiers.contains(&*ABSTRACT) {
                 return Err(format!("abstract method {} found in non-abstract class {}",
                                    method.name,
                                    child.name));
