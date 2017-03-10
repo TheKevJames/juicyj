@@ -204,6 +204,7 @@ pub fn lookup(name: &ASTNode,
     match found {
         Some(f) => Ok(f),
         None => {
+            // assert!(false);
             Err(format!("could not lookup kind {:?} from class {:?}",
                         name,
                         current.name))

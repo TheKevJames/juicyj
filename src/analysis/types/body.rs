@@ -158,13 +158,15 @@ impl Type {
             Err(e) => return Err(e),
         };
 
+        let result = lhs.clone();
+
         // can assign null to anything
         let null = ASTNode {
             token: Token::new(TokenKind::Null, None),
             children: Vec::new(),
         };
         if rhs.kind.name == null {
-            return Ok(lhs.clone());
+            return Ok(result);
         }
 
         // can't assign classes to arrays, but can assign arrays to Object
@@ -190,7 +192,7 @@ impl Type {
         }
 
         if lhs == rhs {
-            return Ok(lhs.clone());
+            return Ok(result);
         }
 
         let boolean = ASTNode {
@@ -203,7 +205,7 @@ impl Type {
         };
         let mut primitives = vec![boolean.clone(), byte.clone()];
         if lhs.kind.name == byte.clone() && primitives.contains(&rhs.kind.name) {
-            return Ok(lhs.clone());
+            return Ok(result);
         }
 
         let short = ASTNode {
@@ -212,7 +214,7 @@ impl Type {
         };
         primitives.push(short.clone());
         if lhs.kind.name == short.clone() && primitives.contains(&rhs.kind.name) {
-            return Ok(lhs.clone());
+            return Ok(result);
         }
 
         let charr = ASTNode {
@@ -226,13 +228,13 @@ impl Type {
         primitives.push(charr.clone());
         primitives.push(int.clone());
         if lhs.kind.name == int.clone() && primitives.contains(&rhs.kind.name) {
-            return Ok(lhs.clone());
+            return Ok(result);
         }
 
         let mut parents = vec![rhs.kind.clone()];
         while let Some(parent) = parents.pop() {
             if parent.name == lhs.kind.name {
-                return Ok(lhs.clone());
+                return Ok(result);
             }
 
             // TODO: .chain()
