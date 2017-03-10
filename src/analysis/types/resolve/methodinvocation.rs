@@ -56,15 +56,19 @@ pub fn go(node: &ASTNode,
                 Err(e) => return Err(e),
             };
 
+            let mut name = NAME.clone();
+            name.children.push(node.children[2].clone());
+            name.flatten();
+
             // TODO: in_class would save some effort
-            match lookup::method::in_env(&lhs.kind.name, &node.children[2], current, kinds) {
+            match lookup::method::in_env(&lhs.kind.name, &name, current, kinds) {
                 Ok(t) => return Ok(t),
                 Err(_) => (),
             }
 
             Err(format!("could not resolve {:?} to method on class {:?}",
                         node.children[2],
-                        node.children[0]))
+                        lhs.kind.name))
         }
         _ => Err(format!("malformed MethodInvocation {:?}", node)),
     }

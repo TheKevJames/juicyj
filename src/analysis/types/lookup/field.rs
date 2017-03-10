@@ -53,6 +53,7 @@ pub fn in_env(canonical: &ASTNode,
             remaining_field.children.remove(0);
             if idx % 2 != 0 {
                 // canonical is "a.b.c". No trailing Dot is allowed.
+                continue;
             }
 
             for f in &cls.fields {

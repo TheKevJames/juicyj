@@ -173,6 +173,7 @@ pub fn nonblock(node: &mut ASTNode,
         }
         // TODO: should be much more fine-grained
         // _ => Err(format!("could not verify statement {:?}", node)),
+        Some(ref l) if l == "Name" => Ok(()),
         _ => {
             match node.token.kind {
                 TokenKind::Boolean | TokenKind::Byte | TokenKind::Char | TokenKind::Int |
