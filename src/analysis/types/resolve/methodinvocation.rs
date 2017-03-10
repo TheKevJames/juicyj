@@ -8,6 +8,12 @@ use scanner::Token;
 use scanner::TokenKind;
 
 lazy_static! {
+    // static ref ARGUMENTLIST: ASTNode = {
+    //     ASTNode {
+    //         token: Token::new(TokenKind::NonTerminal, Some("ArgumentList")),
+    //         children: Vec::new(),
+    //     }
+    // };
     static ref NAME: ASTNode = {
         ASTNode { token: Token::new(TokenKind::NonTerminal, Some("Name")), children: Vec::new() }
     };
@@ -16,15 +22,22 @@ lazy_static! {
     };
 }
 
-pub fn go(node: &ASTNode,
-          modifiers: &Vec<ASTNode>,
-          current: &ClassOrInterfaceEnvironment,
-          kinds: &Vec<ClassOrInterfaceEnvironment>,
-          globals: &Vec<VariableEnvironment>)
-          -> Result<Type, String> {
+// fn get_args(node: &ASTNode) -> ASTNode {
+//     match node.children.len() {
+//         6 => node.children[4].clone(),
+//         4 => node.children[2].clone(),
+//         _ => ARGUMENTLIST.clone(),
+//     }
+// }
+
+fn get_method(node: &ASTNode,
+              modifiers: &Vec<ASTNode>,
+              current: &ClassOrInterfaceEnvironment,
+              kinds: &Vec<ClassOrInterfaceEnvironment>,
+              globals: &Vec<VariableEnvironment>)
+              -> Result<Type, String> {
     match node.children.len() {
-        // child[0] is a method. child[3] is an arg if children.len() == 4
-        // TODO: arg
+        // child[0] is a method.
         3 | 4 => {
             // TODO: resolve first? Might have to remove trailing "Dot Identifier"?
             let mut canonical = node.children[0].clone();
@@ -53,9 +66,7 @@ pub fn go(node: &ASTNode,
                         canonical,
                         current.name))
         }
-        // child[0] is class/field. child[2] is method on previous. child[5] is
-        // an arg if children.len() == 6
-        // TODO: arg
+        // child[0] is class/field. child[2] is method on previous.
         5 | 6 => {
             let lhs = match resolve::expression::go(&node.children[0],
                                                     modifiers,
@@ -82,4 +93,21 @@ pub fn go(node: &ASTNode,
         }
         _ => Err(format!("malformed MethodInvocation {:?}", node)),
     }
+}
+
+pub fn go(node: &ASTNode,
+          modifiers: &Vec<ASTNode>,
+          current: &ClassOrInterfaceEnvironment,
+          kinds: &Vec<ClassOrInterfaceEnvironment>,
+          globals: &Vec<VariableEnvironment>)
+          -> Result<Type, String> {
+    let method = match get_method(node, modifiers, current, kinds, globals) {
+        Ok(m) => m,
+        Err(e) => return Err(e),
+    };
+
+    // TODO: arg verification
+    // let args = get_args(node);
+
+    Ok(method)
 }

@@ -218,7 +218,8 @@ impl ASTNode {
                             Err(e) => Err(e),
                         }
                     }
-                    Some(ref l) if node.children.len() == 1 && l == "Name" => {
+                    Some(ref l) if node.children.len() == 1 &&
+                                   (l == "Name" || l == "ArgumentList") => {
                         let mut children: Vec<ASTNode> = Vec::new();
                         match ASTNode::new(&node.children[0]) {
                             Ok(child) => children.push(child),
