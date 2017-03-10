@@ -1,6 +1,7 @@
 mod body;
-pub mod check;
 mod inheritance;
+pub mod lookup;
+pub mod verify;
 
 use analysis::environment::ClassOrInterface;
 use analysis::environment::Environment;
@@ -51,14 +52,14 @@ fn verify_env_inheritable(env: &Environment) -> Result<(), String> {
     };
 
     for current in &env.kinds {
-        match check::verify_package_prefixes(current.name.clone(), &current, &env.kinds) {
+        match verify::prefixes::package(&current.name, &current, &env.kinds) {
             Ok(_) => (),
             Err(e) => return Err(e),
         }
 
         if current.kind == ClassOrInterface::CLASS {
             for extended in &current.extends {
-                let found = match check::lookup(&extended, &current, &env.kinds) {
+                let found = match lookup::class::in_env(&extended, &current, &env.kinds) {
                     Ok(f) => f,
                     Err(e) => return Err(e),
                 };
@@ -87,7 +88,7 @@ fn verify_env_inheritable(env: &Environment) -> Result<(), String> {
 
             let mut resolved = Vec::new();
             for implemented in &current.implements {
-                let found = match check::lookup(&implemented, &current, &env.kinds) {
+                let found = match lookup::class::in_env(&implemented, &current, &env.kinds) {
                     Ok(f) => f,
                     Err(e) => return Err(e),
                 };
@@ -103,7 +104,7 @@ fn verify_env_inheritable(env: &Environment) -> Result<(), String> {
         } else if current.kind == ClassOrInterface::INTERFACE {
             let mut resolved = Vec::new();
             for extended in &current.extends {
-                let found = match check::lookup(&extended, &current, &env.kinds) {
+                let found = match lookup::class::in_env(&extended, &current, &env.kinds) {
                     Ok(f) => f,
                     Err(e) => return Err(e),
                 };
@@ -150,7 +151,7 @@ fn verify_env(env: &Environment) -> Result<(), String> {
                 }
                 params.push(parameter.name.clone());
 
-                let result = check::verify(parameter.kind.clone(), &current, &env.kinds);
+                let result = verify::prefixes::canonical(&parameter.kind, &current, &env.kinds);
                 if result.is_err() {
                     return result;
                 }
@@ -163,10 +164,10 @@ fn verify_env(env: &Environment) -> Result<(), String> {
             for field in &current.fields {
                 globals.push(field.to_variable());
             }
-            match body::verify(&mut constructor.body.clone(),
-                               &current,
-                               &env.kinds,
-                               &globals) {
+            match body::verifybody(&mut constructor.body.clone(),
+                                   &current,
+                                   &env.kinds,
+                                   &globals) {
                 Ok(_) => (),
                 Err(e) => return Err(e),
             }
@@ -181,7 +182,7 @@ fn verify_env(env: &Environment) -> Result<(), String> {
         // TODO: non-static fields must be initialized in order and without implicit `this`:
         // http://titanium.cs.berkeley.edu/doc/java-langspec-1.0/8.doc.html#38013
         for field in &current.fields {
-            let result = check::verify(field.kind.clone(), &current, &env.kinds);
+            let result = verify::prefixes::canonical(&field.kind, &current, &env.kinds);
             if result.is_err() {
                 return result;
             }
@@ -206,7 +207,7 @@ fn verify_env(env: &Environment) -> Result<(), String> {
                 params.push(parameter.name.clone());
             }
 
-            let result = check::verify(method.return_type.clone(), &current, &env.kinds);
+            let result = verify::prefixes::canonical(&method.return_type, &current, &env.kinds);
             if result.is_err() {
                 return result;
             }
@@ -219,10 +220,10 @@ fn verify_env(env: &Environment) -> Result<(), String> {
                 for field in &current.fields {
                     globals.push(field.to_variable());
                 }
-                match body::verify(&mut method.clone().body.unwrap().clone(),
-                                   &current,
-                                   &env.kinds,
-                                   &globals) {
+                match body::verifybody(&mut method.clone().body.unwrap().clone(),
+                                       &current,
+                                       &env.kinds,
+                                       &globals) {
                     Ok(_) => (),
                     Err(e) => return Err(e),
                 }

@@ -1,7 +1,8 @@
 use analysis::environment::ClassOrInterface;
 use analysis::environment::ClassOrInterfaceEnvironment;
 use analysis::environment::VariableEnvironment;
-use analysis::types::check;
+use analysis::types::lookup;
+use analysis::types::verify;
 use scanner::ASTNode;
 use scanner::Token;
 use scanner::TokenKind;
@@ -46,12 +47,7 @@ impl Type {
         }
     }
 
-    // TODO: subset of operations (string concat only, no subtraction)
     fn apply_math(&self, operation: &TokenKind, other: &Type) -> Result<Type, String> {
-        if self == other {
-            return Ok(self.clone());
-        }
-
         let charr = ASTNode {
             token: Token::new(TokenKind::Char, None),
             children: Vec::new(),
@@ -101,41 +97,46 @@ impl Type {
                                                                  ClassOrInterface::CLASS)));
         }
 
-        let string = ASTNode {
-            token: Token::new(TokenKind::NonTerminal, Some("Name")),
-            children: vec![ASTNode {
-                               token: Token::new(TokenKind::Identifier, Some("String")),
-                               children: Vec::new(),
-                           }],
-        };
-        let java_lang_string = ASTNode {
-            token: Token::new(TokenKind::NonTerminal, Some("Name")),
-            children: vec![ASTNode {
-                               token: Token::new(TokenKind::Identifier, Some("java")),
-                               children: Vec::new(),
-                           },
-                           ASTNode {
-                               token: Token::new(TokenKind::Dot, None),
-                               children: Vec::new(),
-                           },
-                           ASTNode {
-                               token: Token::new(TokenKind::Identifier, Some("lang")),
-                               children: Vec::new(),
-                           },
-                           ASTNode {
-                               token: Token::new(TokenKind::Dot, None),
-                               children: Vec::new(),
-                           },
-                           ASTNode {
-                               token: Token::new(TokenKind::Identifier, Some("String")),
-                               children: Vec::new(),
-                           }],
-        };
-        let strings = vec![string.clone(), java_lang_string.clone()];
-        if strings.contains(&self.kind.name) || strings.contains(&other.kind.name) {
-            // anything can resolve to a String
-            return Ok(Type::new(ClassOrInterfaceEnvironment::new(java_lang_string.clone(),
-                                                                 ClassOrInterface::CLASS)));
+        match *operation {
+            TokenKind::Plus => {
+                let string = ASTNode {
+                    token: Token::new(TokenKind::NonTerminal, Some("Name")),
+                    children: vec![ASTNode {
+                                       token: Token::new(TokenKind::Identifier, Some("String")),
+                                       children: Vec::new(),
+                                   }],
+                };
+                let java_lang_string = ASTNode {
+                    token: Token::new(TokenKind::NonTerminal, Some("Name")),
+                    children: vec![ASTNode {
+                                       token: Token::new(TokenKind::Identifier, Some("java")),
+                                       children: Vec::new(),
+                                   },
+                                   ASTNode {
+                                       token: Token::new(TokenKind::Dot, None),
+                                       children: Vec::new(),
+                                   },
+                                   ASTNode {
+                                       token: Token::new(TokenKind::Identifier, Some("lang")),
+                                       children: Vec::new(),
+                                   },
+                                   ASTNode {
+                                       token: Token::new(TokenKind::Dot, None),
+                                       children: Vec::new(),
+                                   },
+                                   ASTNode {
+                                       token: Token::new(TokenKind::Identifier, Some("String")),
+                                       children: Vec::new(),
+                                   }],
+                };
+                let strings = vec![string.clone(), java_lang_string.clone()];
+                if strings.contains(&self.kind.name) || strings.contains(&other.kind.name) {
+                    // anything can resolve to a String
+                    return Ok(Type::new(ClassOrInterfaceEnvironment::new(java_lang_string.clone(),
+                                                                         ClassOrInterface::CLASS)));
+                }
+            }
+            _ => (),
         }
 
         Err(format!("could not apply {:?} to {:?} and {:?}",
@@ -149,11 +150,11 @@ impl Type {
               current: &ClassOrInterfaceEnvironment,
               kinds: &Vec<ClassOrInterfaceEnvironment>)
               -> Result<Type, String> {
-        let mut lhs = match check::lookup_or_primitive(&self.kind.name, current, kinds) {
+        let mut lhs = match lookup::class::in_env(&self.kind.name, current, kinds) {
             Ok(cls) => Type::new(cls),
             Err(e) => return Err(e),
         };
-        let mut rhs = match check::lookup_or_primitive(&rhs.kind.name, current, kinds) {
+        let mut rhs = match lookup::class::in_env(&rhs.kind.name, current, kinds) {
             Ok(cls) => Type::new(cls),
             Err(e) => return Err(e),
         };
@@ -181,11 +182,11 @@ impl Type {
             }
 
             // TODO: while ArrayType? nested!
-            lhs = match check::lookup_or_primitive(&lhs.kind.name.children[0], current, kinds) {
+            lhs = match lookup::class::in_env(&lhs.kind.name.children[0], current, kinds) {
                 Ok(cls) => Type::new(cls),
                 Err(e) => return Err(e),
             };
-            rhs = match check::lookup_or_primitive(&rhs.kind.name.children[0], current, kinds) {
+            rhs = match lookup::class::in_env(&rhs.kind.name.children[0], current, kinds) {
                 Ok(cls) => Type::new(cls),
                 Err(e) => return Err(e),
             };
@@ -239,13 +240,13 @@ impl Type {
 
             // TODO: .chain()
             for grandparent in &parent.extends {
-                match check::lookup(&grandparent, &parent, kinds) {
+                match lookup::class::in_env(&grandparent, &parent, kinds) {
                     Ok(cls) => parents.push(cls),
                     Err(e) => return Err(e),
                 };
             }
             for grandparent in &parent.implements {
-                match check::lookup(&grandparent, &parent, kinds) {
+                match lookup::class::in_env(&grandparent, &parent, kinds) {
                     Ok(cls) => parents.push(cls),
                     Err(e) => return Err(e),
                 };
@@ -417,7 +418,7 @@ fn resolve_expression(node: &ASTNode,
         Some(ref l) if l == "ClassInstanceCreationExpression" => {
             let mut kind = node.children[0].clone();
             kind.flatten();
-            match check::lookup(&kind, current, kinds) {
+            match lookup::class::in_env(&kind, current, kinds) {
                 Ok(cls) => Ok(Type::new(cls)),
                 Err(e) => Err(e),
             }
@@ -437,7 +438,7 @@ fn resolve_expression(node: &ASTNode,
                     if lhs_kind == current.name {
                         current.clone()
                     } else {
-                        match check::lookup_or_primitive(&lhs_kind, current, kinds) {
+                        match lookup::class::in_env(&lhs_kind, current, kinds) {
                             Ok(cls) => cls,
                             Err(e) => return Err(e),
                         }
@@ -447,7 +448,7 @@ fn resolve_expression(node: &ASTNode,
 
             for field in &cls.fields {
                 if field.name == node.children[2] {
-                    match check::lookup_or_primitive(&field.to_variable().kind, &cls, kinds) {
+                    match lookup::class::in_env(&field.to_variable().kind, &cls, kinds) {
                         Ok(cls) => return Ok(Type::new(cls)),
                         Err(_) => (),
                     }
@@ -466,7 +467,7 @@ fn resolve_expression(node: &ASTNode,
                         Ok(l) => {
                             let mut lhs_name = l.kind.name.clone();
                             lhs_name.flatten();
-                            check::lookup_or_primitive(&lhs_name, current, kinds).ok()
+                            lookup::class::in_env(&lhs_name, current, kinds).ok()
                         }
                         Err(_) => None,
                     };
@@ -493,7 +494,7 @@ fn resolve_expression(node: &ASTNode,
                             if var.name.children.len() == 3 &&
                                var.name.children[0].clone().token.kind == TokenKind::This &&
                                var.name.children[2] == name {
-                                // let result = check::lookup(&var.kind, current, kinds);
+                                // let result = lookup::class::in_env(&var.kind, current, kinds);
                                 // if result.is_err() {
                                 //     continue;
                                 // }
@@ -503,7 +504,7 @@ fn resolve_expression(node: &ASTNode,
                             }
                         }
 
-                        match check::lookup(&name, current, kinds) {
+                        match lookup::class::in_env(&name, current, kinds) {
                             Ok(cls) => Some((cls, method.clone())),
                             // assume we don't need to resolve
                             Err(_) => Some((current.clone(), node.children[0].clone())),
@@ -519,7 +520,7 @@ fn resolve_expression(node: &ASTNode,
 
                     let mut lhs_name = lhs.kind.name.clone();
                     lhs_name.flatten();
-                    match check::lookup_or_primitive(&lhs_name, current, kinds) {
+                    match lookup::class::in_env(&lhs_name, current, kinds) {
                         Ok(cls) => Some((cls, node.children[2].clone())),
                         Err(e) => return Err(e),
                     }
@@ -588,7 +589,7 @@ fn resolve_expression(node: &ASTNode,
                     // lookup var.kind for a class, then find node.children[2]
                     let mut kind = var.kind.clone();
                     kind.flatten();
-                    return match check::lookup(&kind, current, kinds) {
+                    return match lookup::class::in_env(&kind, current, kinds) {
                         Ok(f) => {
                             let mut result = None;
 
@@ -619,7 +620,7 @@ fn resolve_expression(node: &ASTNode,
                     if var.name == node_fieldless {
                         let mut kind = var.kind.clone();
                         kind.flatten();
-                        return match check::lookup(&kind, current, kinds) {
+                        return match lookup::class::in_env(&kind, current, kinds) {
                             Ok(f) => {
                                 let mut result = None;
 
@@ -653,7 +654,7 @@ fn resolve_expression(node: &ASTNode,
                        var.name.children[2] == node_fieldless {
                         let mut kind = var.kind.clone();
                         kind.flatten();
-                        return match check::lookup(&kind, current, kinds) {
+                        return match lookup::class::in_env(&kind, current, kinds) {
                             Ok(f) => {
                                 let mut result = None;
 
@@ -691,7 +692,7 @@ fn resolve_expression(node: &ASTNode,
                     break;
                 }
 
-                let cls = match check::lookup(&node_fieldless, current, kinds) {
+                let cls = match lookup::class::in_env(&node_fieldless, current, kinds) {
                     Ok(c) => c,
                     Err(_) => break,
                 };
@@ -699,7 +700,7 @@ fn resolve_expression(node: &ASTNode,
                 let field = field.unwrap();
                 for f in &cls.fields {
                     if &f.name == &field {
-                        match check::lookup_or_primitive(&f.to_variable().kind, &cls, kinds) {
+                        match lookup::class::in_env(&f.to_variable().kind, &cls, kinds) {
                             Ok(cls) => return Ok(Type::new(cls)),
                             Err(_) => (),
                         }
@@ -709,7 +710,7 @@ fn resolve_expression(node: &ASTNode,
                 break;
             }
 
-            match check::lookup(&node, current, kinds) {
+            match lookup::class::in_env(&node, current, kinds) {
                 Ok(f) => Ok(Type::new(f)),
                 Err(e) => Err(e),
             }
@@ -890,11 +891,11 @@ fn resolve_expression(node: &ASTNode,
 }
 
 // TODO: globals should be split into fields, parameters instead of fields to_var hack
-pub fn verify(node: &mut ASTNode,
-              current: &ClassOrInterfaceEnvironment,
-              kinds: &Vec<ClassOrInterfaceEnvironment>,
-              globals: &Vec<VariableEnvironment>)
-              -> Result<(), String> {
+pub fn verifybody(node: &mut ASTNode,
+                  current: &ClassOrInterfaceEnvironment,
+                  kinds: &Vec<ClassOrInterfaceEnvironment>,
+                  globals: &Vec<VariableEnvironment>)
+                  -> Result<(), String> {
     let node = match node.clone().token.lexeme {
         Some(ref l) if l == "BlockStatements" => node.flatten().clone(),
         Some(ref l) if l == "Block" => {
@@ -937,7 +938,7 @@ fn verify_statement(node: &mut ASTNode,
             // TODO: ACE -> child1 may be expr, CICE -> child1 may be params
             let mut kind = node.children[0].clone();
             kind.flatten();
-            match check::lookup_or_primitive(&kind, current, kinds) {
+            match lookup::class::in_env(&kind, current, kinds) {
                 Ok(ref k) if k.modifiers.contains(&modifier_abstract) => {
                     Err(format!("instantiated abstract class {}", k.name))
                 }
@@ -961,7 +962,7 @@ fn verify_statement(node: &mut ASTNode,
             for local in locals {
                 block_globals.push(local.clone());
             }
-            verify(&mut node.children[1], current, kinds, &block_globals)
+            verifybody(&mut node.children[1], current, kinds, &block_globals)
         }
         Some(ref l) if l == "Block" => Ok(()),
         Some(ref l) if l == "ForStatement" || l == "ForStatementNoShortIf" => {
@@ -1036,10 +1037,10 @@ fn verify_statement(node: &mut ASTNode,
                 // Primary Dot Identifier ( Args )
                 let primary = node.children[0].clone();
                 match verify_statement(&mut primary.clone(),
-                                 current,
-                                 kinds,
-                                 &globals,
-                                 &mut locals.clone()) {
+                                       current,
+                                       kinds,
+                                       &globals,
+                                       &mut locals.clone()) {
                     Ok(_) => (),
                     Err(e) => return Err(e),
                 }
@@ -1098,7 +1099,7 @@ fn verify_declaration(kinds: &Vec<ClassOrInterfaceEnvironment>,
                 block_globals.push(local);
             }
 
-            let lhs = match check::lookup_or_primitive(&new.kind, current, kinds) {
+            let lhs = match lookup::class::in_env(&new.kind, current, kinds) {
                 Ok(l) => Type::new(l),
                 Err(e) => return Err(e),
             };
@@ -1130,5 +1131,5 @@ fn verify_declaration(kinds: &Vec<ClassOrInterfaceEnvironment>,
     }
 
     locals.push(new.clone());
-    check::verify(new.kind.clone(), current, kinds)
+    verify::class::resolveable(&new.kind, current, kinds)
 }

@@ -1,7 +1,7 @@
 use analysis::environment::ClassOrInterface;
 use analysis::environment::ClassOrInterfaceEnvironment;
 use analysis::environment::Environment;
-use analysis::types::check;
+use analysis::types::lookup;
 use scanner::ASTNode;
 use scanner::Token;
 use scanner::TokenKind;
@@ -17,7 +17,7 @@ pub fn verify(env: &Environment,
 
     let mut child = ClassOrInterfaceEnvironment::new(current.name.clone(), current.kind.clone());
     for implemented in &current.implements {
-        let found = match check::lookup(&implemented, &current, &env.kinds) {
+        let found = match lookup::class::in_env(&implemented, &current, &env.kinds) {
             Ok(f) => f,
             Err(e) => return Err(e),
         };
@@ -33,7 +33,7 @@ pub fn verify(env: &Environment,
         }
     }
     for extended in &current.extends {
-        let found = match check::lookup(&extended, &current, &env.kinds) {
+        let found = match lookup::class::in_env(&extended, &current, &env.kinds) {
             Ok(f) => f,
             Err(e) => return Err(e),
         };

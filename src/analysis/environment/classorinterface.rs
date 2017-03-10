@@ -3,7 +3,7 @@ use std::fmt;
 use analysis::environment::constructor::ConstructorEnvironment;
 use analysis::environment::field::FieldEnvironment;
 use analysis::environment::method::MethodEnvironment;
-use analysis::types::check;
+use analysis::types::lookup;
 use scanner::ASTNode;
 use scanner::ASTNodeImport;
 use scanner::Token;
@@ -93,12 +93,12 @@ impl ClassOrInterfaceEnvironment {
                 for (constructor_param, existing_param) in
                     constructor.parameters.iter().zip(existing.parameters.iter()) {
                     let found_constructor_param =
-                        match check::lookup_or_primitive(&constructor_param.kind, child, kinds) {
+                        match lookup::class::in_env(&constructor_param.kind, child, kinds) {
                             Ok(mp) => mp,
                             Err(e) => return Err(e),
                         };
                     let found_existing_param =
-                        match check::lookup_or_primitive(&existing_param.kind, child, kinds) {
+                        match lookup::class::in_env(&existing_param.kind, child, kinds) {
                             Ok(mp) => mp,
                             Err(e) => return Err(e),
                         };
@@ -137,12 +137,12 @@ impl ClassOrInterfaceEnvironment {
                 for (method_param, existing_param) in
                     method.parameters.iter().zip(existing.parameters.iter()) {
                     let found_method_param =
-                        match check::lookup_or_primitive(&method_param.kind, child, kinds) {
+                        match lookup::class::in_env(&method_param.kind, child, kinds) {
                             Ok(mp) => mp,
                             Err(e) => return Err(e),
                         };
                     let found_existing_param =
-                        match check::lookup_or_primitive(&existing_param.kind, child, kinds) {
+                        match lookup::class::in_env(&existing_param.kind, child, kinds) {
                             Ok(mp) => mp,
                             Err(e) => return Err(e),
                         };
@@ -153,12 +153,12 @@ impl ClassOrInterfaceEnvironment {
                 }
                 if !different {
                     let method_return_type =
-                        match check::lookup_or_primitive(&method.return_type, child, kinds) {
+                        match lookup::class::in_env(&method.return_type, child, kinds) {
                             Ok(rt) => rt,
                             Err(e) => return Err(e),
                         };
                     let existing_return_type =
-                        match check::lookup_or_primitive(&existing.return_type, child, kinds) {
+                        match lookup::class::in_env(&existing.return_type, child, kinds) {
                             Ok(rt) => rt,
                             Err(e) => return Err(e),
                         };
@@ -300,12 +300,12 @@ impl ClassOrInterfaceEnvironment {
                 for (method_param, existing_param) in
                     method.parameters.iter().zip(existing.parameters.iter()) {
                     let found_method_param =
-                        match check::lookup_or_primitive(&method_param.kind, parent, kinds) {
+                        match lookup::class::in_env(&method_param.kind, parent, kinds) {
                             Ok(mp) => mp,
                             Err(e) => return Err(e),
                         };
                     let found_existing_param =
-                        match check::lookup_or_primitive(&existing_param.kind, parent, kinds) {
+                        match lookup::class::in_env(&existing_param.kind, parent, kinds) {
                             Ok(mp) => mp,
                             Err(e) => return Err(e),
                         };
@@ -316,12 +316,12 @@ impl ClassOrInterfaceEnvironment {
                 }
                 if !different {
                     let method_return_type =
-                        match check::lookup_or_primitive(&method.return_type, parent, kinds) {
+                        match lookup::class::in_env(&method.return_type, parent, kinds) {
                             Ok(rt) => rt,
                             Err(e) => return Err(e),
                         };
                     let existing_return_type =
-                        match check::lookup_or_primitive(&existing.return_type, parent, kinds) {
+                        match lookup::class::in_env(&existing.return_type, parent, kinds) {
                             Ok(rt) => rt,
                             Err(e) => return Err(e),
                         };
