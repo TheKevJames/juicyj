@@ -1,8 +1,5 @@
 use analysis::environment::ClassOrInterfaceEnvironment;
-use analysis::environment::variable::VariableEnvironment;
 use scanner::ASTNode;
-use scanner::Token;
-use scanner::TokenKind;
 
 #[derive(Clone,Debug)]
 pub struct FieldEnvironment {
@@ -14,33 +11,24 @@ pub struct FieldEnvironment {
 
 impl FieldEnvironment {
     pub fn new(name: ASTNode, kind: ASTNode) -> FieldEnvironment {
+        let mut kind = kind.clone();
+        kind.flatten();
+
         FieldEnvironment {
             modifiers: Vec::new(),
-            kind: kind,
-            name: name,
+            kind: match kind.clone().token.lexeme {
+                Some(ref l) if l == "ArrayType" => {
+                    // Remove Dim or DimExpr
+                    kind.children.truncate(1);
+                    // Flatten Name
+                    kind.children[0].flatten();
+                    kind
+                }
+                _ => kind,
+            },
+            name: name, // TODO: maybe flatten this?
             value: None,
         }
-    }
-
-    // TODO: stop converting back and forth. FieldEnv { Vec, VariableEnv } ?
-    pub fn to_variable(&self) -> VariableEnvironment {
-        let mut fakename = ASTNode {
-            token: Token::new(TokenKind::NonTerminal, Some("Name")),
-            children: vec![ASTNode {
-                               token: Token::new(TokenKind::This, None),
-                               children: Vec::new(),
-                           },
-                           ASTNode {
-                               token: Token::new(TokenKind::Dot, None),
-                               children: Vec::new(),
-                           },
-                           self.name.clone()],
-        };
-        let fakenode = ASTNode {
-            token: Token::new(TokenKind::Void, None),
-            children: vec![self.kind.clone(), fakename.flatten().clone()],
-        };
-        VariableEnvironment::new(fakenode)
     }
 }
 

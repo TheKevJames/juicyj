@@ -10,6 +10,9 @@ lazy_static! {
     static ref NAME: ASTNode = {
         ASTNode { token: Token::new(TokenKind::NonTerminal, Some("Name")), children: Vec::new() }
     };
+    static ref STATIC: ASTNode = {
+        ASTNode { token: Token::new(TokenKind::Static, None), children: Vec::new() }
+    };
 }
 
 // A "Name" can refer to a bunch of things.
@@ -17,6 +20,7 @@ lazy_static! {
 //   - fields on either of the above classes
 //   - etc
 pub fn go(node: &ASTNode,
+          modifiers: &Vec<ASTNode>,
           current: &ClassOrInterfaceEnvironment,
           kinds: &Vec<ClassOrInterfaceEnvironment>,
           globals: &Vec<VariableEnvironment>)
@@ -40,10 +44,12 @@ pub fn go(node: &ASTNode,
     }
 
     // implicit `this`
-    // TODO: in_class would save some effort
-    match lookup::field::in_env(&current.name, &node, current, kinds) {
-        Ok(t) => return Ok(t),
-        Err(_) => (),
+    if !modifiers.contains(&*STATIC) {
+        // TODO: in_class would save some effort
+        match lookup::field::in_env(&current.name, &node, current, kinds) {
+            Ok(t) => return Ok(t),
+            Err(_) => (),
+        }
     }
 
     match lookup::class::in_env(&node, current, kinds) {

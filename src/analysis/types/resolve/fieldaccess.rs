@@ -22,6 +22,7 @@ use scanner::TokenKind;
 // }
 
 pub fn go(node: &ASTNode,
+          modifiers: &Vec<ASTNode>,
           current: &ClassOrInterfaceEnvironment,
           kinds: &Vec<ClassOrInterfaceEnvironment>,
           globals: &Vec<VariableEnvironment>)
@@ -29,7 +30,11 @@ pub fn go(node: &ASTNode,
     let cls = match node.children[0].token.kind {
         TokenKind::This => current.clone(),
         _ => {
-            let lhs = match resolve::expression::go(&node.children[0], current, kinds, globals) {
+            let lhs = match resolve::expression::go(&node.children[0],
+                                                    modifiers,
+                                                    current,
+                                                    kinds,
+                                                    globals) {
                 Ok(l) => l,
                 Err(e) => return Err(e),
             };
@@ -49,7 +54,7 @@ pub fn go(node: &ASTNode,
 
     for field in &cls.fields {
         if field.name == node.children[2] {
-            match lookup::class::in_env(&field.to_variable().kind, &cls, kinds) {
+            match lookup::class::in_env(&field.kind, &cls, kinds) {
                 Ok(cls) => return Ok(Type::new(cls)),
                 Err(_) => (),
             }

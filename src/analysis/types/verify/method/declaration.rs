@@ -8,6 +8,7 @@ use scanner::ASTNode;
 use scanner::TokenKind;
 
 pub fn go(node: &ASTNode,
+          modifiers: &Vec<ASTNode>,
           kinds: &Vec<ClassOrInterfaceEnvironment>,
           current: &ClassOrInterfaceEnvironment,
           globals: &Vec<VariableEnvironment>,
@@ -36,6 +37,7 @@ pub fn go(node: &ASTNode,
         TokenKind::Assignment => {
             let mut rvalue = node.children[1].clone().children[1].clone();
             match verify::method::statement::nonblock(&mut rvalue,
+                                                      modifiers,
                                                       current,
                                                       kinds,
                                                       globals,
@@ -51,10 +53,11 @@ pub fn go(node: &ASTNode,
 
             let mut block_globals = globals.clone();
             block_globals.extend(locals.clone());
-            let rhs = match resolve::expression::go(&rvalue, current, kinds, &block_globals) {
-                Ok(r) => r,
-                Err(e) => return Err(e),
-            };
+            let rhs =
+                match resolve::expression::go(&rvalue, modifiers, current, kinds, &block_globals) {
+                    Ok(r) => r,
+                    Err(e) => return Err(e),
+                };
 
             match lhs.assign(&rhs, current, kinds) {
                 Ok(_) => (),

@@ -16,14 +16,16 @@ lazy_static! {
 const BITWISE: [TokenKind; 3] = [TokenKind::BitAnd, TokenKind::BitOr, TokenKind::BitXor];
 
 pub fn onearg_boolean(node: &ASTNode,
+                      modifiers: &Vec<ASTNode>,
                       current: &ClassOrInterfaceEnvironment,
                       kinds: &Vec<ClassOrInterfaceEnvironment>,
                       globals: &Vec<VariableEnvironment>)
                       -> Result<Type, String> {
-    let arg = match resolve::expression::go(&node.children[0], current, kinds, globals) {
-        Ok(l) => l,
-        Err(e) => return Err(e),
-    };
+    let arg =
+        match resolve::expression::go(&node.children[0], modifiers, current, kinds, globals) {
+            Ok(l) => l,
+            Err(e) => return Err(e),
+        };
 
     if arg == *BOOLEAN {
         Ok(arg)
@@ -35,35 +37,41 @@ pub fn onearg_boolean(node: &ASTNode,
 }
 
 pub fn twoarg(node: &ASTNode,
+              modifiers: &Vec<ASTNode>,
               current: &ClassOrInterfaceEnvironment,
               kinds: &Vec<ClassOrInterfaceEnvironment>,
               globals: &Vec<VariableEnvironment>)
               -> Result<Type, String> {
-    let lhs = match resolve::expression::go(&node.children[0], current, kinds, globals) {
-        Ok(l) => l,
-        Err(e) => return Err(e),
-    };
-    let rhs = match resolve::expression::go(&node.children[1], current, kinds, globals) {
-        Ok(r) => r,
-        Err(e) => return Err(e),
-    };
+    let lhs =
+        match resolve::expression::go(&node.children[0], modifiers, current, kinds, globals) {
+            Ok(l) => l,
+            Err(e) => return Err(e),
+        };
+    let rhs =
+        match resolve::expression::go(&node.children[1], modifiers, current, kinds, globals) {
+            Ok(r) => r,
+            Err(e) => return Err(e),
+        };
 
     lhs.apply_comparison(&node.token.kind, &rhs, current, kinds)
 }
 
 pub fn twoarg_boolean(node: &ASTNode,
+                      modifiers: &Vec<ASTNode>,
                       current: &ClassOrInterfaceEnvironment,
                       kinds: &Vec<ClassOrInterfaceEnvironment>,
                       globals: &Vec<VariableEnvironment>)
                       -> Result<Type, String> {
-    let lhs = match resolve::expression::go(&node.children[0], current, kinds, globals) {
-        Ok(l) => l,
-        Err(e) => return Err(e),
-    };
-    let rhs = match resolve::expression::go(&node.children[1], current, kinds, globals) {
-        Ok(r) => r,
-        Err(e) => return Err(e),
-    };
+    let lhs =
+        match resolve::expression::go(&node.children[0], modifiers, current, kinds, globals) {
+            Ok(l) => l,
+            Err(e) => return Err(e),
+        };
+    let rhs =
+        match resolve::expression::go(&node.children[1], modifiers, current, kinds, globals) {
+            Ok(r) => r,
+            Err(e) => return Err(e),
+        };
 
     if lhs == *BOOLEAN && rhs == *BOOLEAN {
         Ok(lhs)
@@ -78,16 +86,17 @@ pub fn twoarg_boolean(node: &ASTNode,
 }
 
 pub fn twoarg_instanceof(node: &ASTNode,
+                         modifiers: &Vec<ASTNode>,
                          current: &ClassOrInterfaceEnvironment,
                          kinds: &Vec<ClassOrInterfaceEnvironment>,
                          globals: &Vec<VariableEnvironment>)
                          -> Result<Type, String> {
     // TODO: do these need to resolve to anything special?
-    match resolve::expression::go(&node.children[0], current, kinds, globals) {
+    match resolve::expression::go(&node.children[0], modifiers, current, kinds, globals) {
         Ok(_) => (),
         Err(e) => return Err(e),
     }
-    match resolve::expression::go(&node.children[1], current, kinds, globals) {
+    match resolve::expression::go(&node.children[1], modifiers, current, kinds, globals) {
         Ok(_) => (),
         Err(e) => return Err(e),
     }

@@ -5,18 +5,21 @@ use analysis::types::resolve;
 use scanner::ASTNode;
 
 pub fn go(node: &ASTNode,
+          modifiers: &Vec<ASTNode>,
           current: &ClassOrInterfaceEnvironment,
           kinds: &Vec<ClassOrInterfaceEnvironment>,
           globals: &Vec<VariableEnvironment>)
           -> Result<Type, String> {
-    let lhs = match resolve::expression::go(&node.children[0], current, kinds, globals) {
-        Ok(l) => l,
-        Err(e) => return Err(e),
-    };
-    let rhs = match resolve::expression::go(&node.children[1], current, kinds, globals) {
-        Ok(r) => r,
-        Err(e) => return Err(e),
-    };
+    let lhs =
+        match resolve::expression::go(&node.children[0], modifiers, current, kinds, globals) {
+            Ok(l) => l,
+            Err(e) => return Err(e),
+        };
+    let rhs =
+        match resolve::expression::go(&node.children[1], modifiers, current, kinds, globals) {
+            Ok(r) => r,
+            Err(e) => return Err(e),
+        };
 
     lhs.apply_math(&node.token.kind, &rhs)
 }

@@ -11,9 +11,13 @@ lazy_static! {
     static ref NAME: ASTNode = {
         ASTNode { token: Token::new(TokenKind::NonTerminal, Some("Name")), children: Vec::new() }
     };
+    static ref STATIC: ASTNode = {
+        ASTNode { token: Token::new(TokenKind::Static, None), children: Vec::new() }
+    };
 }
 
 pub fn go(node: &ASTNode,
+          modifiers: &Vec<ASTNode>,
           current: &ClassOrInterfaceEnvironment,
           kinds: &Vec<ClassOrInterfaceEnvironment>,
           globals: &Vec<VariableEnvironment>)
@@ -37,10 +41,12 @@ pub fn go(node: &ASTNode,
             }
 
             // implicit `this`
-            // TODO: in_class would save some effort
-            match lookup::method::in_env(&current.name, &canonical, current, kinds) {
-                Ok(t) => return Ok(t),
-                Err(_) => (),
+            if !modifiers.contains(&*STATIC) {
+                // TODO: in_class would save some effort
+                match lookup::method::in_env(&current.name, &canonical, current, kinds) {
+                    Ok(t) => return Ok(t),
+                    Err(_) => (),
+                }
             }
 
             Err(format!("could not resolve {:?} to method from class {:?}",
@@ -51,7 +57,11 @@ pub fn go(node: &ASTNode,
         // an arg if children.len() == 6
         // TODO: arg
         5 | 6 => {
-            let lhs = match resolve::expression::go(&node.children[0], current, kinds, globals) {
+            let lhs = match resolve::expression::go(&node.children[0],
+                                                    modifiers,
+                                                    current,
+                                                    kinds,
+                                                    globals) {
                 Ok(t) => t,
                 Err(e) => return Err(e),
             };

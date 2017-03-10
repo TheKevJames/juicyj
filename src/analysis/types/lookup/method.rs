@@ -86,15 +86,14 @@ pub fn in_env(canonical: &ASTNode,
                     return Err(format!("TODO: uh... what? MethodIsNotAMethodError."));
                 }
 
-                let kind = f.to_variable().kind.clone();
-                return match lookup::class::in_env(&kind, &cls, kinds) {
+                return match lookup::class::in_env(&f.kind, &cls, kinds) {
                     Ok(cls) => {
                         remaining_method.children.remove(0);
                         // cls is now kind or A.B.C.f.g, remaining_method is h.i()
                         in_env(&cls.name, &remaining_method, &cls, kinds)
                     }
                     Err(_) => {
-                        Err(format!("could not lookup kind {} of field in class {}", kind, cls))
+                        Err(format!("could not lookup kind {} of field in class {}", f.kind, cls))
                     }
                 };
             }

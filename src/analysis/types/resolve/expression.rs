@@ -14,42 +14,45 @@ lazy_static! {
 }
 
 pub fn go(node: &ASTNode,
+          modifiers: &Vec<ASTNode>,
           current: &ClassOrInterfaceEnvironment,
           kinds: &Vec<ClassOrInterfaceEnvironment>,
           globals: &Vec<VariableEnvironment>)
           -> Result<Type, String> {
     match node.token.lexeme {
         Some(ref l) if l == "ArrayAccess" => {
-            resolve::arrayaccess::go(node, current, kinds, globals)
+            resolve::arrayaccess::go(node, modifiers, current, kinds, globals)
         }
         Some(ref l) if l == "ArrayCreationExpression" => {
-            resolve::arraycreationexpression::go(node, current, kinds, globals)
+            resolve::arraycreationexpression::go(node, modifiers, current, kinds, globals)
         }
         Some(ref l) if l == "ArrayType" => {
             Ok(Type::new(ClassOrInterfaceEnvironment::new(node.clone(), ClassOrInterface::CLASS)))
         }
-        Some(ref l) if l == "Assignment" => resolve::assignment::go(node, current, kinds, globals),
+        Some(ref l) if l == "Assignment" => {
+            resolve::assignment::go(node, modifiers, current, kinds, globals)
+        }
         Some(ref l) if l == "CastExpression" => {
-            resolve::castexpression::go(node, current, kinds, globals)
+            resolve::castexpression::go(node, modifiers, current, kinds, globals)
         }
         Some(ref l) if l == "ClassInstanceCreationExpression" => {
             resolve::classinstancecreationexpression::go(node, current, kinds)
         }
         Some(ref l) if l == "FieldAccess" => {
-            resolve::fieldaccess::go(node, current, kinds, globals)
+            resolve::fieldaccess::go(node, modifiers, current, kinds, globals)
         }
         Some(ref l) if l == "MethodInvocation" => {
-            resolve::methodinvocation::go(node, current, kinds, globals)
+            resolve::methodinvocation::go(node, modifiers, current, kinds, globals)
         }
-        Some(ref l) if l == "Name" => resolve::name::go(node, current, kinds, globals),
+        Some(ref l) if l == "Name" => resolve::name::go(node, modifiers, current, kinds, globals),
         _ => {
             match node.token.kind {
                 TokenKind::And | TokenKind::BitAnd | TokenKind::Or | TokenKind::BitOr |
                 TokenKind::BitXor => {
-                    resolve::comparison::twoarg_boolean(node, current, kinds, globals)
+                    resolve::comparison::twoarg_boolean(node, modifiers, current, kinds, globals)
                 }
                 TokenKind::Not => {
-                    resolve::comparison::onearg_boolean(node, current, kinds, globals)
+                    resolve::comparison::onearg_boolean(node, modifiers, current, kinds, globals)
                 }
                 TokenKind::Equality |
                 TokenKind::NotEqual |
@@ -57,13 +60,13 @@ pub fn go(node: &ASTNode,
                 TokenKind::LessThanOrEqual |
                 TokenKind::GreaterThan |
                 TokenKind::GreaterThanOrEqual => {
-                    resolve::comparison::twoarg(node, current, kinds, globals)
+                    resolve::comparison::twoarg(node, modifiers, current, kinds, globals)
                 }
                 TokenKind::Instanceof => {
-                    resolve::comparison::twoarg_instanceof(node, current, kinds, globals)
+                    resolve::comparison::twoarg_instanceof(node, modifiers, current, kinds, globals)
                 }
                 TokenKind::FSlash | TokenKind::Minus | TokenKind::Percent | TokenKind::Plus |
-                TokenKind::Star => resolve::math::go(node, current, kinds, globals),
+                TokenKind::Star => resolve::math::go(node, modifiers, current, kinds, globals),
                 TokenKind::Boolean | TokenKind::Byte | TokenKind::Char | TokenKind::CharValue |
                 TokenKind::False | TokenKind::Int | TokenKind::Null | TokenKind::NumValue |
                 TokenKind::Short | TokenKind::StrValue | TokenKind::True => {

@@ -170,6 +170,7 @@ fn verify_env(env: &Environment) -> Result<(), String> {
 
             let globals = constructor.parameters.clone();
             let return_types = match statement::block(&mut constructor.body.clone(),
+                                                      &constructor.modifiers,
                                                       &current,
                                                       &env.kinds,
                                                       &globals) {
@@ -209,11 +210,14 @@ fn verify_env(env: &Environment) -> Result<(), String> {
             // TODO: allow qualified names to be resolved to future fields
             // TODO: static fields can not use implicit `this`
             let rexpr = field.clone().value.unwrap();
-            let rvalue =
-                match resolve::expression::go(&rexpr, &current_builder, &env.kinds, &Vec::new()) {
-                    Ok(t) => t,
-                    Err(e) => return Err(e),
-                };
+            let rvalue = match resolve::expression::go(&rexpr,
+                                                       &field.modifiers,
+                                                       &current_builder,
+                                                       &env.kinds,
+                                                       &Vec::new()) {
+                Ok(t) => t,
+                Err(e) => return Err(e),
+            };
 
             let lvalue = match lookup::class::in_env(&field.kind, &current_builder, &env.kinds) {
                 Ok(c) => Type::new(c),
@@ -249,10 +253,24 @@ fn verify_env(env: &Environment) -> Result<(), String> {
                 return result;
             }
 
+            if method.modifiers.contains(&*ABSTRACT) {
+                if method.modifiers.contains(&*FINAL) {
+                    if method.name != *GETCLASS {
+                        return Err(format!("final method {} is abstract", method));
+                    }
+                }
+
+                if method.modifiers.contains(&*STATIC) {
+                    return Err(format!("static method {} is abstract", method));
+                }
+            }
+
+            // TODO: static methods can not use implicit `this`
             if method.body.is_some() {
                 let globals = method.parameters.clone();
                 let return_types =
                     match statement::block(&mut method.clone().body.unwrap().clone(),
+                                           &method.modifiers,
                                            &current,
                                            &env.kinds,
                                            &globals) {
@@ -282,19 +300,6 @@ fn verify_env(env: &Environment) -> Result<(), String> {
                 }
             }
 
-            if method.modifiers.contains(&*ABSTRACT) {
-                if method.modifiers.contains(&*FINAL) {
-                    if method.name != *GETCLASS {
-                        return Err(format!("final method {} is abstract", method));
-                    }
-                }
-
-                if method.modifiers.contains(&*STATIC) {
-                    return Err(format!("static method {} is abstract", method));
-                }
-            }
-
-            // TODO: static methods can not use implicit `this`
         }
     }
 

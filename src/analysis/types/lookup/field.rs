@@ -61,12 +61,11 @@ pub fn in_env(canonical: &ASTNode,
                     continue;
                 }
 
-                let kind = f.to_variable().kind.clone();
-                let result = match lookup::class::in_env(&kind, &cls, kinds) {
+                let result = match lookup::class::in_env(&f.kind, &cls, kinds) {
                     Ok(cls) => cls,
                     Err(_) => {
                         return Err(format!("could not lookup kind {} of field in class {}",
-                                           kind,
+                                           f.kind,
                                            cls))
                     }
                 };
