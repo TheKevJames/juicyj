@@ -5,6 +5,64 @@ use scanner::ASTNode;
 use scanner::Token;
 use scanner::TokenKind;
 
+// TODO: move this?
+fn into_array(name: &ASTNode) -> ClassOrInterfaceEnvironment {
+    let mut name = name.clone();
+    // remove Dim or DimExpr
+    name.children.truncate(1);
+    name.children[0].flatten();
+    let mut array = ClassOrInterfaceEnvironment::new(name, ClassOrInterface::CLASS);
+
+    let object = ASTNode {
+        token: Token::new(TokenKind::NonTerminal, Some("Name")),
+        children: vec![ASTNode {
+                           token: Token::new(TokenKind::Identifier, Some("java")),
+                           children: Vec::new(),
+                       },
+                       ASTNode {
+                           token: Token::new(TokenKind::Dot, None),
+                           children: Vec::new(),
+                       },
+                       ASTNode {
+                           token: Token::new(TokenKind::Identifier, Some("lang")),
+                           children: Vec::new(),
+                       },
+                       ASTNode {
+                           token: Token::new(TokenKind::Dot, None),
+                           children: Vec::new(),
+                       },
+                       ASTNode {
+                           token: Token::new(TokenKind::Identifier, Some("Object")),
+                           children: Vec::new(),
+                       }],
+    };
+    array.extends.push(object);
+
+    // array.fields clone is public
+
+    let length_name = ASTNode {
+        token: Token::new(TokenKind::Identifier, Some("length")),
+        children: Vec::new(),
+    };
+    let length_kind = ASTNode {
+        token: Token::new(TokenKind::Int, None),
+        children: Vec::new(),
+    };
+    let mut length = FieldEnvironment::new(length_name, length_kind);
+
+    length.modifiers.push(ASTNode {
+        token: Token::new(TokenKind::Public, None),
+        children: Vec::new(),
+    });
+    length.modifiers.push(ASTNode {
+        token: Token::new(TokenKind::Final, None),
+        children: Vec::new(),
+    });
+    array.fields.push(length);
+
+    return array;
+}
+
 pub fn lookup_canonical(name: &ASTNode,
                         current: &ClassOrInterfaceEnvironment,
                         kinds: &Vec<ClassOrInterfaceEnvironment>)
@@ -55,80 +113,30 @@ pub fn lookup(name: &ASTNode,
               current: &ClassOrInterfaceEnvironment,
               kinds: &Vec<ClassOrInterfaceEnvironment>)
               -> Result<ClassOrInterfaceEnvironment, String> {
-    let name = name.clone();
-    let node_star = ASTNode {
-        token: Token::new(TokenKind::Star, None),
-        children: Vec::new(),
-    };
-
     if let Some(l) = name.clone().token.lexeme {
         if l == "ArrayType" {
-            let mut array = ClassOrInterfaceEnvironment::new(name.clone(), ClassOrInterface::CLASS);
-
-            let object = ASTNode {
-                token: Token::new(TokenKind::NonTerminal, Some("Name")),
-                children: vec![ASTNode {
-                                   token: Token::new(TokenKind::Identifier, Some("java")),
-                                   children: Vec::new(),
-                               },
-                               ASTNode {
-                                   token: Token::new(TokenKind::Dot, None),
-                                   children: Vec::new(),
-                               },
-                               ASTNode {
-                                   token: Token::new(TokenKind::Identifier, Some("lang")),
-                                   children: Vec::new(),
-                               },
-                               ASTNode {
-                                   token: Token::new(TokenKind::Dot, None),
-                                   children: Vec::new(),
-                               },
-                               ASTNode {
-                                   token: Token::new(TokenKind::Identifier, Some("Object")),
-                                   children: Vec::new(),
-                               }],
-            };
-            array.extends.push(object);
-
-            // array.fields clone is public
-
-            let mut length = FieldEnvironment::new(ASTNode {
-                                                       token: Token::new(TokenKind::Identifier,
-                                                                         Some("length")),
-                                                       children: Vec::new(),
-                                                   },
-                                                   ASTNode {
-                                                       token: Token::new(TokenKind::Int, None),
-                                                       children: Vec::new(),
-                                                   });
-            length.modifiers.push(ASTNode {
-                token: Token::new(TokenKind::Public, None),
-                children: Vec::new(),
-            });
-            length.modifiers.push(ASTNode {
-                token: Token::new(TokenKind::Final, None),
-                children: Vec::new(),
-            });
-            array.fields.push(length);
-
-            return Ok(array);
+            return Ok(into_array(name));
         }
     }
 
     // 0. lookup canonical path
-    match lookup_canonical(&name, current, kinds) {
+    match lookup_canonical(name, current, kinds) {
         Some(x) => return x,
         None => (),
     }
 
     // 1. try the enclosing class or interface
     if let Some(class_name) = current.name.children.last() {
-        if &name == class_name {
+        if name == class_name {
             return Ok(current.clone());
         }
     }
 
     let mut found = None;
+    let node_star = ASTNode {
+        token: Token::new(TokenKind::Star, None),
+        children: Vec::new(),
+    };
 
     // 2. try any single-type-import (A.B.C.D)
     for import in &current.imports {
@@ -138,7 +146,7 @@ pub fn lookup(name: &ASTNode,
             }
 
             // find the right import
-            if &name == import_name {
+            if name == import_name {
                 for kind in kinds {
                     // find the associated kind
                     if kind.name == import.import {
@@ -164,7 +172,7 @@ pub fn lookup(name: &ASTNode,
     }
 
     // 3. try the same package
-    let result = lookup_in_package(&name, current, kinds);
+    let result = lookup_in_package(name, current, kinds);
     if result.is_some() {
         return result.unwrap();
     }
@@ -178,7 +186,7 @@ pub fn lookup(name: &ASTNode,
 
             for kind in kinds {
                 if let Some((kind_name, kind_package)) = kind.name.children.split_last() {
-                    if import_package == kind_package && &name == kind_name {
+                    if import_package == kind_package && name == kind_name {
                         match found {
                             Some(_) => {
                                 return Err(format!("ambiguous on-demand lookup for {:?} in {:?}",
@@ -207,12 +215,12 @@ pub fn lookup_or_primitive(kind: &ASTNode,
                            current: &ClassOrInterfaceEnvironment,
                            kinds: &Vec<ClassOrInterfaceEnvironment>)
                            -> Result<ClassOrInterfaceEnvironment, String> {
-    let mut child_kind = kind.clone();
     if let Some(l) = kind.clone().token.lexeme {
         if l == "ArrayType" {
-            child_kind = kind.children[0].clone();
+            return Ok(into_array(&kind));
         }
     }
+
     if vec![TokenKind::Boolean,
             TokenKind::Byte,
             TokenKind::Char,
@@ -220,11 +228,13 @@ pub fn lookup_or_primitive(kind: &ASTNode,
             TokenKind::Null,
             TokenKind::Short,
             TokenKind::Void]
-        .contains(&child_kind.token.kind) {
+        .contains(&kind.token.kind) {
         return Ok(ClassOrInterfaceEnvironment::new(kind.clone(), ClassOrInterface::CLASS));
     }
 
-    lookup(&child_kind.flatten(), current, kinds)
+    let mut kind = kind.clone();
+    kind.flatten();
+    lookup(&kind, current, kinds)
 }
 
 pub fn verify(kind: ASTNode,
@@ -234,9 +244,11 @@ pub fn verify(kind: ASTNode,
     let mut kind = kind;
     if let Some(l) = kind.clone().token.lexeme {
         if l == "ArrayType" {
+            // verify contents
             kind = kind.children[0].clone();
         }
     }
+
     if vec![TokenKind::Boolean,
             TokenKind::Byte,
             TokenKind::Char,
@@ -290,9 +302,7 @@ pub fn verify_prefixes(kind: ASTNode,
                 Some(Ok(ref cls)) if cls.name != kind => {
                     return Err(format!("strict prefix {} resolves to local type", testable))
                 }
-                Some(Ok(_)) => {
-                    return Err(format!("strict prefix {} resolves to self", testable))
-                }
+                Some(Ok(_)) => return Err(format!("strict prefix {} resolves to self", testable)),
                 _ => (),
             }
         }

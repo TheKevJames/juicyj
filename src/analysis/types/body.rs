@@ -334,6 +334,7 @@ fn resolve_expression(node: &ASTNode,
         Some(ref l) if l == "ArrayCreationExpression" => {
             match resolve_expression(&node.children[0], current, kinds, globals) {
                 Ok(x) => {
+                    // TODO: into_array ?
                     let mut kind = x.kind;
                     kind.name = ASTNode {
                         token: Token::new(TokenKind::NonTerminal, Some("ArrayType")),
@@ -361,7 +362,9 @@ fn resolve_expression(node: &ASTNode,
             match resolve_expression(&node.children[1], current, kinds, globals) {
                 Ok(x) => {
                     let mut kind = x.kind;
+                    // CastExpression has 5 children iff it contains a DimExpr
                     if node.children.len() == 5 {
+                        // TODO: into_array ?
                         kind.name = ASTNode {
                             token: Token::new(TokenKind::NonTerminal, Some("ArrayType")),
                             children: vec![kind.name],
@@ -384,10 +387,11 @@ fn resolve_expression(node: &ASTNode,
             let cls = match node.children[0].token.kind {
                 TokenKind::This => current.clone(),
                 _ => {
-                    let lhs = match resolve_expression(&node.children[0], current, kinds, globals) {
-                        Ok(l) => l,
-                        Err(e) => return Err(e),
-                    };
+                    let lhs =
+                        match resolve_expression(&node.children[0], current, kinds, globals) {
+                            Ok(l) => l,
+                            Err(e) => return Err(e),
+                        };
 
                     let mut lhs_kind = lhs.kind.name.clone();
                     lhs_kind.flatten();
