@@ -198,8 +198,10 @@ fn verify_env(env: &Environment) -> Result<(), String> {
             }
         }
 
+        let mut current_builder = current.clone();
+        current_builder.fields = Vec::new();
         for field in &current.fields {
-            let result = verify::prefixes::canonical(&field.kind, &current, &env.kinds);
+            let result = verify::prefixes::canonical(&field.kind, &current_builder, &env.kinds);
             if result.is_err() {
                 return result;
             }
@@ -208,23 +210,29 @@ fn verify_env(env: &Environment) -> Result<(), String> {
                 continue;
             }
 
-            // TODO: current subset (forward declarations)
+            // TODO: should this still include other classes?
+            let env_builder = vec![current_builder.clone()];
+
             let rexpr = field.clone().value.unwrap();
-            let rvalue = match resolve::expression::go(&rexpr, &current, &env.kinds, &Vec::new()) {
+            let rvalue = match resolve::expression::go(&rexpr,
+                                                       &current_builder,
+                                                       &env_builder,
+                                                       &Vec::new()) {
                 Ok(t) => t,
                 Err(e) => return Err(e),
             };
 
-            let lvalue = match lookup::class::in_env(&field.kind, &current, &env.kinds) {
+            let lvalue = match lookup::class::in_env(&field.kind, &current_builder, &env_builder) {
                 Ok(c) => Type::new(c),
                 Err(e) => return Err(e),
             };
 
-            match lvalue.assign(&rvalue, &current, &env.kinds) {
+            match lvalue.assign(&rvalue, &current_builder, &env_builder) {
                 Ok(_) => (),
                 Err(e) => return Err(e),
             }
 
+            current_builder.fields.push(field.clone());
             // TODO: static fields can not use implicit `this`
         }
 
