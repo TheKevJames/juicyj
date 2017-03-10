@@ -32,11 +32,11 @@ fn move_two(cls: &mut ASTNode, method: &mut ASTNode) -> Result<(), ()> {
     Ok(())
 }
 
-fn select_method(methods: &Vec<MethodEnvironment>,
-                 args: &Vec<Type>,
-                 cls: &ClassOrInterfaceEnvironment,
-                 kinds: &Vec<ClassOrInterfaceEnvironment>)
-                 -> Result<MethodEnvironment, String> {
+pub fn select_method(methods: &Vec<MethodEnvironment>,
+                     args: &Vec<Type>,
+                     cls: &ClassOrInterfaceEnvironment,
+                     kinds: &Vec<ClassOrInterfaceEnvironment>)
+                     -> Result<MethodEnvironment, String> {
     let mut best: Option<MethodEnvironment> = None;
     let mut distance = <u32>::max_value();
 

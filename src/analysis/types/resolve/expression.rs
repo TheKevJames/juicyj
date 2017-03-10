@@ -36,7 +36,7 @@ pub fn go(node: &ASTNode,
             resolve::castexpression::go(node, modifiers, current, kinds, globals)
         }
         Some(ref l) if l == "ClassInstanceCreationExpression" => {
-            resolve::classinstancecreationexpression::go(node, current, kinds)
+            resolve::classinstancecreationexpression::go(node, modifiers, current, kinds, globals)
         }
         Some(ref l) if l == "FieldAccess" => {
             resolve::fieldaccess::go(node, modifiers, current, kinds, globals)

@@ -85,8 +85,34 @@ pub fn nonblock(node: &mut ASTNode,
         // TODO: check expressions are correctly types (no narrowing conversions)
         // TODO: ensure all expressions are resolved
         // TODO: handle UnaryExpression (Minus, Not)
-        Some(ref l) if l == "ArrayCreationExpression" || l == "ClassInstanceCreationExpression" => {
-            // TODO: ACE -> child1 may be expr, CICE -> child1 may be params
+        Some(ref l) if l == "ArrayCreationExpression" => {
+            // TODO: does this even?
+            // TODO: ACE -> child1 may be expr
+            let mut kind = node.children[0].clone();
+            kind.flatten();
+
+            match lookup::class::in_env(&kind, current, kinds) {
+                Ok(ref k) if k.modifiers.contains(&*ABSTRACT) => {
+                    Err(format!("instantiated abstract class {}", k.name))
+                }
+                Ok(ref k) if k.kind == ClassOrInterface::INTERFACE => {
+                    Err(format!("instantiated interface {}", k.name))
+                }
+                Ok(_) => Ok(vec![NULL.clone()]),
+                Err(e) => Err(e),
+            }
+        }
+        Some(ref l) if l == "ClassInstanceCreationExpression" => {
+            // TODO: calling resolve::expression::go here is mostly a hack, since it
+            // does the type lookup accidentally
+            let mut block_globals = globals.clone();
+            block_globals.extend(locals.clone());
+
+            match resolve::expression::go(&node, modifiers, current, kinds, &block_globals) {
+                Ok(_) => (),
+                Err(e) => return Err(e),
+            }
+
             let mut kind = node.children[0].clone();
             kind.flatten();
             match lookup::class::in_env(&kind, current, kinds) {
