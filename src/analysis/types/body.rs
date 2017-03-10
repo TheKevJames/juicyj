@@ -131,9 +131,9 @@ impl Type {
                                children: Vec::new(),
                            }],
         };
-        primitives.push(string.clone());
-        primitives.push(java_lang_string.clone());
-        if primitives.contains(&self.kind.name) && primitives.contains(&other.kind.name) {
+        let strings = vec![string.clone(), java_lang_string.clone()];
+        if strings.contains(&self.kind.name) || strings.contains(&other.kind.name) {
+            // anything can resolve to a String
             return Ok(Type::new(ClassOrInterfaceEnvironment::new(java_lang_string.clone(),
                                                                  ClassOrInterface::CLASS)));
         }
