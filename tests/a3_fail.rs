@@ -5,7 +5,6 @@ macro_rules! a3_fail_tests {
     ($($name:ident: $case:tt,)*) => {
     $(
         #[test]
-        #[ignore]
         fn $name() {
             let stdlib_io = std::fs::read_dir("stdlib/java/io").unwrap();
             let stdlib_lang = std::fs::read_dir("stdlib/java/lang").unwrap();
@@ -37,7 +36,6 @@ macro_rules! a3_fail_tests_folders {
     ($($name:ident: $case:tt,)*) => {
     $(
         #[test]
-        #[ignore]
         fn $name() {
             let stdlib_io = std::fs::read_dir("stdlib/java/io").unwrap();
             let stdlib_lang = std::fs::read_dir("stdlib/java/lang").unwrap();
