@@ -86,20 +86,22 @@ impl Type {
                             kinds: &Vec<ClassOrInterfaceEnvironment>)
                             -> Result<Type, String> {
         // Anything assignable is comparable. Comparability, though, is reflexive.
-        let result = self.assign(other, current, kinds);
-        if result.is_ok() {
+        let lhs_result = self.assign(other, current, kinds);
+        if lhs_result.is_ok() {
             return Ok(BOOLEAN.clone());
         }
 
-        let result = other.assign(self, current, kinds);
-        if result.is_ok() {
+        let rhs_result = other.assign(self, current, kinds);
+        if rhs_result.is_ok() {
             return Ok(BOOLEAN.clone());
         }
 
-        Err(format!("could not apply {:?} to {:?} and {:?}",
+        Err(format!("could not apply comparison {:?} to {:?} and {:?}\ngot errors:\n\t{:?}\n\t{:?}",
                     operation,
                     self.kind.name,
-                    other.kind.name))
+                    other.kind.name,
+                    lhs_result.unwrap_err(),
+                    rhs_result.unwrap_err()))
     }
 
     pub fn apply_math(&self, operation: &TokenKind, other: &Type) -> Result<Type, String> {
@@ -138,7 +140,7 @@ impl Type {
             _ => (),
         }
 
-        Err(format!("could not apply {:?} to {:?} and {:?}",
+        Err(format!("could not apply math {:?} to {:?} and {:?}",
                     operation,
                     self.kind.name,
                     other.kind.name))

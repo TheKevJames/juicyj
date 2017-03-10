@@ -19,6 +19,13 @@ pub fn canonical(canonical: &ASTNode,
                  current: &ClassOrInterfaceEnvironment,
                  kinds: &Vec<ClassOrInterfaceEnvironment>)
                  -> Result<(), String> {
+    // TODO: This might be wrong. Seems to fix the issue caused by always
+    // resolving types early (ie. class foo in foo.bar refering to self as "foo"
+    // is pre-resolved to foo.bar.foo before this method is called)
+    if canonical == &current.name {
+        return Ok(());
+    }
+
     let mut canonical = canonical.clone();
     if let Some(l) = canonical.clone().token.lexeme {
         if l == "ArrayType" {
@@ -27,7 +34,7 @@ pub fn canonical(canonical: &ASTNode,
     }
 
     if canonical.children.len() <= 1 {
-        return Ok(())
+        return Ok(());
     }
 
     if PRIMITIVES.contains(&canonical.children[0].token.kind) {

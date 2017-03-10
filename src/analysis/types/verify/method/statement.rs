@@ -167,18 +167,29 @@ pub fn nonblock(node: &mut ASTNode,
             Ok(())
         }
         Some(ref l) if l == "PrimaryNoNewArray" || l == "ReturnStatement" => {
+            // TODO: ReturnStatement should verify child returns return_type
             let mut expr = node.children[1].clone();
             nonblock(&mut expr, current, kinds, &globals, &mut locals.clone())
         }
         // TODO: should be much more fine-grained
         // _ => Err(format!("could not verify statement {:?}", node)),
         _ => {
-            let mut block_globals = globals.clone();
-            block_globals.extend(locals.clone());
+            match node.token.kind {
+                TokenKind::Boolean | TokenKind::Byte | TokenKind::Char | TokenKind::Int |
+                TokenKind::Short => Ok(()),
+                TokenKind::Null | TokenKind::This => Ok(()),
+                TokenKind::CharValue | TokenKind::NumValue | TokenKind::StrValue => Ok(()),
+                TokenKind::True | TokenKind::False => Ok(()),
+                _ => {
+                    println!("defaulting on : {:?}", node);
+                    let mut block_globals = globals.clone();
+                    block_globals.extend(locals.clone());
 
-            match resolve::expression::go(node, current, kinds, &block_globals) {
-                Ok(_) => Ok(()),
-                Err(e) => Err(e),
+                    match resolve::expression::go(node, current, kinds, &block_globals) {
+                        Ok(_) => Ok(()),
+                        Err(e) => Err(e),
+                    }
+                }
             }
         }
     }
