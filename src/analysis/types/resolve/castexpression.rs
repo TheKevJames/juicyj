@@ -16,15 +16,24 @@ pub fn go(node: &ASTNode,
           kinds: &Vec<ClassOrInterfaceEnvironment>,
           globals: &Vec<VariableEnvironment>)
           -> Result<Type, String> {
-    match resolve::expression::go(&node.children[1], current, kinds, globals) {
+    let expr = node.children.last().unwrap().clone();
+    let rhs = match resolve::expression::go(&expr, current, kinds, globals) {
+        Ok(t) => t,
+        Err(e) => return Err(e),
+    };
+
+    let lhs = match resolve::expression::go(&node.children[1], current, kinds, globals) {
         // CastExpression has 5 children iff it contains a DimExpr
-        Ok(ref x) if node.children.len() == 5 => {
+        Ok(ref t) if node.children.len() == 5 => {
             let kind = ASTNode {
                 token: ARRAYTYPE.clone(),
-                children: vec![x.kind.name.clone()],
+                children: vec![t.kind.name.clone()],
             };
-            Ok(Type::new(array::create(&kind)))
+            Type::new(array::create(&kind))
         }
-        x => x,
-    }
+        Ok(t) => t,
+        Err(e) => return Err(e),
+    };
+
+    lhs.assign(&rhs, current, kinds)
 }
