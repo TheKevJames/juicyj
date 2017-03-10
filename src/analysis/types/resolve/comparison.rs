@@ -12,6 +12,24 @@ lazy_static! {
         let node = ASTNode { token: Token::new(TokenKind::Boolean, None), children: Vec::new() };
         Type::new(ClassOrInterfaceEnvironment::new(node, ClassOrInterface::CLASS))
     };
+    static ref BYTE: Type = {
+        let node = ASTNode { token: Token::new(TokenKind::Byte, None), children: Vec::new() };
+        Type::new(ClassOrInterfaceEnvironment::new(node, ClassOrInterface::CLASS))
+    };
+    static ref CHAR: Type = {
+        let node = ASTNode { token: Token::new(TokenKind::Char, None), children: Vec::new() };
+        Type::new(ClassOrInterfaceEnvironment::new(node, ClassOrInterface::CLASS))
+    };
+    static ref INTEGER: Type = {
+        let node = ASTNode { token: Token::new(TokenKind::Int, None), children: Vec::new() };
+        Type::new(ClassOrInterfaceEnvironment::new(node, ClassOrInterface::CLASS))
+    };
+    static ref SHORT: Type = {
+        let node = ASTNode { token: Token::new(TokenKind::Short, None), children: Vec::new() };
+        Type::new(ClassOrInterfaceEnvironment::new(node, ClassOrInterface::CLASS))
+    };
+    static ref PRIMITIVES: [Type; 5] = [BOOLEAN.clone(), BYTE.clone(), CHAR.clone(),
+                                        INTEGER.clone(), SHORT.clone()];
 }
 const BITWISE: [TokenKind; 3] = [TokenKind::BitAnd, TokenKind::BitOr, TokenKind::BitXor];
 
@@ -92,13 +110,17 @@ pub fn twoarg_instanceof(node: &ASTNode,
                          globals: &Vec<VariableEnvironment>)
                          -> Result<Type, String> {
     // TODO: do these need to resolve to anything special?
-    match resolve::expression::go(&node.children[0], modifiers, current, kinds, globals) {
-        Ok(_) => (),
+    let lhs = match resolve::expression::go(&node.children[0], modifiers, current, kinds, globals) {
+        Ok(t) => t,
         Err(e) => return Err(e),
-    }
-    match resolve::expression::go(&node.children[1], modifiers, current, kinds, globals) {
-        Ok(_) => (),
+    };
+    let rhs = match resolve::expression::go(&node.children[1], modifiers, current, kinds, globals) {
+        Ok(t) => t,
         Err(e) => return Err(e),
+    };
+
+    if PRIMITIVES.contains(&lhs) || PRIMITIVES.contains(&rhs) {
+        return Err(format!("can not apply instanceof to primitive types"));
     }
 
     Ok(BOOLEAN.clone())
