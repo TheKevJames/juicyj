@@ -199,13 +199,8 @@ impl Type {
 
         let result = lhs.clone();
 
-        // can assign null to anything
-        if rhs == *NULL {
-            return Ok(result);
-        }
-
         // can not assign anything to voids (except nulls as returns...)
-        if lhs == *VOID {
+        if lhs == *VOID && rhs != *NULL {
             return Err(format!("cannot assign {} to void", rhs.kind.name));
         }
 
@@ -248,6 +243,11 @@ impl Type {
         primitives.push(CHAR.clone());
         primitives.push(INTEGER.clone());
         if lhs == *INTEGER && primitives.contains(&rhs) {
+            return Ok(result);
+        }
+
+        // can assign null to anything non-primitive
+        if !primitives.contains(&lhs) && rhs == *NULL {
             return Ok(result);
         }
 
