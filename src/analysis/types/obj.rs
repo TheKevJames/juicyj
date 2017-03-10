@@ -284,20 +284,22 @@ impl Type {
 
 impl PartialEq for Type {
     fn eq(&self, other: &Type) -> bool {
-        if let Some(lhs_lex) = self.kind.name.clone().token.lexeme {
-            if lhs_lex == "ArrayType" {
-                let mut lhs = self.clone();
-                lhs.kind.name = lhs.kind.name.children[0].clone();
-                return &lhs == other;
-            }
+        let lhs_array = self.kind.name.clone().token.lexeme.unwrap_or("".to_owned()) == "ArrayType";
+        let rhs_array = other.kind.name.clone().token.lexeme.unwrap_or("".to_owned()) ==
+                        "ArrayType";
+
+        if lhs_array != rhs_array {
+            return false;
         }
 
-        if let Some(rhs_lex) = other.kind.name.clone().token.lexeme {
-            if rhs_lex == "ArrayType" {
-                let mut rhs = other.clone();
-                rhs.kind.name = rhs.kind.name.children[0].clone();
-                return self == &rhs;
-            }
+        if lhs_array && rhs_array {
+            let mut lhs = self.clone();
+            lhs.kind.name = lhs.kind.name.children[0].clone();
+
+            let mut rhs = other.clone();
+            rhs.kind.name = rhs.kind.name.children[0].clone();
+
+            return lhs == rhs;
         }
 
         if self.kind.name == other.kind.name {

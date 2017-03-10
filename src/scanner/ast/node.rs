@@ -357,9 +357,27 @@ impl ASTNodePackage {
 
 impl PartialEq for ASTNode {
     fn eq(&self, other: &ASTNode) -> bool {
-        (self.token == other.token && self.children == other.children) ||
-        (self.children.len() == 1 && &self.children[0] == other) ||
-        (other.children.len() == 1 && &other.children[0] == self)
+        if self.token == other.token && self.children == other.children {
+            return true;
+        }
+
+        // TODO: remove this child stuff
+        // Note that a bunch of stuff relies on it, so... do it anyway.
+        if self.children.len() == 1 &&
+           self.clone().token.lexeme.unwrap_or("".to_owned()) == "Name" {
+            if &self.children[0] == other {
+                return true;
+            }
+        }
+
+        if other.children.len() == 1 &&
+           other.clone().token.lexeme.unwrap_or("".to_owned()) == "Name" {
+            if self == &other.children[0] {
+                return true;
+            }
+        }
+
+        false
     }
 }
 
