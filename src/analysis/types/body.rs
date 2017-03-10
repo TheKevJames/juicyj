@@ -149,18 +149,14 @@ impl Type {
               current: &ClassOrInterfaceEnvironment,
               kinds: &Vec<ClassOrInterfaceEnvironment>)
               -> Result<Type, String> {
-        let lhs = match check::lookup_or_primitive(&self.kind.name, current, kinds) {
+        let mut lhs = match check::lookup_or_primitive(&self.kind.name, current, kinds) {
             Ok(cls) => Type::new(cls),
             Err(e) => return Err(e),
         };
-        let rhs = match check::lookup_or_primitive(&rhs.kind.name, current, kinds) {
+        let mut rhs = match check::lookup_or_primitive(&rhs.kind.name, current, kinds) {
             Ok(cls) => Type::new(cls),
             Err(e) => return Err(e),
         };
-
-        if lhs == rhs {
-            return Ok(lhs.clone());
-        }
 
         // can assign null to anything
         let null = ASTNode {
@@ -168,6 +164,32 @@ impl Type {
             children: Vec::new(),
         };
         if rhs.kind.name == null {
+            return Ok(lhs.clone());
+        }
+
+        // can't assign classes to arrays, but can assign arrays to Object
+        // can assign arrays to each other with rules equal to child kinds
+        let lhs_array = lhs.kind.name.clone().token.lexeme.unwrap_or("".to_owned()) == "ArrayType";
+        let rhs_array = rhs.kind.name.clone().token.lexeme.unwrap_or("".to_owned()) == "ArrayType";
+        if lhs_array {
+            if !rhs_array {
+                return Err(format!("cannot assign class {} to array {}",
+                                   rhs.kind.name,
+                                   lhs.kind.name));
+            }
+
+            // TODO: while ArrayType? nested!
+            lhs = match check::lookup_or_primitive(&lhs.kind.name.children[0], current, kinds) {
+                Ok(cls) => Type::new(cls),
+                Err(e) => return Err(e),
+            };
+            rhs = match check::lookup_or_primitive(&rhs.kind.name.children[0], current, kinds) {
+                Ok(cls) => Type::new(cls),
+                Err(e) => return Err(e),
+            };
+        }
+
+        if lhs == rhs {
             return Ok(lhs.clone());
         }
 
@@ -344,6 +366,10 @@ fn resolve_expression(node: &ASTNode,
                 }
                 Err(e) => return Err(e),
             }
+        }
+        Some(ref l) if l == "ArrayType" => {
+            // TODO: is this it?
+            Ok(Type::new(ClassOrInterfaceEnvironment::new(node.clone(), ClassOrInterface::CLASS)))
         }
         Some(ref l) if l == "Assignment" => {
             let lhs = match resolve_expression(&node.children[0], current, kinds, globals) {
