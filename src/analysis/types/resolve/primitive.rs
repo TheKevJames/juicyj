@@ -70,7 +70,7 @@ pub fn go(node: &ASTNode) -> Result<Type, String> {
         // primitive values
         // TODO: lexemes?
         TokenKind::CharValue => Ok(CHAR.clone()),
-        TokenKind::NumValue => Ok(SHORT.clone()),
+        TokenKind::NumValue => Ok(INT.clone()),
         TokenKind::StrValue => Ok(STRING.clone()),
         TokenKind::True | TokenKind::False => Ok(BOOLEAN.clone()),
         _ => Err(format!("invalid primitive type {:?}", node)),
