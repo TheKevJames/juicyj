@@ -38,8 +38,6 @@ pub fn in_env(canonical: &ASTNode,
               current: &ClassOrInterfaceEnvironment,
               kinds: &Vec<ClassOrInterfaceEnvironment>)
               -> Result<Type, String> {
-    let mut canonical = canonical.clone();
-
     loop {
         let cls = match lookup::class::in_env(&canonical, current, kinds) {
             Ok(cls) => cls,
@@ -104,6 +102,7 @@ pub fn in_env(canonical: &ASTNode,
         break;
     }
 
+    let mut canonical = canonical.clone();
     let mut method = method.clone();
     match move_two(&mut canonical, &mut method) {
         Ok(()) => in_env(&canonical, &method, current, kinds),

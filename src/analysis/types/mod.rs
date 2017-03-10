@@ -208,7 +208,6 @@ fn verify_env(env: &Environment) -> Result<(), String> {
             }
 
             // TODO: allow qualified names to be resolved to future fields
-            // TODO: static fields can not use implicit `this`
             let rexpr = field.clone().value.unwrap();
             let rvalue = match resolve::expression::go(&rexpr,
                                                        &field.modifiers,
@@ -265,7 +264,6 @@ fn verify_env(env: &Environment) -> Result<(), String> {
                 }
             }
 
-            // TODO: static methods can not use implicit `this`
             if method.body.is_some() {
                 let globals = method.parameters.clone();
                 let return_types =
