@@ -1,6 +1,8 @@
+use analysis::environment::ClassOrInterface;
 use analysis::environment::ClassOrInterfaceEnvironment;
 use analysis::environment::VariableEnvironment;
 use analysis::types::lookup;
+use analysis::types::obj::Type;
 use analysis::types::resolve;
 use analysis::types::verify;
 use scanner::ASTNode;
@@ -10,6 +12,10 @@ use scanner::TokenKind;
 lazy_static! {
     static ref ABSTRACT: ASTNode = {
         ASTNode { token: Token::new(TokenKind::Abstract, None), children: Vec::new() }
+    };
+    static ref BOOLEAN: Type = {
+        let node = ASTNode { token: Token::new(TokenKind::Boolean, None), children: Vec::new() };
+        Type::new(ClassOrInterfaceEnvironment::new(node, ClassOrInterface::CLASS))
     };
 }
 
@@ -120,6 +126,12 @@ pub fn nonblock(node: &mut ASTNode,
             let mut block_globals = globals.clone();
             block_globals.extend(locals.clone());
 
+            match resolve::expression::go(&node.children[2], current, kinds, &block_globals) {
+                Ok(ref t) if t == &*BOOLEAN => (),
+                Ok(_) => return Err(format!("condition {} is not boolean", node.children[2])),
+                Err(e) => return Err(e),
+            }
+
             nonblock(&mut node.children[4],
                      current,
                      kinds,
@@ -129,6 +141,12 @@ pub fn nonblock(node: &mut ASTNode,
         Some(ref l) if l == "IfElseStatement" || l == "IfElseStatementNoShortIf" => {
             let mut block_globals = globals.clone();
             block_globals.extend(locals.clone());
+
+            match resolve::expression::go(&node.children[2], current, kinds, &block_globals) {
+                Ok(ref t) if t == &*BOOLEAN => (),
+                Ok(_) => return Err(format!("condition {} is not boolean", node.children[2])),
+                Err(e) => return Err(e),
+            }
 
             match nonblock(&mut node.children[4],
                            current,
