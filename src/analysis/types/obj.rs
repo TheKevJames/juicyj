@@ -88,7 +88,6 @@ impl Type {
                       current: &ClassOrInterfaceEnvironment,
                       kinds: &Vec<ClassOrInterfaceEnvironment>)
                       -> Result<Type, String> {
-        // TODO: figure out these rules
         let lhs = match lookup::class::in_env(&self.kind.name, current, kinds) {
             Ok(cls) => Type::new(cls),
             Err(e) => return Err(e),
@@ -100,13 +99,25 @@ impl Type {
 
         let result = lhs.clone();
 
-        let lhs_array = lhs.kind.name.clone().token.lexeme.unwrap_or("".to_owned()) == "ArrayType";
-        let rhs_array = rhs.kind.name.clone().token.lexeme.unwrap_or("".to_owned()) == "ArrayType";
-        if lhs_array != rhs_array {
-            return Err(format!("cannot cast classes and arrays"));
+        // TODO: figure out these rules
+        // is it backwards from assignability? (J1_6_Assignable_Object_ObjectArray)
+        // plus primitives? (stdlib)
+        //   no, but maybe backwards + forwards?
+        let lhs_result = lhs.assign(&rhs, current, kinds);
+        if lhs_result.is_ok() {
+            return Ok(result);
         }
 
-        Ok(result)
+        let rhs_result = rhs.assign(&lhs, current, kinds);
+        if rhs_result.is_ok() {
+            return Ok(result);
+        }
+
+        Err(format!("could not cast {:?} to {:?}\ngot errors:\n\t{:?}\n\t{:?}",
+                    rhs.kind.name,
+                    lhs.kind.name,
+                    lhs_result.unwrap_err(),
+                    rhs_result.unwrap_err()))
     }
 
     pub fn apply_comparison(&self,
@@ -276,8 +287,7 @@ impl Type {
     }
 
     pub fn is_coercible_to_int(&self) -> bool {
-        let primitives =
-            vec![BOOLEAN.clone(), BYTE.clone(), CHAR.clone(), INTEGER.clone(), SHORT.clone()];
+        let primitives = vec![BYTE.clone(), CHAR.clone(), INTEGER.clone(), SHORT.clone()];
         primitives.contains(&self)
     }
 }
