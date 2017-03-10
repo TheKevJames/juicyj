@@ -157,11 +157,7 @@ impl Type {
             return Ok(CHAR.clone());
         }
 
-        if *self == *BOOLEAN && *other == *BOOLEAN {
-            return Ok(BOOLEAN.clone());
-        }
-
-        let mut primitives = vec![BOOLEAN.clone(), BYTE.clone()];
+        let mut primitives = vec![BYTE.clone()];
         if primitives.contains(&self) && primitives.contains(&other) {
             return Ok(BYTE.clone());
         }
@@ -247,19 +243,19 @@ impl Type {
         }
 
         let mut primitives = vec![BYTE.clone()];
-        if lhs == *BYTE && primitives.contains(&rhs) {
+        if primitives.contains(&lhs) && primitives.contains(&rhs) {
             return Ok(result);
         }
 
         primitives.push(SHORT.clone());
-        if lhs == *SHORT && primitives.contains(&rhs) {
+        if primitives.contains(&lhs) && primitives.contains(&rhs) {
             return Ok(result);
         }
 
         primitives.push(CHAR.clone());
         primitives.push(INTEGER.clone());
-        if lhs == *INTEGER && primitives.contains(&rhs) {
-            return Ok(result);
+        if primitives.contains(&lhs) && primitives.contains(&rhs) {
+            return Ok(INTEGER.clone());
         }
 
         // can assign null to anything non-primitive
