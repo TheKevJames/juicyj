@@ -4,7 +4,14 @@ use analysis::environment::VariableEnvironment;
 use analysis::types::obj::Type;
 use analysis::types::resolve;
 use scanner::ASTNode;
+use scanner::Token;
 use scanner::TokenKind;
+
+lazy_static! {
+    static ref NULL: ASTNode = {
+        ASTNode { token: Token::new(TokenKind::Null, None), children: Vec::new() }
+    };
+}
 
 pub fn go(node: &ASTNode,
           current: &ClassOrInterfaceEnvironment,
@@ -63,6 +70,8 @@ pub fn go(node: &ASTNode,
                     resolve::primitive::go(node)
                 }
                 TokenKind::This => Ok(Type::new(current.clone())),
+                // Naked returns resolve to Null
+                TokenKind::Return => resolve::primitive::go(&NULL.clone()),
                 _ => Err(format!("could not resolve expression {:?}", node)),
             }
         }

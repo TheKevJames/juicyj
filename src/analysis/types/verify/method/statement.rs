@@ -166,7 +166,11 @@ pub fn nonblock(node: &mut ASTNode,
 
             Ok(())
         }
-        Some(ref l) if l == "PrimaryNoNewArray" || l == "ReturnStatement" => {
+        Some(ref l) if l == "PrimaryNoNewArray" => {
+            let mut expr = node.children[1].clone();
+            nonblock(&mut expr, current, kinds, &globals, &mut locals.clone())
+        }
+        Some(ref l) if l == "ReturnStatement" => {
             // TODO: ReturnStatement should verify child returns return_type
             let mut expr = node.children[1].clone();
             nonblock(&mut expr, current, kinds, &globals, &mut locals.clone())
