@@ -103,6 +103,12 @@ impl Type {
         // is it backwards from assignability? (J1_6_Assignable_Object_ObjectArray)
         // plus primitives? (stdlib)
         //   no, but maybe backwards + forwards?
+        //   also needs Short<-Char and Byte<-Char
+        let mut primitives = vec![BYTE.clone(), CHAR.clone(), INTEGER.clone(), SHORT.clone()];
+        if primitives.contains(&lhs) && primitives.contains(&rhs) {
+            return Ok(result);
+        }
+
         let lhs_result = lhs.assign(&rhs, current, kinds);
         if lhs_result.is_ok() {
             return Ok(result);
