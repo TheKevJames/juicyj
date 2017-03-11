@@ -18,6 +18,9 @@ lazy_static! {
     static ref NAME: ASTNode = {
         ASTNode { token: Token::new(TokenKind::NonTerminal, Some("Name")), children: Vec::new() }
     };
+    static ref PROTECTED: ASTNode = {
+        ASTNode { token: Token::new(TokenKind::Protected, None), children: Vec::new() }
+    };
     static ref STATIC: ASTNode = {
         ASTNode { token: Token::new(TokenKind::Static, None), children: Vec::new() }
     };
@@ -151,6 +154,28 @@ pub fn go(node: &ASTNode,
         Ok(m) => m,
         Err(e) => return Err(e),
     };
+
+    if cls.modifiers.contains(&*PROTECTED) || method.modifiers.contains(&*PROTECTED) {
+        let mut current_package = current.name.clone();
+        current_package.children.pop();
+
+        let mut cls_package = cls.name.clone();
+        cls_package.children.pop();
+
+        if cls_package != current_package {
+            let tcls = Type::new(cls.clone());
+            let tcurrent = Type::new(current.clone());
+            match tcls.assign(&tcurrent, current, kinds) {
+                Ok(_) => (),
+                Err(_) => {
+                    return Err(format!("could not access method {} on class {} from class {}",
+                                       method.name,
+                                       cls.name,
+                                       current.name))
+                }
+            }
+        }
+    }
 
     let kind = method.return_type.clone();
     match lookup::class::in_env(&kind, &cls, kinds) {
