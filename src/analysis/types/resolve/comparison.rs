@@ -109,7 +109,6 @@ pub fn twoarg_instanceof(node: &ASTNode,
                          kinds: &Vec<ClassOrInterfaceEnvironment>,
                          globals: &Vec<VariableEnvironment>)
                          -> Result<Type, String> {
-    // TODO: do these need to resolve to anything special?
     let lhs =
         match resolve::expression::go(&node.children[0], modifiers, current, kinds, globals) {
             Ok(t) => t,

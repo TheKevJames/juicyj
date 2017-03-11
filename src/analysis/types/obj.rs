@@ -99,11 +99,6 @@ impl Type {
 
         let result = lhs.clone();
 
-        // TODO: figure out these rules
-        // is it backwards from assignability? (J1_6_Assignable_Object_ObjectArray)
-        // plus primitives? (stdlib)
-        //   no, but maybe backwards + forwards?
-        //   also needs Short<-Char and Byte<-Char
         let primitives = vec![BYTE.clone(), CHAR.clone(), INTEGER.clone(), SHORT.clone()];
         if primitives.contains(&lhs) && primitives.contains(&rhs) {
             return Ok(result);
@@ -222,7 +217,6 @@ impl Type {
         let lhs_array = lhs.kind.name.clone().token.lexeme.unwrap_or("".to_owned()) == "ArrayType";
         let rhs_array = rhs.kind.name.clone().token.lexeme.unwrap_or("".to_owned()) == "ArrayType";
         if lhs_array {
-            // TODO: null works for all arrays, or just non-primitive arrays?
             if lhs == rhs || rhs == *NULL {
                 return Ok(result);
             }
@@ -312,7 +306,6 @@ impl Type {
         let lhs_array = lhs.kind.name.clone().token.lexeme.unwrap_or("".to_owned()) == "ArrayType";
         let rhs_array = rhs.kind.name.clone().token.lexeme.unwrap_or("".to_owned()) == "ArrayType";
         if lhs_array {
-            // TODO: null works for all arrays, or just non-primitive arrays?
             if lhs == rhs || rhs == *NULL {
                 return Ok(0);
             }
