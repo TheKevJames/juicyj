@@ -160,9 +160,7 @@ pub fn in_env(canonical: &ASTNode,
             }
         }
 
-        // TODO: is this ambiguous?
-        // return Err(...)
-        break;
+        return Err(format!("resolved method {} to class {} without that method", method, cls.name));
     }
 
     let mut canonical = canonical.clone();

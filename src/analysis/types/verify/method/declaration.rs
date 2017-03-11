@@ -33,6 +33,8 @@ pub fn go(node: &ASTNode,
                            new.name));
     }
 
+    locals.push(new.clone());
+
     match node.children[1].clone().token.kind {
         TokenKind::Assignment => {
             let mut rvalue = node.children[1].clone().children[1].clone();
@@ -67,6 +69,5 @@ pub fn go(node: &ASTNode,
         _ => (),
     }
 
-    locals.push(new.clone());
     verify::class::resolveable(&new.kind, current, kinds)
 }
