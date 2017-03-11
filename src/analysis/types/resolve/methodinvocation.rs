@@ -121,7 +121,7 @@ fn get_method(node: &ASTNode,
                 return Err(format!("can not use 'this' in static method"));
             }
 
-            let lhs = match resolve::expression::go(&primary, modifiers, current, kinds, globals) {
+            let lhs = match resolve::expression::go(&node.children[0], modifiers, current, kinds, globals) {
                 Ok(t) => t,
                 Err(e) => return Err(e),
             };
