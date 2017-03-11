@@ -32,6 +32,7 @@ pub fn go(node: &ASTNode,
         return Err(format!("can not use 'this' in static method"));
     }
 
+    // TODO: make lookup::field return a FieldEnv. Then, when looking up type, keep the modifiers
     match lookup::field::in_variables(&node, &NAME.clone(), current, kinds, globals) {
         Ok(t) => return Ok(t),
         Err(_) => (),

@@ -24,7 +24,7 @@ fn get_args(node: &ASTNode,
             globals: &Vec<VariableEnvironment>)
             -> Result<Vec<Type>, String> {
     let mut args = match node.children.len() {
-        5 => node.children[3].clone(),
+        2 => node.children[1].clone(),
         _ => ARGUMENTLIST.clone(),
     };
     args.flatten();
