@@ -113,22 +113,22 @@ fn get_method(node: &ASTNode,
         }
         // child[0] is class/field. child[2] is method on previous.
         5 | 6 => {
-            let mut name = NAME.clone();
-            name.children.push(node.children[2].clone());
-            name.flatten();
+            let mut primary = NAME.clone();
+            primary.children.push(node.children[0].clone());
+            primary.flatten();
             if modifiers.contains(&*STATIC) &&
-               name.children.first().unwrap().token.kind == TokenKind::This {
+               primary.children.first().unwrap().token.kind == TokenKind::This {
                 return Err(format!("can not use 'this' in static method"));
             }
 
-            let lhs = match resolve::expression::go(&node.children[0],
-                                                    modifiers,
-                                                    current,
-                                                    kinds,
-                                                    globals) {
+            let lhs = match resolve::expression::go(&primary, modifiers, current, kinds, globals) {
                 Ok(t) => t,
                 Err(e) => return Err(e),
             };
+
+            let mut name = NAME.clone();
+            name.children.push(node.children[2].clone());
+            name.flatten();
 
             // TODO: in_class would save some effort
             match lookup::method::in_env(&lhs.kind.name, &name, &args, current, kinds) {
@@ -137,7 +137,7 @@ fn get_method(node: &ASTNode,
             }
 
             Err(format!("could not resolve {:?} to method on class {:?}",
-                        node.children[2],
+                        name,
                         lhs.kind.name))
         }
         _ => Err(format!("malformed MethodInvocation {:?}", node)),
