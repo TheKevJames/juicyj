@@ -32,12 +32,24 @@ pub fn block(node: &mut ASTNode,
     let node = match node.clone().token.lexeme {
         Some(ref l) if l == "BlockStatements" => node.flatten().clone(),
         Some(ref l) if l == "Block" => {
-            return nonblock(&mut node.clone(),
-                            modifiers,
-                            current,
-                            kinds,
-                            globals,
-                            &mut Vec::new())
+            return match nonblock(&mut node.clone(),
+                                  modifiers,
+                                  current,
+                                  kinds,
+                                  globals,
+                                  &mut Vec::new()) {
+                Ok(rts) => {
+                    let mut return_types: Vec<Type> = Vec::new();
+                    for (rt, is_ret) in rts {
+                        if !is_ret {
+                            continue;
+                        }
+                        return_types.push(rt);
+                    }
+                    Ok(return_types)
+                }
+                Err(e) => Err(e),
+            }
         }
         _ => {
             ASTNode {
@@ -56,7 +68,14 @@ pub fn block(node: &mut ASTNode,
                        kinds,
                        globals,
                        &mut locals) {
-            Ok(rt) => return_types.extend(rt),
+            Ok(rts) => {
+                for (rt, is_ret) in rts {
+                    if !is_ret {
+                        continue;
+                    }
+                    return_types.push(rt);
+                }
+            }
             Err(e) => return Err(e),
         }
     }
@@ -68,13 +87,15 @@ pub fn block(node: &mut ASTNode,
     }
 }
 
+// TODO hack: return type sucks. Currently, its a vector of Types and whether
+// they're actually returned.
 pub fn nonblock(node: &mut ASTNode,
                 modifiers: &Vec<ASTNode>,
                 current: &ClassOrInterfaceEnvironment,
                 kinds: &Vec<ClassOrInterfaceEnvironment>,
                 globals: &Vec<VariableEnvironment>,
                 locals: &mut Vec<VariableEnvironment>)
-                -> Result<Vec<Type>, String> {
+                -> Result<Vec<(Type, bool)>, String> {
     match node.token.lexeme {
         // TODO: check accesses of protected fields, methods, and constructors are in
         // subtype or same package
@@ -97,7 +118,7 @@ pub fn nonblock(node: &mut ASTNode,
                 Ok(ref k) if k.kind == ClassOrInterface::INTERFACE => {
                     Err(format!("instantiated interface {}", k.name))
                 }
-                Ok(_) => Ok(vec![NULL.clone()]),
+                Ok(k) => Ok(vec![(Type::new(k.clone()), false)]),
                 Err(e) => Err(e),
             }
         }
@@ -121,7 +142,7 @@ pub fn nonblock(node: &mut ASTNode,
                 Ok(ref k) if k.kind == ClassOrInterface::INTERFACE => {
                     Err(format!("instantiated interface {}", k.name))
                 }
-                Ok(_) => Ok(vec![NULL.clone()]),
+                Ok(k) => Ok(vec![(Type::new(k.clone()), false)]),
                 Err(e) => Err(e),
             }
         }
@@ -131,20 +152,29 @@ pub fn nonblock(node: &mut ASTNode,
             block_globals.extend(locals.clone());
             match resolve::expression::go(&node, modifiers, current, kinds, &block_globals) {
                 // TODO: is this actually null?
-                Ok(_) => Ok(vec![NULL.clone()]),
+                Ok(_) => Ok(Vec::new()),
                 Err(e) => return Err(e),
             }
         }
         Some(ref l) if l == "Block" && node.children.len() == 3 => {
             let mut block_globals = globals.clone();
             block_globals.extend(locals.clone());
-            block(&mut node.children[1],
-                  modifiers,
-                  current,
-                  kinds,
-                  &block_globals)
+            match block(&mut node.children[1],
+                        modifiers,
+                        current,
+                        kinds,
+                        &block_globals) {
+                Ok(rts) => {
+                    let mut return_types = Vec::new();
+                    for rt in rts {
+                        return_types.push((rt, false));
+                    }
+                    Ok(return_types)
+                }
+                Err(e) => Err(e),
+            }
         }
-        Some(ref l) if l == "Block" => Ok(vec![NULL.clone()]),
+        Some(ref l) if l == "Block" => Ok(Vec::new()),
         Some(ref l) if l == "ForStatement" || l == "ForStatementNoShortIf" => {
             let mut block_globals = globals.clone();
             block_globals.extend(locals.clone());
@@ -178,11 +208,11 @@ pub fn nonblock(node: &mut ASTNode,
                         return Err(format!("for condition has multiple types"));
                     }
 
-                    if ts[0].kind.name.token.kind != TokenKind::Boolean {
+                    if ts[0].0.kind.name.token.kind != TokenKind::Boolean {
                         return Err(format!("for condition is not a boolean"));
                     }
 
-                    if let Some(value) = ts[0].kind.name.token.lexeme.clone() {
+                    if let Some(value) = ts[0].0.kind.name.token.lexeme.clone() {
                         if value == "false".to_owned() {
                             return Err(format!("for statement condition is false"));
                         }
@@ -207,12 +237,17 @@ pub fn nonblock(node: &mut ASTNode,
             }
 
             let mut block = node.children.last().unwrap().clone();
-            nonblock(&mut block,
-                     modifiers,
-                     current,
-                     kinds,
-                     &block_globals,
-                     &mut block_locals)
+            match nonblock(&mut block,
+                           modifiers,
+                           current,
+                           kinds,
+                           &block_globals,
+                           &mut block_locals) {
+                Ok(_) => (),
+                Err(e) => return Err(e),
+            }
+
+            Ok(Vec::new())
         }
         Some(ref l) if l == "IfStatement" || l == "WhileStatement" ||
                        l == "WhileStatementNoShortIf" => {
@@ -229,12 +264,17 @@ pub fn nonblock(node: &mut ASTNode,
                 Err(e) => return Err(e),
             }
 
-            nonblock(&mut node.children[4],
-                     modifiers,
-                     current,
-                     kinds,
-                     &block_globals,
-                     &mut Vec::new())
+            match nonblock(&mut node.children[4],
+                           modifiers,
+                           current,
+                           kinds,
+                           &block_globals,
+                           &mut Vec::new()) {
+                Ok(_) => (),
+                Err(e) => return Err(e),
+            }
+
+            Ok(Vec::new())
         }
         Some(ref l) if l == "IfElseStatement" || l == "IfElseStatementNoShortIf" => {
             let mut block_globals = globals.clone();
@@ -260,12 +300,17 @@ pub fn nonblock(node: &mut ASTNode,
                 Err(e) => return Err(e),
             }
 
-            nonblock(&mut node.children[6],
-                     modifiers,
-                     current,
-                     kinds,
-                     &block_globals,
-                     &mut Vec::new())
+            match nonblock(&mut node.children[6],
+                           modifiers,
+                           current,
+                           kinds,
+                           &block_globals,
+                           &mut Vec::new()) {
+                Ok(_) => (),
+                Err(e) => return Err(e),
+            }
+
+            Ok(Vec::new())
         }
         Some(ref l) if l == "LocalVariableDeclaration" => {
             match verify::method::declaration::go(&node,
@@ -274,7 +319,8 @@ pub fn nonblock(node: &mut ASTNode,
                                                   current,
                                                   globals,
                                                   locals) {
-                Ok(_) => Ok(vec![NULL.clone()]),
+                // TODO: what type is this?
+                Ok(_) => Ok(Vec::new()),
                 Err(e) => Err(e),
             }
         }
@@ -284,10 +330,11 @@ pub fn nonblock(node: &mut ASTNode,
             let mut block_globals = globals.clone();
             block_globals.extend(locals.clone());
 
-            match resolve::expression::go(&node, modifiers, current, kinds, &block_globals) {
-                Ok(_) => (),
-                Err(e) => return Err(e),
-            }
+            let method =
+                match resolve::expression::go(&node, modifiers, current, kinds, &block_globals) {
+                    Ok(t) => t,
+                    Err(e) => return Err(e),
+                };
 
             if node.children.len() >= 5 {
                 // Primary Dot Identifier ( Args )
@@ -305,7 +352,7 @@ pub fn nonblock(node: &mut ASTNode,
 
             // TODO: verify args are same as params of method
 
-            Ok(vec![NULL.clone()])
+            Ok(vec![(method.clone(), false)])
         }
         Some(ref l) if l == "PrimaryNoNewArray" => {
             let mut expr = node.children[1].clone();
@@ -331,7 +378,7 @@ pub fn nonblock(node: &mut ASTNode,
             let mut block_globals = globals.clone();
             block_globals.extend(locals.clone());
             match resolve::expression::go(&expr, modifiers, current, kinds, &block_globals) {
-                Ok(rt) => Ok(vec![rt]),
+                Ok(rt) => Ok(vec![(rt, true)]),
                 Err(e) => Err(e),
             }
         }
@@ -340,7 +387,7 @@ pub fn nonblock(node: &mut ASTNode,
             block_globals.extend(locals.clone());
 
             match resolve::expression::go(node, modifiers, current, kinds, &block_globals) {
-                Ok(t) => Ok(vec![t.clone()]),
+                Ok(t) => Ok(vec![(t.clone(), false)]),
                 Err(e) => Err(e),
             }
         }

@@ -303,7 +303,8 @@ fn verify_env(env: &Environment) -> Result<(), String> {
                     match method_return_type.assign(&return_type, current, &env.kinds) {
                         Ok(_) => (),
                         Err(e) => {
-                            return Err(format!("method {} has invalid return type\nerror: {:?}",
+                            return Err(format!("{} method {} has invalid return type\nerror: {:?}",
+                                               current.name,
                                                method.name,
                                                e))
                         }
