@@ -319,7 +319,9 @@ fn verify_env(env: &Environment) -> Result<(), String> {
                 }
 
                 if return_types.is_empty() && method_return_type != *VOID {
-                    return Err(format!("non-void method has no return type"));
+                    return Err(format!("non-void {} method {} has no return type",
+                                       current.name,
+                                       method.name));
                 }
             }
 

@@ -23,6 +23,7 @@ lazy_static! {
     };
 }
 
+// TODO: cleanup by splitting into entrance point and recursion fn
 pub fn block(node: &mut ASTNode,
              modifiers: &Vec<ASTNode>,
              current: &ClassOrInterfaceEnvironment,
@@ -167,7 +168,7 @@ pub fn nonblock(node: &mut ASTNode,
                 Ok(rts) => {
                     let mut return_types = Vec::new();
                     for rt in rts {
-                        return_types.push((rt, false));
+                        return_types.push((rt, true));
                     }
                     Ok(return_types)
                 }
