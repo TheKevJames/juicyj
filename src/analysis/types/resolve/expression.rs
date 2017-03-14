@@ -73,8 +73,9 @@ pub fn go(node: &ASTNode,
                     resolve::primitive::go(node)
                 }
                 TokenKind::This => Ok(Type::new(current.clone())),
-                // Naked returns resolve to Null
+                // Naked returns and empty statements resolve to Null
                 TokenKind::Return => resolve::primitive::go(&NULL.clone()),
+                TokenKind::Semicolon => resolve::primitive::go(&NULL.clone()),
                 _ => Err(format!("could not resolve expression {:?}", node)),
             }
         }
