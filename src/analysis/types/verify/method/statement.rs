@@ -249,8 +249,7 @@ pub fn nonblock(node: &mut ASTNode,
 
             Ok(Vec::new())
         }
-        Some(ref l) if l == "IfStatement" || l == "WhileStatement" ||
-                       l == "WhileStatementNoShortIf" => {
+        Some(ref l) if l == "IfStatement" => {
             let mut block_globals = globals.clone();
             block_globals.extend(locals.clone());
 
@@ -260,6 +259,39 @@ pub fn nonblock(node: &mut ASTNode,
                                           kinds,
                                           &block_globals) {
                 Ok(ref t) if t == &*BOOLEAN => (),
+                Ok(_) => return Err(format!("condition {} is not boolean", node.children[2])),
+                Err(e) => return Err(e),
+            }
+
+            match nonblock(&mut node.children[4],
+                           modifiers,
+                           current,
+                           kinds,
+                           &block_globals,
+                           &mut Vec::new()) {
+                Ok(_) => (),
+                Err(e) => return Err(e),
+            }
+
+            Ok(Vec::new())
+        }
+        Some(ref l) if l == "WhileStatement" ||
+                       l == "WhileStatementNoShortIf" => {
+            let mut block_globals = globals.clone();
+            block_globals.extend(locals.clone());
+
+            match resolve::expression::go(&node.children[2],
+                                          modifiers,
+                                          current,
+                                          kinds,
+                                          &block_globals) {
+                Ok(ref t) if t == &*BOOLEAN => {
+                    if let Some(value) = t.kind.name.token.lexeme.clone() {
+                        if value == "false".to_owned() {
+                            return Err(format!("while statement condition is false"));
+                        }
+                    }
+                }
                 Ok(_) => return Err(format!("condition {} is not boolean", node.children[2])),
                 Err(e) => return Err(e),
             }
