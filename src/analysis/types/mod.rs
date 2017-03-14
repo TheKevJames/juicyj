@@ -5,6 +5,7 @@ mod resolve;
 pub mod verify;
 
 use analysis::environment::ClassOrInterface;
+use analysis::environment::ClassOrInterfaceEnvironment;
 use analysis::environment::Environment;
 use analysis::types::obj::Type;
 use analysis::types::verify::method::statement;
@@ -57,6 +58,10 @@ lazy_static! {
     };
     static ref STATIC: ASTNode = {
         ASTNode { token: Token::new(TokenKind::Static, None), children: Vec::new() }
+    };
+    static ref VOID: Type = {
+        let node = ASTNode { token: Token::new(TokenKind::Void, None), children: Vec::new() };
+        Type::new(ClassOrInterfaceEnvironment::new(node, ClassOrInterface::CLASS))
     };
 }
 
@@ -194,6 +199,8 @@ fn verify_env(env: &Environment) -> Result<(), String> {
                     }
                 }
             }
+
+            // no return on non-void?
         }
 
         let mut current_builder = current.clone();
@@ -295,7 +302,7 @@ fn verify_env(env: &Environment) -> Result<(), String> {
                         Err(e) => return Err(e),
                     };
 
-                for return_type in return_types {
+                for return_type in &return_types {
                     if return_type.kind.name == *NULL {
                         continue;
                     }
@@ -309,6 +316,10 @@ fn verify_env(env: &Environment) -> Result<(), String> {
                                                e))
                         }
                     }
+                }
+
+                if return_types.is_empty() && method_return_type != *VOID {
+                    return Err(format!("non-void method has no return type"));
                 }
             }
 

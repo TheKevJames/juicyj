@@ -275,8 +275,7 @@ pub fn nonblock(node: &mut ASTNode,
 
             Ok(Vec::new())
         }
-        Some(ref l) if l == "WhileStatement" ||
-                       l == "WhileStatementNoShortIf" => {
+        Some(ref l) if l == "WhileStatement" || l == "WhileStatementNoShortIf" => {
             let mut block_globals = globals.clone();
             block_globals.extend(locals.clone());
 
