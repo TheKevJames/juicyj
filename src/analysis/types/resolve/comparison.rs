@@ -46,7 +46,19 @@ pub fn onearg_boolean(node: &ASTNode,
         };
 
     if arg == *BOOLEAN {
-        Ok(arg)
+        let mut result = BOOLEAN.clone();
+
+        let value = match arg.kind.name.token.lexeme {
+            Some(ref l) if l == "false" => false,
+            Some(ref l) if l == "true" => true,
+            _ => return Ok(result),
+        };
+        result.kind.name.token.lexeme = match value {
+            false => Some("true".to_owned()),
+            true => Some("false".to_owned()),
+        };
+
+        Ok(result)
     } else {
         Err(format!("could not apply {:?} to {:?}",
                     node.token.kind,
@@ -92,7 +104,33 @@ pub fn twoarg_boolean(node: &ASTNode,
         };
 
     if lhs == *BOOLEAN && rhs == *BOOLEAN {
-        Ok(lhs)
+        let mut result = BOOLEAN.clone();
+
+        let vlhs = match lhs.kind.name.token.lexeme {
+            Some(ref l) if l == "false" => false,
+            Some(ref l) if l == "true" => true,
+            _ => return Ok(result),
+        };
+        let vrhs = match rhs.kind.name.token.lexeme {
+            Some(ref l) if l == "false" => false,
+            Some(ref l) if l == "true" => true,
+            _ => return Ok(result),
+        };
+
+        let value = match node.token.kind {
+            TokenKind::And => vlhs && vrhs,
+            TokenKind::BitAnd => vlhs | vrhs,
+            TokenKind::Or => vlhs || vrhs,
+            TokenKind::BitOr => vlhs | vrhs,
+            TokenKind::BitXor => vlhs ^ vrhs,
+            _ => false,  // TODO: impossible
+        };
+        result.kind.name.token.lexeme = match value {
+            false => Some("false".to_owned()),
+            true => Some("true".to_owned()),
+        };
+
+        Ok(result)
     } else if BITWISE.contains(&node.token.kind) {
         Err(format!("bitwise operations are not allowed"))
     } else {
