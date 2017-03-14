@@ -456,7 +456,7 @@ impl PartialEq for Type {
             return lhs == rhs;
         }
 
-        if self.kind.name == other.kind.name {
+        if self.kind.name.is_same_type(&other.kind.name) {
             return true;
         }
 

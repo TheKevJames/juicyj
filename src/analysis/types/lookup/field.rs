@@ -80,7 +80,9 @@ pub fn in_env(canonical: &ASTNode,
             }
         }
 
-        return Err(format!("resolved field {} to class {} without that field", field, cls.name));
+        return Err(format!("resolved field {} to class {} without that field",
+                           field,
+                           cls.name));
     }
 
     let mut canonical = canonical.clone();

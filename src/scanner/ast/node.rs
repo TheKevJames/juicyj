@@ -298,6 +298,35 @@ impl ASTNode {
         children
     }
 
+    /// Used for performing type comparisions, eg. true.is_same_type(false), so
+    /// we can compare them.
+    ///
+    // Really, this should be on Type under PartialEq, but I fucked up and have
+    // Type::PartialEq called for doing comparisons of method names and stuff...
+    // Nasty methods, just nasty.
+    pub fn is_same_type(&self, other: &ASTNode) -> bool {
+        for (child, other_child) in self.children.iter().zip(other.children.iter()) {
+            if !child.is_same_type(other_child) {
+                return false;
+            }
+        }
+
+        if self.token == other.token {
+            return true;
+        }
+
+        // weirdness follows
+        if self.token.kind != other.token.kind {
+            return false;
+        }
+
+        if self.token.kind == TokenKind::Boolean {
+            return true;
+        }
+
+        false
+    }
+
     /// Convenience function for recursive ASTNode printing. Should be accessed
     /// with the standard print command (ie. `fmt::Display`).
     pub fn print(&self, f: &mut fmt::Formatter, indent: usize) -> fmt::Result {

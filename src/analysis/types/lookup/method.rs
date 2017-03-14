@@ -160,7 +160,9 @@ pub fn in_env(canonical: &ASTNode,
             }
         }
 
-        return Err(format!("resolved method {} to class {} without that method", method, cls.name));
+        return Err(format!("resolved method {} to class {} without that method",
+                           method,
+                           cls.name));
     }
 
     let mut canonical = canonical.clone();

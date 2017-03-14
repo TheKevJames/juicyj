@@ -72,7 +72,20 @@ pub fn go(node: &ASTNode) -> Result<Type, String> {
         TokenKind::CharValue => Ok(CHAR.clone()),
         TokenKind::NumValue => Ok(INTEGER.clone()),
         TokenKind::StrValue => Ok(STRING.clone()),
-        TokenKind::True | TokenKind::False => Ok(BOOLEAN.clone()),
+        TokenKind::True | TokenKind::False => {
+            // TODO: do this better. Maybe a ResolvedToken type?
+            let value = if node.token.kind == TokenKind::True {
+                "true"
+            } else {
+                "false"
+            };
+
+            let node = ASTNode {
+                token: Token::new(TokenKind::Boolean, Some(value)),
+                children: Vec::new(),
+            };
+            Ok(Type::new(ClassOrInterfaceEnvironment::new(node, ClassOrInterface::CLASS)))
+        }
         _ => Err(format!("invalid primitive type {:?}", node)),
     }
 }
