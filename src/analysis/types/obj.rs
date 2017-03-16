@@ -190,7 +190,7 @@ impl Type {
         }
 
         if *self == *CHAR && *other == *CHAR {
-            return Ok(CHAR.clone());
+            return Ok(INTEGER.clone());
         }
 
         let mut primitives = vec![BYTE.clone()];
