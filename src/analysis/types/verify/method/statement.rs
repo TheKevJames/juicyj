@@ -162,8 +162,7 @@ pub fn nonblock(node: &mut ASTNode,
             let mut block_globals = globals.clone();
             block_globals.extend(locals.clone());
             match resolve::expression::go(&node, modifiers, current, kinds, &block_globals) {
-                // TODO: is this actually null?
-                Ok(_) => Ok(vec![(VOID.clone(), false)]),
+                Ok(t) => Ok(vec![(t.clone(), false)]),
                 Err(e) => return Err(e),
             }
         }
