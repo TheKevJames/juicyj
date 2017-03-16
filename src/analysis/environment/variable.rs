@@ -9,6 +9,7 @@ pub struct VariableEnvironment {
     pub kind: ASTNode,
     pub name: ASTNode,
     pub dim: bool,
+    pub initialized: bool,
 }
 
 impl VariableEnvironment {
@@ -44,6 +45,7 @@ impl VariableEnvironment {
                 }
             },
             dim: dim,
+            initialized: false,
         }
     }
 }

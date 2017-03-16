@@ -30,7 +30,7 @@ fn get_args(node: &ASTNode,
             modifiers: &Vec<ASTNode>,
             current: &ClassOrInterfaceEnvironment,
             kinds: &Vec<ClassOrInterfaceEnvironment>,
-            globals: &Vec<VariableEnvironment>)
+            globals: &mut Vec<VariableEnvironment>)
             -> Result<Vec<Type>, String> {
     let mut args = match node.children.len() {
         6 => node.children[4].clone(),
@@ -58,7 +58,7 @@ fn get_method(node: &ASTNode,
               modifiers: &Vec<ASTNode>,
               current: &ClassOrInterfaceEnvironment,
               kinds: &Vec<ClassOrInterfaceEnvironment>,
-              globals: &Vec<VariableEnvironment>)
+              globals: &mut Vec<VariableEnvironment>)
               -> Result<(ClassOrInterfaceEnvironment, MethodEnvironment), String> {
     let args = match get_args(node, modifiers, current, kinds, globals) {
         Ok(a) => a,
@@ -152,7 +152,7 @@ pub fn go(node: &ASTNode,
           modifiers: &Vec<ASTNode>,
           current: &ClassOrInterfaceEnvironment,
           kinds: &Vec<ClassOrInterfaceEnvironment>,
-          globals: &Vec<VariableEnvironment>)
+          globals: &mut Vec<VariableEnvironment>)
           -> Result<Type, String> {
     let (cls, method) = match get_method(node, modifiers, current, kinds, globals) {
         Ok(m) => m,

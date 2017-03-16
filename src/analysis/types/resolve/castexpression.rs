@@ -15,7 +15,7 @@ pub fn go(node: &ASTNode,
           modifiers: &Vec<ASTNode>,
           current: &ClassOrInterfaceEnvironment,
           kinds: &Vec<ClassOrInterfaceEnvironment>,
-          globals: &Vec<VariableEnvironment>)
+          globals: &mut Vec<VariableEnvironment>)
           -> Result<Type, String> {
     let expr = node.children.last().unwrap().clone();
     let rhs = match resolve::expression::go(&expr, modifiers, current, kinds, globals) {

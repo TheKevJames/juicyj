@@ -55,16 +55,22 @@ pub fn go(node: &ASTNode,
 
             let mut block_globals = globals.clone();
             block_globals.extend(locals.clone());
-            let rhs =
-                match resolve::expression::go(&rvalue, modifiers, current, kinds, &block_globals) {
-                    Ok(r) => r,
-                    Err(e) => return Err(e),
-                };
+            let rhs = match resolve::expression::go(&rvalue,
+                                                    modifiers,
+                                                    current,
+                                                    kinds,
+                                                    &mut block_globals) {
+                Ok(r) => r,
+                Err(e) => return Err(e),
+            };
 
             match lhs.assign(&rhs, current, kinds) {
                 Ok(_) => (),
                 Err(e) => return Err(e),
             }
+
+            let idx = &locals.len() - 1;
+            locals[idx].initialized = true;
         }
         _ => (),
     }

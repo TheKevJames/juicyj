@@ -8,7 +8,7 @@ pub fn go(node: &ASTNode,
           modifiers: &Vec<ASTNode>,
           current: &ClassOrInterfaceEnvironment,
           kinds: &Vec<ClassOrInterfaceEnvironment>,
-          globals: &Vec<VariableEnvironment>)
+          globals: &mut Vec<VariableEnvironment>)
           -> Result<Type, String> {
     let array =
         match resolve::expression::go(&node.children[0], modifiers, current, kinds, globals) {

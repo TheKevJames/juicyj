@@ -34,7 +34,7 @@ pub fn go(node: &ASTNode,
           modifiers: &Vec<ASTNode>,
           current: &ClassOrInterfaceEnvironment,
           kinds: &Vec<ClassOrInterfaceEnvironment>,
-          globals: &Vec<VariableEnvironment>)
+          globals: &mut Vec<VariableEnvironment>)
           -> Result<Type, String> {
     let cls = match node.children[0].token.kind {
         TokenKind::This if modifiers.contains(&*STATIC) => {

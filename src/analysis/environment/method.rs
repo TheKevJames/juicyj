@@ -79,7 +79,10 @@ pub fn analyze_abstract_method_declaration(current: &mut ClassOrInterfaceEnviron
             if param.token.kind == TokenKind::Comma {
                 continue;
             }
-            new.parameters.push(VariableEnvironment::new(param.clone()));
+
+            let mut param = VariableEnvironment::new(param.clone());
+            param.initialized = true;
+            new.parameters.push(param);
         }
     }
 
@@ -120,7 +123,10 @@ pub fn analyze_constructor_declaration(current: &mut ClassOrInterfaceEnvironment
             if param.token.kind == TokenKind::Comma {
                 continue;
             }
-            new.parameters.push(VariableEnvironment::new(param.clone()));
+
+            let mut param = VariableEnvironment::new(param.clone());
+            param.initialized = true;
+            new.parameters.push(param);
         }
     }
 
@@ -164,7 +170,10 @@ pub fn analyze_method_declaration(current: &mut ClassOrInterfaceEnvironment,
             if param.token.kind == TokenKind::Comma {
                 continue;
             }
-            new.parameters.push(VariableEnvironment::new(param.clone()));
+
+            let mut param = VariableEnvironment::new(param.clone());
+            param.initialized = true;
+            new.parameters.push(param);
         }
     }
 

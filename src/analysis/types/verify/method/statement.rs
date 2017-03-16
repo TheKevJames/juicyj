@@ -138,8 +138,7 @@ pub fn nonblock(node: &mut ASTNode,
             // does the type lookup accidentally
             let mut block_globals = globals.clone();
             block_globals.extend(locals.clone());
-
-            match resolve::expression::go(&node, modifiers, current, kinds, &block_globals) {
+            match resolve::expression::go(&node, modifiers, current, kinds, &mut block_globals) {
                 Ok(_) => (),
                 Err(e) => return Err(e),
             }
@@ -161,7 +160,7 @@ pub fn nonblock(node: &mut ASTNode,
         Some(ref l) if l == "Assignment" => {
             let mut block_globals = globals.clone();
             block_globals.extend(locals.clone());
-            match resolve::expression::go(&node, modifiers, current, kinds, &block_globals) {
+            match resolve::expression::go(&node, modifiers, current, kinds, &mut block_globals) {
                 Ok(t) => Ok(vec![(t.clone(), false)]),
                 Err(e) => return Err(e),
             }
@@ -173,7 +172,7 @@ pub fn nonblock(node: &mut ASTNode,
                         modifiers,
                         current,
                         kinds,
-                        &block_globals) {
+                        &mut block_globals) {
                 Ok(rts) => {
                     let mut return_types = Vec::new();
                     for rt in rts {
@@ -262,12 +261,11 @@ pub fn nonblock(node: &mut ASTNode,
         Some(ref l) if l == "IfStatement" => {
             let mut block_globals = globals.clone();
             block_globals.extend(locals.clone());
-
             match resolve::expression::go(&node.children[2],
                                           modifiers,
                                           current,
                                           kinds,
-                                          &block_globals) {
+                                          &mut block_globals) {
                 Ok(ref t) if t == &*BOOLEAN => (),
                 Ok(_) => return Err(format!("condition {} is not boolean", node.children[2])),
                 Err(e) => return Err(e),
@@ -288,12 +286,11 @@ pub fn nonblock(node: &mut ASTNode,
         Some(ref l) if l == "WhileStatement" || l == "WhileStatementNoShortIf" => {
             let mut block_globals = globals.clone();
             block_globals.extend(locals.clone());
-
             match resolve::expression::go(&node.children[2],
                                           modifiers,
                                           current,
                                           kinds,
-                                          &block_globals) {
+                                          &mut block_globals) {
                 Ok(ref t) if t == &*BOOLEAN => {
                     if let Some(value) = t.kind.name.token.lexeme.clone() {
                         if value == "false".to_owned() {
@@ -320,12 +317,11 @@ pub fn nonblock(node: &mut ASTNode,
         Some(ref l) if l == "IfElseStatement" || l == "IfElseStatementNoShortIf" => {
             let mut block_globals = globals.clone();
             block_globals.extend(locals.clone());
-
             match resolve::expression::go(&node.children[2],
                                           modifiers,
                                           current,
                                           kinds,
-                                          &block_globals) {
+                                          &mut block_globals) {
                 Ok(ref t) if t == &*BOOLEAN => (),
                 Ok(_) => return Err(format!("condition {} is not boolean", node.children[2])),
                 Err(e) => return Err(e),
@@ -370,12 +366,14 @@ pub fn nonblock(node: &mut ASTNode,
             // does the type lookup accidentally
             let mut block_globals = globals.clone();
             block_globals.extend(locals.clone());
-
-            let method =
-                match resolve::expression::go(&node, modifiers, current, kinds, &block_globals) {
-                    Ok(t) => t,
-                    Err(e) => return Err(e),
-                };
+            let method = match resolve::expression::go(&node,
+                                                       modifiers,
+                                                       current,
+                                                       kinds,
+                                                       &mut block_globals) {
+                Ok(t) => t,
+                Err(e) => return Err(e),
+            };
 
             if node.children.len() >= 5 {
                 // Primary Dot Identifier ( Args )
@@ -418,7 +416,7 @@ pub fn nonblock(node: &mut ASTNode,
 
             let mut block_globals = globals.clone();
             block_globals.extend(locals.clone());
-            match resolve::expression::go(&expr, modifiers, current, kinds, &block_globals) {
+            match resolve::expression::go(&expr, modifiers, current, kinds, &mut block_globals) {
                 Ok(rt) => Ok(vec![(rt, true)]),
                 Err(e) => Err(e),
             }
@@ -426,8 +424,7 @@ pub fn nonblock(node: &mut ASTNode,
         _ => {
             let mut block_globals = globals.clone();
             block_globals.extend(locals.clone());
-
-            match resolve::expression::go(node, modifiers, current, kinds, &block_globals) {
+            match resolve::expression::go(node, modifiers, current, kinds, &mut block_globals) {
                 Ok(t) => Ok(vec![(t.clone(), false)]),
                 Err(e) => Err(e),
             }

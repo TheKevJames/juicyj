@@ -37,7 +37,7 @@ pub fn onearg_boolean(node: &ASTNode,
                       modifiers: &Vec<ASTNode>,
                       current: &ClassOrInterfaceEnvironment,
                       kinds: &Vec<ClassOrInterfaceEnvironment>,
-                      globals: &Vec<VariableEnvironment>)
+                      globals: &mut Vec<VariableEnvironment>)
                       -> Result<Type, String> {
     let arg =
         match resolve::expression::go(&node.children[0], modifiers, current, kinds, globals) {
@@ -70,7 +70,7 @@ pub fn twoarg(node: &ASTNode,
               modifiers: &Vec<ASTNode>,
               current: &ClassOrInterfaceEnvironment,
               kinds: &Vec<ClassOrInterfaceEnvironment>,
-              globals: &Vec<VariableEnvironment>)
+              globals: &mut Vec<VariableEnvironment>)
               -> Result<Type, String> {
     let lhs =
         match resolve::expression::go(&node.children[0], modifiers, current, kinds, globals) {
@@ -90,7 +90,7 @@ pub fn twoarg_boolean(node: &ASTNode,
                       modifiers: &Vec<ASTNode>,
                       current: &ClassOrInterfaceEnvironment,
                       kinds: &Vec<ClassOrInterfaceEnvironment>,
-                      globals: &Vec<VariableEnvironment>)
+                      globals: &mut Vec<VariableEnvironment>)
                       -> Result<Type, String> {
     let lhs =
         match resolve::expression::go(&node.children[0], modifiers, current, kinds, globals) {
@@ -145,7 +145,7 @@ pub fn twoarg_instanceof(node: &ASTNode,
                          modifiers: &Vec<ASTNode>,
                          current: &ClassOrInterfaceEnvironment,
                          kinds: &Vec<ClassOrInterfaceEnvironment>,
-                         globals: &Vec<VariableEnvironment>)
+                         globals: &mut Vec<VariableEnvironment>)
                          -> Result<Type, String> {
     let lhs =
         match resolve::expression::go(&node.children[0], modifiers, current, kinds, globals) {

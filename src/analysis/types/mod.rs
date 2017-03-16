@@ -231,7 +231,7 @@ fn verify_env(env: &Environment) -> Result<(), String> {
                                                        &field.modifiers,
                                                        &current_builder,
                                                        &env_builder,
-                                                       &Vec::new()) {
+                                                       &mut Vec::new()) {
                 Ok(t) => t,
                 Err(e) => return Err(e),
             };
