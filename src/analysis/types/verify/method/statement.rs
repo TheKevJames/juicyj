@@ -21,6 +21,10 @@ lazy_static! {
         let node = ASTNode { token: Token::new(TokenKind::Null, None), children: Vec::new() };
         Type::new(ClassOrInterfaceEnvironment::new(node, ClassOrInterface::CLASS))
     };
+    static ref VOID: Type = {
+        let node = ASTNode { token: Token::new(TokenKind::Void, None), children: Vec::new() };
+        Type::new(ClassOrInterfaceEnvironment::new(node, ClassOrInterface::CLASS))
+    };
 }
 
 // TODO: cleanup by splitting into entrance point and recursion fn
@@ -42,11 +46,11 @@ pub fn block(node: &mut ASTNode,
                 Ok(rts) => {
                     let mut return_types: Vec<Type> = Vec::new();
                     for (rt, is_ret) in rts {
-                        if !is_ret {
-                            continue;
-                        } else if !return_types.is_empty() {
+                        if !return_types.is_empty() {
                             // TODO: too naive
                             return Err(format!("unreachable block after return statement"));
+                        } else if !is_ret || rt == *VOID {
+                            continue;
                         }
                         return_types.push(rt);
                     }
@@ -74,11 +78,11 @@ pub fn block(node: &mut ASTNode,
                        &mut locals) {
             Ok(rts) => {
                 for (rt, is_ret) in rts {
-                    if !is_ret {
-                        continue;
-                    } else if !return_types.is_empty() {
+                    if !return_types.is_empty() {
                         // TODO: too naive
                         return Err(format!("unreachable block after return statement"));
+                    } else if !is_ret || rt == *VOID {
+                        continue;
                     }
                     return_types.push(rt);
                 }
@@ -159,7 +163,7 @@ pub fn nonblock(node: &mut ASTNode,
             block_globals.extend(locals.clone());
             match resolve::expression::go(&node, modifiers, current, kinds, &block_globals) {
                 // TODO: is this actually null?
-                Ok(_) => Ok(Vec::new()),
+                Ok(_) => Ok(vec![(VOID.clone(), false)]),
                 Err(e) => return Err(e),
             }
         }
@@ -181,7 +185,7 @@ pub fn nonblock(node: &mut ASTNode,
                 Err(e) => Err(e),
             }
         }
-        Some(ref l) if l == "Block" => Ok(Vec::new()),
+        Some(ref l) if l == "Block" => Ok(vec![(VOID.clone(), false)]),
         Some(ref l) if l == "ForStatement" || l == "ForStatementNoShortIf" => {
             let mut block_globals = globals.clone();
             block_globals.extend(locals.clone());
@@ -254,7 +258,7 @@ pub fn nonblock(node: &mut ASTNode,
                 Err(e) => return Err(e),
             }
 
-            Ok(Vec::new())
+            Ok(vec![(VOID.clone(), false)])
         }
         Some(ref l) if l == "IfStatement" => {
             let mut block_globals = globals.clone();
@@ -280,7 +284,7 @@ pub fn nonblock(node: &mut ASTNode,
                 Err(e) => return Err(e),
             }
 
-            Ok(Vec::new())
+            Ok(vec![(VOID.clone(), false)])
         }
         Some(ref l) if l == "WhileStatement" || l == "WhileStatementNoShortIf" => {
             let mut block_globals = globals.clone();
@@ -312,7 +316,7 @@ pub fn nonblock(node: &mut ASTNode,
                 Err(e) => return Err(e),
             }
 
-            Ok(Vec::new())
+            Ok(vec![(VOID.clone(), false)])
         }
         Some(ref l) if l == "IfElseStatement" || l == "IfElseStatementNoShortIf" => {
             let mut block_globals = globals.clone();
@@ -348,7 +352,7 @@ pub fn nonblock(node: &mut ASTNode,
                 Err(e) => return Err(e),
             }
 
-            Ok(Vec::new())
+            Ok(vec![(VOID.clone(), false)])
         }
         Some(ref l) if l == "LocalVariableDeclaration" => {
             match verify::method::declaration::go(&node,
@@ -358,7 +362,7 @@ pub fn nonblock(node: &mut ASTNode,
                                                   globals,
                                                   locals) {
                 // TODO: what type is this?
-                Ok(_) => Ok(Vec::new()),
+                Ok(_) => Ok(vec![(VOID.clone(), false)]),
                 Err(e) => Err(e),
             }
         }
