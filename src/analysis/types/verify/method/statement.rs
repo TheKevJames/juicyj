@@ -44,13 +44,16 @@ pub fn block(node: &mut ASTNode,
                     for (rt, is_ret) in rts {
                         if !is_ret {
                             continue;
+                            // } else if !return_types.is_empty() {
+                            //     // TODO: too naive
+                            //     return Err(format!("unreachable block after return statement"));
                         }
                         return_types.push(rt);
                     }
                     Ok(return_types)
                 }
                 Err(e) => Err(e),
-            }
+            };
         }
         _ => {
             ASTNode {
@@ -73,6 +76,9 @@ pub fn block(node: &mut ASTNode,
                 for (rt, is_ret) in rts {
                     if !is_ret {
                         continue;
+                        // } else if !return_types.is_empty() {
+                        //     // TODO: too naive
+                        //     return Err(format!("unreachable block after return statement"));
                     }
                     return_types.push(rt);
                 }

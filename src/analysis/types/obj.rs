@@ -127,6 +127,41 @@ impl Type {
                             current: &ClassOrInterfaceEnvironment,
                             kinds: &Vec<ClassOrInterfaceEnvironment>)
                             -> Result<Type, String> {
+        if *self == *INTEGER && *other == *INTEGER {
+            let mut result = BOOLEAN.clone();
+
+            let vlhs = match self.kind.name.token.lexeme {
+                Some(ref l) => {
+                    match l.clone().parse::<i32>() {
+                        Ok(x) => x,
+                        Err(_) => return Ok(result),
+                    }
+                }
+                _ => return Ok(result),
+            };
+            let vrhs = match other.kind.name.token.lexeme {
+                Some(ref l) => {
+                    match l.clone().parse::<i32>() {
+                        Ok(x) => x,
+                        Err(_) => return Ok(result),
+                    }
+                }
+                _ => return Ok(result),
+            };
+
+            result.kind.name.token.lexeme = match *operation {
+                TokenKind::Equality => Some((vlhs == vrhs).to_string()),
+                TokenKind::NotEqual => Some((vlhs != vrhs).to_string()),
+                TokenKind::LessThan => Some((vlhs < vrhs).to_string()),
+                TokenKind::LessThanOrEqual => Some((vlhs <= vrhs).to_string()),
+                TokenKind::GreaterThan => Some((vlhs > vrhs).to_string()),
+                TokenKind::GreaterThanOrEqual => Some((vlhs >= vrhs).to_string()),
+                _ => None,
+            };
+
+            return Ok(result);
+        }
+
         // Anything assignable is comparable. Comparability, though, is reflexive.
         let lhs_result = self.assign(other, current, kinds);
         if lhs_result.is_ok() {
@@ -166,6 +201,40 @@ impl Type {
         primitives.push(SHORT.clone());
         if primitives.contains(&self) && primitives.contains(&other) {
             return Ok(SHORT.clone());
+        }
+
+        if *self == *INTEGER && *other == *INTEGER {
+            let mut result = INTEGER.clone();
+
+            let vlhs = match self.kind.name.token.lexeme {
+                Some(ref l) => {
+                    match l.clone().parse::<i32>() {
+                        Ok(x) => x,
+                        Err(_) => return Ok(result),
+                    }
+                }
+                _ => return Ok(result),
+            };
+            let vrhs = match other.kind.name.token.lexeme {
+                Some(ref l) => {
+                    match l.clone().parse::<i32>() {
+                        Ok(x) => x,
+                        Err(_) => return Ok(result),
+                    }
+                }
+                _ => return Ok(result),
+            };
+
+            result.kind.name.token.lexeme = match *operation {
+                TokenKind::FSlash => Some((vlhs / vrhs).to_string()),
+                TokenKind::Minus => Some((vlhs - vrhs).to_string()),
+                TokenKind::Percent => Some((vlhs % vrhs).to_string()),
+                TokenKind::Plus => Some((vlhs + vrhs).to_string()),
+                TokenKind::Star => Some((vlhs * vrhs).to_string()),
+                _ => None,
+            };
+
+            return Ok(result);
         }
 
         primitives.push(CHAR.clone());

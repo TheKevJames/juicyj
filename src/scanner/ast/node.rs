@@ -320,11 +320,8 @@ impl ASTNode {
             return false;
         }
 
-        if self.token.kind == TokenKind::Boolean {
-            return true;
-        }
-
-        false
+        let primitives = vec![TokenKind::Boolean, TokenKind::Int];
+        primitives.contains(&self.token.kind)
     }
 
     /// Convenience function for recursive ASTNode printing. Should be accessed

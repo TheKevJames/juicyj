@@ -70,7 +70,17 @@ pub fn go(node: &ASTNode) -> Result<Type, String> {
         // primitive values
         // TODO: lexemes?
         TokenKind::CharValue => Ok(CHAR.clone()),
-        TokenKind::NumValue => Ok(INTEGER.clone()),
+        TokenKind::NumValue => {
+            // TODO: do this better. Maybe a ResolvedToken type?
+            let node = ASTNode {
+                token: Token {
+                    kind: TokenKind::Int,
+                    lexeme: node.token.clone().lexeme,
+                },
+                children: Vec::new(),
+            };
+            Ok(Type::new(ClassOrInterfaceEnvironment::new(node, ClassOrInterface::CLASS)))
+        }
         TokenKind::StrValue => Ok(STRING.clone()),
         TokenKind::True | TokenKind::False => {
             // TODO: do this better. Maybe a ResolvedToken type?
