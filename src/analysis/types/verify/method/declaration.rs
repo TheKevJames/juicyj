@@ -48,6 +48,14 @@ pub fn go(node: &ASTNode,
                 Err(e) => return Err(e),
             }
 
+            match verify::variable::initialized(&rvalue, current, globals) {
+                Ok(_) => match verify::variable::initialized(&rvalue, current, locals) {
+                    Ok(_) => (),
+                    Err(e) => return Err(e),
+                },
+                Err(e) => return Err(e),
+            }
+
             let lhs = match lookup::class::in_env(&new.kind, current, kinds) {
                 Ok(l) => Type::new(l),
                 Err(e) => return Err(e),
