@@ -307,6 +307,7 @@ pub fn nonblock(node: &mut ASTNode,
                         if value == "false".to_owned() {
                             return Err(format!("while statement condition is false"));
                         } else if value == "true".to_owned() {
+                            // TODO: only if there is another statement after this
                             return Err(format!("while statement condition is true"));
                         }
                     }
