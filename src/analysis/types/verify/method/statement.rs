@@ -17,10 +17,6 @@ lazy_static! {
         let node = ASTNode { token: Token::new(TokenKind::Boolean, None), children: Vec::new() };
         Type::new(ClassOrInterfaceEnvironment::new(node, ClassOrInterface::CLASS))
     };
-    static ref NULL: Type = {
-        let node = ASTNode { token: Token::new(TokenKind::Null, None), children: Vec::new() };
-        Type::new(ClassOrInterfaceEnvironment::new(node, ClassOrInterface::CLASS))
-    };
     static ref VOID: Type = {
         let node = ASTNode { token: Token::new(TokenKind::Void, None), children: Vec::new() };
         Type::new(ClassOrInterfaceEnvironment::new(node, ClassOrInterface::CLASS))
@@ -48,7 +44,7 @@ pub fn block(node: &mut ASTNode,
                     for (rt, is_ret) in rts {
                         if !return_types.is_empty() {
                             // TODO: too naive
-                            return Err(format!("unreachable block after return statement"));
+                            return Err(format!("unreachable code in block::Block"));
                         } else if !is_ret || rt == *VOID {
                             continue;
                         }
@@ -80,7 +76,7 @@ pub fn block(node: &mut ASTNode,
                 for (rt, is_ret) in rts {
                     if !return_types.is_empty() {
                         // TODO: too naive
-                        return Err(format!("unreachable block after return statement"));
+                        return Err(format!("unreachable code in block"));
                     } else if !is_ret || rt == *VOID {
                         continue;
                     }
@@ -92,7 +88,7 @@ pub fn block(node: &mut ASTNode,
     }
 
     if return_types.is_empty() {
-        Ok(vec![NULL.clone()])
+        Ok(Vec::new())
     } else {
         Ok(return_types.clone())
     }
@@ -282,7 +278,7 @@ pub fn nonblock(node: &mut ASTNode,
                     for (rt, is_ret) in rts {
                         if !return_types.is_empty() {
                             // TODO: too naive
-                            return Err(format!("unreachable block after return statement"));
+                            return Err(format!("unreachable code in IfStatement"));
                         } else if !is_ret || rt == *VOID {
                             continue;
                         }
@@ -338,6 +334,7 @@ pub fn nonblock(node: &mut ASTNode,
                 Err(e) => return Err(e),
             }
 
+            let mut if_return_types: Vec<Type> = Vec::new();
             match nonblock(&mut node.children[4],
                            modifiers,
                            current,
@@ -345,20 +342,20 @@ pub fn nonblock(node: &mut ASTNode,
                            &block_globals,
                            &mut Vec::new()) {
                 Ok(rts) => {
-                    let mut return_types: Vec<Type> = Vec::new();
                     for (rt, is_ret) in rts {
-                        if !return_types.is_empty() {
+                        if !if_return_types.is_empty() {
                             // TODO: too naive
-                            return Err(format!("unreachable block after return statement"));
+                            return Err(format!("unreachable code in IfElseStatement::if"));
                         } else if !is_ret || rt == *VOID {
                             continue;
                         }
-                        return_types.push(rt);
+                        if_return_types.push(rt);
                     }
                 }
                 Err(e) => return Err(e),
             }
 
+            let mut else_return_types: Vec<Type> = Vec::new();
             match nonblock(&mut node.children[6],
                            modifiers,
                            current,
@@ -366,21 +363,38 @@ pub fn nonblock(node: &mut ASTNode,
                            &block_globals,
                            &mut Vec::new()) {
                 Ok(rts) => {
-                    let mut return_types: Vec<Type> = Vec::new();
                     for (rt, is_ret) in rts {
-                        if !return_types.is_empty() {
+                        if !else_return_types.is_empty() {
                             // TODO: too naive
-                            return Err(format!("unreachable block after return statement"));
+                            return Err(format!("unreachable code in IfElseStatement::else"));
                         } else if !is_ret || rt == *VOID {
                             continue;
                         }
-                        return_types.push(rt);
+                        else_return_types.push(rt);
                     }
                 }
                 Err(e) => return Err(e),
             }
 
-            Ok(vec![(VOID.clone(), false)])
+            if if_return_types.is_empty() && else_return_types.is_empty() {
+                Ok(vec![(VOID.clone(), false)])
+            } else if if_return_types.is_empty() != else_return_types.is_empty() {
+                // TODO: if neq issues?
+                Ok(vec![(VOID.clone(), false)])
+            } else {
+                let mut return_types: Vec<(Type, bool)> = Vec::new();
+                for rt in if_return_types.iter().chain(else_return_types.iter()) {
+                    let new = (rt.clone(), true);
+                    if return_types.contains(&new) {
+                        continue;
+                    } else if !return_types.is_empty() {
+                        return Err(format!("TODO: IfElseStatement with multiple return types"));
+                    }
+
+                    return_types.push(new);
+                }
+                Ok(return_types)
+            }
         }
         Some(ref l) if l == "LocalVariableDeclaration" => {
             match verify::method::declaration::go(&node,

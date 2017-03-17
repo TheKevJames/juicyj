@@ -49,10 +49,12 @@ pub fn go(node: &ASTNode,
             }
 
             match verify::variable::initialized(&rvalue, current, globals) {
-                Ok(_) => match verify::variable::initialized(&rvalue, current, locals) {
-                    Ok(_) => (),
-                    Err(e) => return Err(e),
-                },
+                Ok(_) => {
+                    match verify::variable::initialized(&rvalue, current, locals) {
+                        Ok(_) => (),
+                        Err(e) => return Err(e),
+                    }
+                }
                 Err(e) => return Err(e),
             }
 
