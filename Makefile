@@ -12,9 +12,9 @@ clean:
 	rm -rf **/*.rs.bk
 	rm -rf grammar/jlalr/*.class
 
-docs: docs/a1.pdf
+docs: docs/a1.pdf docs/a4.pdf
 docs/a1.pdf: docs/a1.md
-	pandoc -s $^ -o $@
+docs/a4.pdf: docs/a4.md
 
 release:
 	@cargo build --release
@@ -34,3 +34,10 @@ zip:
 	zip juicyj.zip Cargo.*
 	zip -r juicyj.zip grammar/joos.lr1
 	zip -r juicyj.zip src
+
+
+.SUFFIXES:
+.SUFFIXES: .md .pdf
+
+.md.pdf:
+	pandoc -s $^ -o $@
