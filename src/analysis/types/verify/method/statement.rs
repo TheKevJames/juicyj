@@ -277,7 +277,18 @@ pub fn nonblock(node: &mut ASTNode,
                            kinds,
                            &block_globals,
                            &mut Vec::new()) {
-                Ok(_) => (),
+                Ok(rts) => {
+                    let mut return_types: Vec<Type> = Vec::new();
+                    for (rt, is_ret) in rts {
+                        if !return_types.is_empty() {
+                            // TODO: too naive
+                            return Err(format!("unreachable block after return statement"));
+                        } else if !is_ret || rt == *VOID {
+                            continue;
+                        }
+                        return_types.push(rt);
+                    }
+                }
                 Err(e) => return Err(e),
             }
 
@@ -333,7 +344,18 @@ pub fn nonblock(node: &mut ASTNode,
                            kinds,
                            &block_globals,
                            &mut Vec::new()) {
-                Ok(_) => (),
+                Ok(rts) => {
+                    let mut return_types: Vec<Type> = Vec::new();
+                    for (rt, is_ret) in rts {
+                        if !return_types.is_empty() {
+                            // TODO: too naive
+                            return Err(format!("unreachable block after return statement"));
+                        } else if !is_ret || rt == *VOID {
+                            continue;
+                        }
+                        return_types.push(rt);
+                    }
+                }
                 Err(e) => return Err(e),
             }
 
@@ -343,7 +365,18 @@ pub fn nonblock(node: &mut ASTNode,
                            kinds,
                            &block_globals,
                            &mut Vec::new()) {
-                Ok(_) => (),
+                Ok(rts) => {
+                    let mut return_types: Vec<Type> = Vec::new();
+                    for (rt, is_ret) in rts {
+                        if !return_types.is_empty() {
+                            // TODO: too naive
+                            return Err(format!("unreachable block after return statement"));
+                        } else if !is_ret || rt == *VOID {
+                            continue;
+                        }
+                        return_types.push(rt);
+                    }
+                }
                 Err(e) => return Err(e),
             }
 
