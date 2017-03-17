@@ -306,6 +306,8 @@ pub fn nonblock(node: &mut ASTNode,
                     if let Some(value) = t.kind.name.token.lexeme.clone() {
                         if value == "false".to_owned() {
                             return Err(format!("while statement condition is false"));
+                        } else if value == "true".to_owned() {
+                            return Err(format!("while statement condition is true"));
                         }
                     }
                 }
