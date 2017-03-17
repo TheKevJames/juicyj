@@ -191,6 +191,12 @@ impl ASTNode {
                             children: children,
                         })
                     }
+                    Some(ref l) if node.children.len() == 2 && l == "ReturnStatement" => {
+                        Ok(ASTNode {
+                            token: node.token.clone(),
+                            children: Vec::new(),
+                        })
+                    }
                     Some(_) if node.children.len() == 2 &&
                                node.children[1].token.kind == TokenKind::Semicolon => {
                         ASTNode::new(&node.children[0])

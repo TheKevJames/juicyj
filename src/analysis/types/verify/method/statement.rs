@@ -17,6 +17,10 @@ lazy_static! {
         let node = ASTNode { token: Token::new(TokenKind::Boolean, None), children: Vec::new() };
         Type::new(ClassOrInterfaceEnvironment::new(node, ClassOrInterface::CLASS))
     };
+    static ref NULL: Type = {
+        let node = ASTNode { token: Token::new(TokenKind::Null, None), children: Vec::new() };
+        Type::new(ClassOrInterfaceEnvironment::new(node, ClassOrInterface::CLASS))
+    };
     static ref VOID: Type = {
         let node = ASTNode { token: Token::new(TokenKind::Void, None), children: Vec::new() };
         Type::new(ClassOrInterfaceEnvironment::new(node, ClassOrInterface::CLASS))
@@ -450,6 +454,10 @@ pub fn nonblock(node: &mut ASTNode,
                      &mut locals.clone())
         }
         Some(ref l) if l == "ReturnStatement" => {
+            if node.children.is_empty() {
+                return Ok(vec![(NULL.clone(), true)]);
+            }
+
             let mut expr = node.children[1].clone();
             match nonblock(&mut expr,
                            modifiers,
