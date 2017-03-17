@@ -30,9 +30,6 @@ lazy_static! {
     static ref NATIVE: ASTNode = {
         ASTNode { token: Token::new(TokenKind::Native, None), children: Vec::new() }
     };
-    static ref NULL: ASTNode = {
-        ASTNode { token: Token::new(TokenKind::Null, None), children: Vec::new() }
-    };
     static ref OBJECT: ASTNode = ASTNode {
         token: Token::new(TokenKind::NonTerminal, Some("Name")),
         children: vec![ASTNode {
@@ -185,11 +182,7 @@ fn verify_env(env: &Environment) -> Result<(), String> {
                 };
 
             let constructor_return_type = Type::new(current.clone());
-            for return_type in return_types {
-                if return_type.kind.name == *NULL {
-                    continue;
-                }
-
+            for return_type in &return_types {
                 match constructor_return_type.assign(&return_type, current, &env.kinds) {
                     Ok(_) => (),
                     Err(e) => {
@@ -199,8 +192,6 @@ fn verify_env(env: &Environment) -> Result<(), String> {
                     }
                 }
             }
-
-            // no return on non-void?
         }
 
         let mut current_builder = current.clone();
@@ -303,10 +294,6 @@ fn verify_env(env: &Environment) -> Result<(), String> {
                     };
 
                 for return_type in &return_types {
-                    if return_type.kind.name == *NULL {
-                        continue;
-                    }
-
                     match method_return_type.assign(&return_type, current, &env.kinds) {
                         Ok(_) => (),
                         Err(e) => {
