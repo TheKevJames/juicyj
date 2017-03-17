@@ -2,6 +2,7 @@ use analysis::environment::ClassOrInterfaceEnvironment;
 use analysis::environment::VariableEnvironment;
 use analysis::types::obj::Type;
 use analysis::types::resolve;
+use analysis::types::verify;
 use scanner::ASTNode;
 
 pub fn go(node: &ASTNode,
@@ -18,6 +19,11 @@ pub fn go(node: &ASTNode,
 
     if array.kind.name.clone().token.lexeme.unwrap_or("".to_owned()) != "ArrayType" {
         return Err(format!("got invalid array type {:?}", array));
+    }
+
+    match verify::variable::initialized(&node.children[0], current, globals) {
+        Ok(_) => (),
+        Err(e) => return Err(e),
     }
 
     match resolve::expression::go(&node.children[2], modifiers, current, kinds, globals) {
