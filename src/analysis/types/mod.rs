@@ -318,13 +318,13 @@ fn verify_env(env: &Environment) -> Result<(), String> {
     Ok(())
 }
 
-pub fn verify(env: Environment) -> Result<(), String> {
-    match verify_env_inheritable(&env) {
+pub fn verify(env: &Environment) -> Result<(), String> {
+    match verify_env_inheritable(env) {
         Ok(_) => (),
         Err(e) => return Err(e),
     }
 
-    let env = match rebuild_env(&env) {
+    let env = match rebuild_env(env) {
         Ok(e) => e,
         Err(e) => return Err(e),
     };

@@ -35,9 +35,20 @@ zip:
 	zip -r juicyj.zip grammar/joos.lr1
 	zip -r juicyj.zip src
 
+ASMSOURCES := $(shell find output -name '*.s')
+ASMOBJECTS := $(ASMSOURCES:%.s=%.o)
+
+stdlib/runtime.o: stdlib/runtime.s
+main: $(ASMOBJECTS) stdlib/runtime.o
+	ld -melf_i386 -o $@ $^
+
 
 .SUFFIXES:
-.SUFFIXES: .md .pdf
+.SUFFIXES: .md .o .pdf .s
 
 .md.pdf:
 	pandoc -s $^ -o $@
+output/%.o: output/%.s
+	nasm -O1 -f elf -g -F dwarf $^
+stdlib/%.o: stdlib/%.s
+	nasm -O1 -f elf -g -F dwarf $^

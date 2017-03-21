@@ -6,12 +6,27 @@ use std;
 use std::fs;
 use std::io::Write;
 
-use scanner::AST;
+use analysis::Environment;
+use scanner::ASTNode;
+use scanner::Token;
+use scanner::TokenKind;
 
-/// Runs a set of ASTs through code generation and exits with code 42 on a
+lazy_static! {
+    static ref INTEGER: ASTNode = {
+        ASTNode { token: Token::new(TokenKind::Int, None), children: Vec::new() }
+    };
+    static ref STATIC: ASTNode = {
+        ASTNode { token: Token::new(TokenKind::Static, None), children: Vec::new() }
+    };
+    static ref TEST: ASTNode = {
+        ASTNode { token: Token::new(TokenKind::Identifier, Some("test")), children: Vec::new() }
+    };
+}
+
+/// Runs an Environment through code generation and exits with code 42 on a
 /// failure. If no failure exists, the compiled files will be located in the
 /// `output/` subdirectory in the current working directory.
-pub fn generate_or_exit(asts: &Vec<AST>) {
+pub fn generate_or_exit(env: &Environment) {
     match fs::create_dir_all("output") {
         Ok(_) => (),
         Err(e) => {
@@ -32,8 +47,8 @@ pub fn generate_or_exit(asts: &Vec<AST>) {
         }
     }
 
-    for ast in asts {
-        let name = ast.canonical
+    for kind in &env.kinds {
+        let name = kind.name
             .children
             .iter()
             .map(|n| n.clone().token.lexeme.unwrap_or("".to_owned()).to_lowercase())
@@ -48,8 +63,33 @@ pub fn generate_or_exit(asts: &Vec<AST>) {
             }
         };
 
-        let data = "nop".as_bytes();
-        match f.write_all(data) {
+        // TODO: codegen
+        let mut data: Vec<&'static str> = Vec::new();
+        for method in &kind.methods {
+            if method.name != *TEST {
+                continue;
+            }
+
+            if method.return_type != *INTEGER {
+                continue;
+            }
+
+            if !method.modifiers.contains(&*STATIC) {
+                continue;
+            }
+
+            data.push("global _start");
+            data.push("_start:");
+
+            data.push("mov eax, 1");
+            data.push("mov ebx, 0");
+            data.push("int 0x80");
+        }
+
+        let source = data.join("\n");
+        // END TODO
+
+        match f.write_all(source.as_bytes()) {
             Ok(_) => (),
             Err(e) => {
                 println!("{}", e);

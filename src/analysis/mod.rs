@@ -7,7 +7,7 @@ use std;
 
 use scanner::AST;
 
-use self::environment::Environment;
+pub use self::environment::Environment;
 use self::types::verify;
 
 /// Runs a set of ASTs through the analysis stack (environment builder) and
@@ -21,7 +21,7 @@ use self::types::verify;
 /// let ast = juicyj::scanner::scan_or_exit(&filename, &contents);
 /// juicyj::analysis::analyze_or_exit(&vec![ast])
 /// ```
-pub fn analyze_or_exit(asts: &Vec<AST>) {
+pub fn analyze_or_exit(asts: &Vec<AST>) -> Environment {
     let env = match Environment::new(asts) {
         Ok(e) => e,
         Err(e) => {
@@ -30,13 +30,15 @@ pub fn analyze_or_exit(asts: &Vec<AST>) {
         }
     };
 
-    match verify(env) {
+    match verify(&env) {
         Ok(_) => (),
         Err(e) => {
             println!("{}", e);
             std::process::exit(42);
         }
     }
+
+    env
 }
 
 // TODO: this should be #[cfg(test)], but for some reason the test macros can't
@@ -61,7 +63,7 @@ pub mod tests {
             }
         };
 
-        match verify(env) {
+        match verify(&env) {
             Ok(_) => (),
             Err(e) => {
                 println!("Verification Error");
@@ -86,7 +88,7 @@ pub mod tests {
             }
         };
 
-        match verify(env) {
+        match verify(&env) {
             Ok(_) => (),
             Err(e) => {
                 println!("Verification Error");

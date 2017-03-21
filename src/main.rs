@@ -63,8 +63,8 @@ fn main() {
         }
     }
 
-    juicyj::analysis::analyze_or_exit(&asts);
-    juicyj::generator::generate_or_exit(&asts);
+    let env = juicyj::analysis::analyze_or_exit(&asts);
+    juicyj::generator::generate_or_exit(&env);
 }
 
 fn print_usage(program: &str, opts: getopts::Options) {
