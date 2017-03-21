@@ -8,4 +8,5 @@ extern crate log;
 
 pub mod analysis;
 pub mod error;
+pub mod generator;
 pub mod scanner;

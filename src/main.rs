@@ -64,6 +64,7 @@ fn main() {
     }
 
     juicyj::analysis::analyze_or_exit(&asts);
+    juicyj::generator::generate_or_exit(&asts);
 }
 
 fn print_usage(program: &str, opts: getopts::Options) {

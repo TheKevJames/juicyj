@@ -10,8 +10,8 @@ use scanner::AST;
 use self::environment::Environment;
 use self::types::verify;
 
-/// Runs a file through the analysis stack (environment builder) and exits with
-/// code 42 on a failure.
+/// Runs a set of ASTs through the analysis stack (environment builder) and
+/// exits with code 42 on a failure.
 ///
 /// # Examples
 ///
