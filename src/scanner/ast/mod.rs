@@ -66,7 +66,7 @@ impl AST {
             package: ASTNode {
                 token: token_name.clone(),
                 children: vec![ASTNode {
-                                   token: Token::new(TokenKind::Identifier, Some("juicyj-unnamed")),
+                                   token: Token::new(TokenKind::Identifier, Some("juicyj_unnamed")),
                                    children: Vec::new(),
                                }],
             },

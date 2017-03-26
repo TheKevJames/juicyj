@@ -7,6 +7,7 @@ use std;
 
 use scanner::AST;
 
+pub use self::environment::ClassOrInterfaceEnvironment;
 pub use self::environment::Environment;
 use self::types::verify;
 

@@ -7,6 +7,21 @@ use scanner::ASTNode;
 use scanner::Token;
 use scanner::TokenKind;
 
+lazy_static! {
+    static ref INTEGER: ASTNode = {
+        ASTNode { token: Token::new(TokenKind::Int, None), children: Vec::new() }
+    };
+    static ref NATIVE: ASTNode = {
+        ASTNode { token: Token::new(TokenKind::Native, None), children: Vec::new() }
+    };
+    static ref STATIC: ASTNode = {
+        ASTNode { token: Token::new(TokenKind::Static, None), children: Vec::new() }
+    };
+    static ref TEST: ASTNode = {
+        ASTNode { token: Token::new(TokenKind::Identifier, Some("test")), children: Vec::new() }
+    };
+}
+
 #[derive(Clone,Debug)]
 pub struct MethodEnvironment {
     pub modifiers: Vec<ASTNode>,
@@ -25,6 +40,27 @@ impl MethodEnvironment {
             parameters: Vec::new(),
             body: None,
         }
+    }
+
+    pub fn to_label(&self, class_label: String) -> String {
+        if self.modifiers.contains(&*STATIC) && self.return_type == *INTEGER && self.name == *TEST {
+            return "start".to_owned();
+        }
+
+        let mut label = Vec::new();
+        if self.modifiers.contains(&*NATIVE) {
+            label.push("NATIVE".to_owned());
+        }
+
+        label.push(class_label);
+        label.push(".".to_owned());
+        label.push(self.name.to_label());
+
+        label.push("_".to_owned());
+        label.extend(self.parameters.iter().map(|p| p.kind.to_label()).collect::<Vec<String>>());
+        label.push("_".to_owned());
+
+        label.join("")
     }
 }
 

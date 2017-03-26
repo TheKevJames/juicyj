@@ -342,6 +342,32 @@ impl ASTNode {
         }
         Ok(())
     }
+
+    /// Creates a label to be used in code generation.
+    pub fn to_label(&self) -> String {
+        let mut parent = self.clone();
+        parent.flatten();
+
+        return match parent.token.kind {
+            TokenKind::Boolean => "BOOL".to_owned(),
+            TokenKind::Byte => "BYTE".to_owned(),
+            TokenKind::Char => "CHAR".to_owned(),
+            TokenKind::Dot => ".".to_owned(),
+            TokenKind::Identifier => parent.token.lexeme.unwrap_or("".to_owned()),
+            TokenKind::Int => "INT".to_owned(),
+            TokenKind::NonTerminal if parent.token.lexeme == Some("ArrayType".to_owned()) => {
+                format!("{}__", parent.children[0].to_label())
+            }
+            TokenKind::NonTerminal if parent.token.lexeme == Some("Name".to_owned()) => {
+                parent.children.iter().map(|c| c.to_label()).collect::<Vec<String>>().join("")
+            }
+            TokenKind::Short => "SHORT".to_owned(),
+            _ => {
+                println!("Could not convert {:?} to label", self);
+                "".to_owned()
+            }
+        };
+    }
 }
 
 impl ASTNodeImport {

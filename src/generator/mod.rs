@@ -6,21 +6,31 @@ use std;
 use std::fs;
 use std::io::Write;
 
+use analysis::ClassOrInterfaceEnvironment;
 use analysis::Environment;
-use scanner::ASTNode;
-use scanner::Token;
-use scanner::TokenKind;
 
-lazy_static! {
-    static ref INTEGER: ASTNode = {
-        ASTNode { token: Token::new(TokenKind::Int, None), children: Vec::new() }
-    };
-    static ref STATIC: ASTNode = {
-        ASTNode { token: Token::new(TokenKind::Static, None), children: Vec::new() }
-    };
-    static ref TEST: ASTNode = {
-        ASTNode { token: Token::new(TokenKind::Identifier, Some("test")), children: Vec::new() }
-    };
+trait Generatable {
+    fn generate(&self) -> String;
+}
+
+impl Generatable for ClassOrInterfaceEnvironment {
+    fn generate(&self) -> String {
+        let class_label = self.name.to_label();
+
+        let mut data: Vec<String> = Vec::new();
+        for method in &self.methods {
+            let label = method.to_label(class_label.clone());
+
+            data.push(format!("global _{}", label));
+            data.push(format!("_{}:", label));
+
+            data.push(format!("mov {}, {}", "eax", "1"));
+            data.push(format!("mov {}, {}", "ebx", "0"));
+            data.push(format!("int {}", "0x80"));
+        }
+
+        data.join("\n")
+    }
 }
 
 /// Runs an Environment through code generation and exits with code 42 on a
@@ -63,33 +73,7 @@ pub fn generate_or_exit(env: &Environment) {
             }
         };
 
-        // TODO: codegen
-        let mut data: Vec<&'static str> = Vec::new();
-        for method in &kind.methods {
-            if method.name != *TEST {
-                continue;
-            }
-
-            if method.return_type != *INTEGER {
-                continue;
-            }
-
-            if !method.modifiers.contains(&*STATIC) {
-                continue;
-            }
-
-            data.push("global _start");
-            data.push("_start:");
-
-            data.push("mov eax, 1");
-            data.push("mov ebx, 0");
-            data.push("int 0x80");
-        }
-
-        let source = data.join("\n");
-        // END TODO
-
-        match f.write_all(source.as_bytes()) {
+        match f.write_all(kind.generate().as_bytes()) {
             Ok(_) => (),
             Err(e) => {
                 println!("{}", e);

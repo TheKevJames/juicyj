@@ -539,7 +539,7 @@ impl PartialEq for Type {
             .clone()
             .token
             .lexeme
-            .unwrap_or("".to_owned()) == "juicyj-unnamed" {
+            .unwrap_or("".to_owned()) == "juicyj_unnamed" {
             lhs.children.remove(0);
             lhs.children.remove(0);
         }
@@ -554,7 +554,7 @@ impl PartialEq for Type {
             .clone()
             .token
             .lexeme
-            .unwrap_or("".to_owned()) == "juicyj-unnamed" {
+            .unwrap_or("".to_owned()) == "juicyj_unnamed" {
             rhs.children.remove(0);
             rhs.children.remove(0);
         }
