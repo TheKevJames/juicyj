@@ -22,7 +22,7 @@ pub fn go(node: &ASTNode,
             }
         }
         _ => {
-            // TODO: ret a specific value, maybe 0?
+            // TODO<codegen>: ret a specific value, maybe 0?
         }
     }
 

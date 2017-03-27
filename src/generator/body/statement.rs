@@ -121,10 +121,7 @@ pub fn go(node: &ASTNode,
                 }
 
                 Some(ref l) if l == "Block" => Ok(()),
-                _ => {
-                    Err(format!("TODO<codegen>: body statement (lexeme) {:?}",
-                                node.token.lexeme))
-                }
+                _ => Err(format!("attempted to generate code for {:?}", node)),
             }
         }
         TokenKind::And | TokenKind::BitAnd | TokenKind::Or | TokenKind::BitOr |
@@ -141,6 +138,9 @@ pub fn go(node: &ASTNode,
             comparison::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
         }
         TokenKind::False | TokenKind::True => booleanvalue::go(&node, &mut text),
+        TokenKind::Identifier => {
+            name::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
+        }
         TokenKind::Instanceof => {
             instanceof::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
         }
@@ -153,6 +153,11 @@ pub fn go(node: &ASTNode,
         TokenKind::NumValue => numvalue::go(&node, &mut text),
         TokenKind::StrValue => strvalue::go(&node, &mut text, &mut data),
         TokenKind::This => this::go(&node, label, &mut text, &mut externs, &mut bss, &mut data),
-        _ => Err(format!("TODO<codegen>: body statement (kind) {:?}", node.token.kind)),
+
+        // TODO<codegen>: prune AST
+        TokenKind::Boolean | TokenKind::Char | TokenKind::Byte | TokenKind::Int |
+        TokenKind::Short => Err(format!("attempted to generate code for unpruned {:?}", node)),
+
+        _ => Err(format!("attempted to generate code for {:?}", node)),
     }
 }

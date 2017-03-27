@@ -7,5 +7,7 @@ pub fn go(node: &ASTNode,
           mut bss: &mut Vec<String>,
           mut data: &mut Vec<String>)
           -> Result<(), String> {
+    // TODO<codegen>
+    // Err(format!("NotImplemented This {:?}", node))
     Ok(())
 }

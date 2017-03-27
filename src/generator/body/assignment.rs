@@ -35,6 +35,7 @@ pub fn go(node: &ASTNode,
         return Ok(());
     }
 
-    // TODO: non-local lookup
+    // TODO<codegen>: non-local lookup
+    // Err(format!("NotImplemented Assignment {:?}", node))
     Ok(())
 }
