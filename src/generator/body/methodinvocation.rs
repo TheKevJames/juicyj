@@ -26,6 +26,7 @@ fn build_method(name: &ASTNode, params: &ASTNode) -> Result<String, String> {
 
 pub fn go(node: &ASTNode,
           mut text: &mut Vec<String>,
+          mut externs: &mut Vec<String>,
           mut bss: &mut Vec<String>,
           mut data: &mut Vec<String>)
           -> Result<(), String> {
@@ -48,13 +49,14 @@ pub fn go(node: &ASTNode,
     text.push(format!("  mov {}, {}", "ebp", "esp"));
     // push params
     for param in node.children[2].children.iter().rev() {
-        match statement::go(&param, &mut text, &mut bss, &mut data) {
+        match statement::go(&param, &mut text, &mut externs, &mut bss, &mut data) {
             Ok(_) => (),
             Err(e) => return Err(e),
         }
         text.push(format!("  push {}", "eax"));
     }
 
+    externs.push(format!("extern {}", method));
     text.push(format!("  call {}", method));
 
     // pop stack by number of params

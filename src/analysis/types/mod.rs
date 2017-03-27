@@ -283,11 +283,7 @@ fn verify_env(mut env: &mut Environment) -> Result<(), String> {
                 let globals = method.parameters.clone();
                 let mut body = method.clone().body.unwrap().clone();
                 let return_types =
-                    match statement::block(&mut body,
-                                           &method.modifiers,
-                                           &curr,
-                                           &kinds,
-                                           &globals) {
+                    match statement::block(&mut body, &method.modifiers, &curr, &kinds, &globals) {
                         Ok(rts) => {
                             method.body = Some(body);
                             rts

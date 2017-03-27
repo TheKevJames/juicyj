@@ -18,7 +18,11 @@ pub fn go(mut node: &mut ASTNode,
           globals: &mut Vec<VariableEnvironment>)
           -> Result<Type, String> {
     if node.children[1].clone().token.lexeme.unwrap() == "DimExpr" {
-        match resolve::expression::go(&mut node.children[1].children[1], modifiers, current, kinds, globals) {
+        match resolve::expression::go(&mut node.children[1].children[1],
+                                      modifiers,
+                                      current,
+                                      kinds,
+                                      globals) {
             Ok(ref idx) if idx.is_coercible_to_int() => (),
             Ok(idx) => return Err(format!("got invalid index type {:?}", idx.kind.name)),
             Err(e) => return Err(e),

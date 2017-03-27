@@ -9,6 +9,9 @@ use scanner::Token;
 use scanner::TokenKind;
 
 lazy_static! {
+    static ref ARGUMENT: Token = {
+        Token::new(TokenKind::NonTerminal, Some("Argument"))
+    };
     static ref ARGUMENTLIST: ASTNode = {
         ASTNode {
             token: Token::new(TokenKind::NonTerminal, Some("ArgumentList")),
@@ -29,29 +32,50 @@ lazy_static! {
     };
 }
 
-fn get_args(node: &ASTNode,
+fn get_args(mut node: &mut ASTNode,
             modifiers: &Vec<ASTNode>,
             current: &ClassOrInterfaceEnvironment,
             kinds: &Vec<ClassOrInterfaceEnvironment>,
             globals: &mut Vec<VariableEnvironment>)
             -> Result<Vec<Type>, String> {
-    let mut args = match node.children.len() {
-        6 => node.children[4].clone(),
-        4 => node.children[2].clone(),
-        _ => ARGUMENTLIST.clone(),
+    let mut idx = match node.children.len() {
+        6 => 4,
+        4 => 2,
+        _ => return Ok(Vec::new()),
     };
-    args.flatten();
+
+    node.children[idx].flatten();
 
     let mut resolved = Vec::new();
-    for mut arg in &mut args.children {
+    for mut arg in &mut node.children[idx].children {
         if arg.token.kind == TokenKind::Comma {
             continue;
         }
 
-        match resolve::expression::go(&mut arg, modifiers, current, kinds, globals) {
-            Ok(t) => resolved.push(t),
+        if arg.clone().token.lexeme.unwrap_or("".to_owned()) == "Argument" {
+            // already has type info
+            let kind = match resolve::expression::go(&mut arg.children[1].clone(),
+                                                     modifiers,
+                                                     current,
+                                                     kinds,
+                                                     globals) {
+                Ok(t) => resolved.push(t),
+                Err(e) => return Err(e),
+            };
+            continue;
+        }
+
+        let kind = match resolve::expression::go(&mut arg, modifiers, current, kinds, globals) {
+            Ok(t) => {
+                resolved.push(t.clone());
+                t.kind.name
+            }
             Err(e) => return Err(e),
         };
+
+        let name = arg.clone();
+        arg.token = ARGUMENT.clone();
+        arg.children = vec![kind, name];
     }
 
     Ok(resolved)

@@ -18,7 +18,11 @@ pub fn go(mut node: &mut ASTNode,
           globals: &mut Vec<VariableEnvironment>)
           -> Result<Type, String> {
     let idx = node.children.len() - 1;
-    let rhs = match resolve::expression::go(&mut node.children[idx], modifiers, current, kinds, globals) {
+    let rhs = match resolve::expression::go(&mut node.children[idx],
+                                            modifiers,
+                                            current,
+                                            kinds,
+                                            globals) {
         Ok(t) => t,
         Err(e) => return Err(e),
     };

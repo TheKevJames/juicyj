@@ -40,11 +40,11 @@ pub fn block(mut node: &mut ASTNode,
         }
         Some(ref l) if l == "Block" => {
             match nonblock(&mut node,
-                                  modifiers,
-                                  current,
-                                  kinds,
-                                  globals,
-                                  &mut Vec::new()) {
+                           modifiers,
+                           current,
+                           kinds,
+                           globals,
+                           &mut Vec::new()) {
                 Ok(rts) => {
                     let mut return_types: Vec<Type> = Vec::new();
                     for (rt, is_ret) in rts {
@@ -71,12 +71,7 @@ pub fn block(mut node: &mut ASTNode,
     let mut locals = Vec::new();
     let mut return_types = Vec::new();
     for mut child in &mut node.children {
-        match nonblock(&mut child,
-                       modifiers,
-                       current,
-                       kinds,
-                       globals,
-                       &mut locals) {
+        match nonblock(&mut child, modifiers, current, kinds, globals, &mut locals) {
             Ok(rts) => {
                 for (rt, is_ret) in rts {
                     if !return_types.is_empty() {
@@ -139,7 +134,11 @@ pub fn nonblock(mut node: &mut ASTNode,
             // does the type lookup accidentally
             let mut block_globals = globals.clone();
             block_globals.extend(locals.clone());
-            match resolve::expression::go(&mut node, modifiers, current, kinds, &mut block_globals) {
+            match resolve::expression::go(&mut node,
+                                          modifiers,
+                                          current,
+                                          kinds,
+                                          &mut block_globals) {
                 Ok(_) => (),
                 Err(e) => return Err(e),
             }
@@ -161,7 +160,11 @@ pub fn nonblock(mut node: &mut ASTNode,
         Some(ref l) if l == "Assignment" => {
             let mut block_globals = globals.clone();
             block_globals.extend(locals.clone());
-            match resolve::expression::go(&mut node, modifiers, current, kinds, &mut block_globals) {
+            match resolve::expression::go(&mut node,
+                                          modifiers,
+                                          current,
+                                          kinds,
+                                          &mut block_globals) {
                 Ok(t) => Ok(vec![(t.clone(), false)]),
                 Err(e) => return Err(e),
             }
@@ -475,7 +478,11 @@ pub fn nonblock(mut node: &mut ASTNode,
 
             let mut block_globals = globals.clone();
             block_globals.extend(locals.clone());
-            match resolve::expression::go(&mut expr, modifiers, current, kinds, &mut block_globals) {
+            match resolve::expression::go(&mut expr,
+                                          modifiers,
+                                          current,
+                                          kinds,
+                                          &mut block_globals) {
                 Ok(rt) => Ok(vec![(rt, true)]),
                 Err(e) => Err(e),
             }

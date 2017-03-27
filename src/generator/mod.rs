@@ -24,13 +24,11 @@ impl Generatable for ClassOrInterfaceEnvironment {
 
         let mut bss: Vec<String> = Vec::new();
         let mut data: Vec<String> = Vec::new();
+        let mut externs: Vec<String> = Vec::new();
         let mut text: Vec<String> = Vec::new();
-        let mut textpre: Vec<String> = Vec::new();
 
-        textpre.push(format!("section .text"));
-        textpre.push(format!("extern {}", "__exception"));
-        textpre.push(format!("extern {}", "__malloc"));
-        textpre.push(format!("extern {}", "__NATIVEjava.io.OutputStream.nativeWrite"));
+        // externs.push(format!("extern {}", "__exception"));
+        // externs.push(format!("extern {}", "__NATIVEjava.io.OutputStream.nativeWrite"));
 
         for method in &self.methods {
             let label = match method.to_label(class_label.clone()) {
@@ -38,12 +36,12 @@ impl Generatable for ClassOrInterfaceEnvironment {
                 Err(e) => return Err(e),
             };
 
-            textpre.push(format!("global _{}", label));
+            externs.push(format!("global _{}", label));
             text.push(format!("_{}:", label));
 
             // TODO<codegen>: else error?
             if let Some(b) = method.body.clone() {
-                match self::body::go(&b, &mut text, &mut bss, &mut data) {
+                match self::body::go(&b, &mut text, &mut externs, &mut bss, &mut data) {
                     Ok(_) => (),
                     Err(e) => return Err(e),
                 }
@@ -60,7 +58,26 @@ impl Generatable for ClassOrInterfaceEnvironment {
         }
 
         let mut code = Vec::new();
-        code.push(textpre.join("\n"));
+        if !externs.is_empty() {
+            externs.sort();
+            externs.dedup();
+
+            // do not import exported labels
+            for (idx, ext) in externs.clone().iter().enumerate() {
+                let split = ext.split_whitespace().collect::<Vec<&str>>();
+                if split[0] != "extern" {
+                    continue;
+                }
+
+                if externs.contains(&vec!["global", split[1]].join(" ")) {
+                    externs.remove(idx);
+                }
+            }
+
+            externs.insert(0, format!("section .text"));
+
+            code.push(externs.join("\n"));
+        }
         code.push(text.join("\n"));
         if !bss.is_empty() {
             bss.sort();

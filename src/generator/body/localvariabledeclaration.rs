@@ -5,6 +5,7 @@ use super::statement;
 
 pub fn go(node: &ASTNode,
           mut text: &mut Vec<String>,
+          mut externs: &mut Vec<String>,
           mut bss: &mut Vec<String>,
           mut data: &mut Vec<String>)
           -> Result<(), String> {
@@ -27,13 +28,15 @@ pub fn go(node: &ASTNode,
 
     // allocate 32 bytes for lhs
     text.push(format!("  mov {}, {}", "eax", "32"));
-    text.push(format!("  call __malloc"));
+    externs.push(format!("extern {}", "__malloc"));
+    text.push(format!("  call {}", "__malloc"));
     text.push(format!("  mov [{}], {}", variable, "eax"));
     text.push("".to_owned());
 
     // resolve rhs and store in lhs
     match statement::go(&node.children[1].children[1],
                         &mut text,
+                        &mut externs,
                         &mut bss,
                         &mut data) {
         Ok(_) => (),

@@ -20,6 +20,9 @@ pub fn go(mut node: &mut ASTNode,
           globals: &mut Vec<VariableEnvironment>)
           -> Result<Type, String> {
     match node.clone().token.lexeme {
+        Some(ref l) if l == "Argument" => {
+            go(&mut node.children[1], modifiers, current, kinds, globals)
+        }
         Some(ref l) if l == "ArrayAccess" => {
             resolve::arrayaccess::go(node, modifiers, current, kinds, globals)
         }

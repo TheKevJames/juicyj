@@ -355,6 +355,9 @@ impl ASTNode {
             TokenKind::Dot => ".".to_owned(),
             TokenKind::False => "false".to_owned(),
             TokenKind::Identifier => parent.token.lexeme.unwrap_or("".to_owned()),
+            TokenKind::NonTerminal if parent.token.lexeme == Some("Argument".to_owned()) => {
+                return parent.children[1].to_label();
+            }
             TokenKind::NonTerminal if parent.token.lexeme == Some("Name".to_owned()) => {
                 let mut labels = Vec::new();
                 for child in &parent.children {
@@ -373,10 +376,9 @@ impl ASTNode {
             _ => {
                 println!("TODO<codegen>: could not create label for {:?}", self);
                 "".to_owned()
-            },
+            }
         };
 
-        // TODO<codegen>: fully qualify label, or do in analyzer
         Ok(label)
     }
 
@@ -391,6 +393,9 @@ impl ASTNode {
             TokenKind::Byte => "BYTE".to_owned(),
             TokenKind::Char | TokenKind::CharValue => "CHAR".to_owned(),
             TokenKind::Int | TokenKind::NumValue => "INT".to_owned(),
+            TokenKind::NonTerminal if parent.token.lexeme == Some("Argument".to_owned()) => {
+                return parent.children[0].to_param();
+            }
             TokenKind::NonTerminal if parent.token.lexeme == Some("ArrayType".to_owned()) => {
                 match parent.children[0].to_param() {
                     Ok(p) => format!("{}__", p),
@@ -410,7 +415,7 @@ impl ASTNode {
                     Err(_) => {
                         println!("TODO<codegen>: could not create param label for {:?}", self);
                         "".to_owned()
-                    },
+                    }
                 }
             }
         };
