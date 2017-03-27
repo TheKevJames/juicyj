@@ -90,10 +90,10 @@ pub fn go(node: &ASTNode,
                 Some(ref l) if l == "FieldAccess" => {
                     fieldaccess::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
                 }
-                Some(ref l) if l == "ForStatement" => {
+                Some(ref l) if l == "ForStatement" || l == "ForStatementNoShortIf" => {
                     forstatement::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
                 }
-                Some(ref l) if l == "IfElseStatement" => {
+                Some(ref l) if l == "IfElseStatement" || l == "IfElseStatementNoShortIf" => {
                     ifelsestatement::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
                 }
                 Some(ref l) if l == "IfStatement" => {
@@ -116,7 +116,7 @@ pub fn go(node: &ASTNode,
                 Some(ref l) if l == "ReturnStatement" => {
                     returnstatement::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
                 }
-                Some(ref l) if l == "WhileStatement" => {
+                Some(ref l) if l == "WhileStatement" || l == "WhileStatementNoShortIf" => {
                     whilestatement::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
                 }
 

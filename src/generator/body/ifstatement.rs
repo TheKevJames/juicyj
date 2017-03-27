@@ -25,11 +25,11 @@ pub fn go(node: &ASTNode,
         Err(e) => return Err(e),
     }
 
-    let jmplabel = format!("if{}",
-                           rand::thread_rng().gen_ascii_chars().take(32).collect::<String>());
+    let iflabel = format!("if{}",
+                          rand::thread_rng().gen_ascii_chars().take(32).collect::<String>());
 
     text.push(format!("  cmp {}, {}", "al", "1"));
-    text.push(format!("  jne .{}", jmplabel));
+    text.push(format!("  jne .{}", iflabel));
     text.push("".to_owned());
 
     match statement::go(&node.children[4],
@@ -41,7 +41,7 @@ pub fn go(node: &ASTNode,
         Ok(_) => (),
         Err(e) => return Err(e),
     }
-    text.push(format!(".{}:", jmplabel));
+    text.push(format!(".{}:", iflabel));
     text.push("".to_owned());
 
     Ok(())
