@@ -112,6 +112,7 @@ impl Generatable for ClassOrInterfaceEnvironment {
         if !bss.is_empty() {
             bss.sort();
             bss.dedup();
+            bss = bss.iter().map(|v| format!("  {}: resb {}", v, "32")).collect();
             bss.insert(0, format!("section .bss"));
 
             code.push(bss.join("\n"));

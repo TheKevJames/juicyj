@@ -23,7 +23,7 @@ pub fn go(node: &ASTNode,
         Ok(l) => l,
         Err(e) => return Err(e),
     };
-    bss.push(format!("  {}: resb {}", variable, "32"));
+    bss.push(variable.clone());
 
     // allocate 32 bytes for lhs
     text.push(format!("  mov {}, {}", "eax", "32"));
