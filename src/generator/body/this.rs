@@ -1,14 +1,17 @@
-use scanner::ASTNode;
+use generator::asm::Instr;
+use generator::asm::Reg;
 
-pub fn go(node: &ASTNode,
-          class_label: &String,
-          label: &String,
+pub fn go(class_label: &String,
           mut text: &mut Vec<String>,
-          mut externs: &mut Vec<String>,
-          mut bss: &mut Vec<String>,
-          mut data: &mut Vec<String>)
+          mut bss: &mut Vec<String>)
           -> Result<(), String> {
-    // TODO<codegen>
-    // Err(format!("NotImplemented This {:?}", node))
+    let this = format!("{}.THIS", class_label);
+    bss.push(this.clone());
+
+    text.push(format!("  ; this"));
+    text.push(format!("{} {}, [{}]", Instr::MOV, Reg::ESI, &this));
+    text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EAX, Reg::ESI));
+    text.push("".to_owned());
+
     Ok(())
 }
