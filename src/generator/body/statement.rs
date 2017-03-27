@@ -123,7 +123,7 @@ pub fn go(node: &ASTNode,
             math::go(&node, &mut text, &mut externs, &mut bss, &mut data)
         }
         TokenKind::Null => nullvalue::go(&node, &mut text, &mut externs, &mut bss, &mut data),
-        TokenKind::NumValue => numvalue::go(&node, &mut text, &mut externs, &mut bss, &mut data),
+        TokenKind::NumValue => numvalue::go(&node, &mut text),
         TokenKind::StrValue => strvalue::go(&node, &mut text, &mut externs, &mut bss, &mut data),
         TokenKind::This => this::go(&node, &mut text, &mut externs, &mut bss, &mut data),
         _ => Err(format!("TODO<codegen>: body statement (kind) {:?}", node.token.kind)),

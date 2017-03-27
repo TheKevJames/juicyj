@@ -1,5 +1,4 @@
 use scanner::ASTNode;
-use scanner::TokenKind;
 
 use super::statement;
 

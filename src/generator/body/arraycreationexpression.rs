@@ -1,5 +1,4 @@
 use scanner::ASTNode;
-use scanner::TokenKind;
 
 pub fn go(node: &ASTNode,
           mut text: &mut Vec<String>,
