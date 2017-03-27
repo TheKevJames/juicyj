@@ -63,7 +63,8 @@ impl Generatable for ClassOrInterfaceEnvironment {
             externs.dedup();
 
             // do not import exported labels
-            for (idx, ext) in externs.clone().iter().enumerate() {
+            // iterate backward to ensure array deletion doesn't fuck with things
+            for (idx, ext) in externs.clone().iter().enumerate().rev() {
                 let split = ext.split_whitespace().collect::<Vec<&str>>();
                 if split[0] != "extern" {
                     continue;
