@@ -1,12 +1,15 @@
 use scanner::ASTNode;
 use scanner::TokenKind;
 
+use super::arraycreationexpression;
 use super::assignment;
+use super::booleanvalue;
 use super::forstatement;
 use super::ifstatement;
 use super::ifelsestatement;
 use super::localvariabledeclaration;
 use super::methodinvocation;
+use super::numvalue;
 use super::returnstatement;
 use super::whilestatement;
 
@@ -17,6 +20,9 @@ pub fn go(node: &ASTNode,
     match node.token.kind {
         TokenKind::NonTerminal => {
             match node.token.lexeme {
+                Some(ref l) if l == "ArrayCreationExpression" => {
+                    arraycreationexpression::go(&node, &mut text, &mut bss, &mut data);
+                }
                 Some(ref l) if l == "Assignment" => {
                     assignment::go(&node, &mut text, &mut bss, &mut data);
                 }
@@ -58,6 +64,8 @@ pub fn go(node: &ASTNode,
                 }
             }
         }
+        TokenKind::False | TokenKind::True => booleanvalue::go(&node, &mut text, &mut bss, &mut data),
+        TokenKind::NumValue => numvalue::go(&node, &mut text, &mut bss, &mut data),
         _ => {
             println!("TODO:");
             println!("{:?}", node.token.kind);
