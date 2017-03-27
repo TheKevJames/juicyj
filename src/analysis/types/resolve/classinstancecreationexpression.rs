@@ -48,6 +48,7 @@ pub fn go(mut node: &mut ASTNode,
             };
 
             let mut fully_qualified = cls.name.clone();
+            fully_qualified.flatten();
             fully_qualified.children.push(DOT.clone());
             fully_qualified.children.push(method.name.clone());
             node.children[0] = fully_qualified;

@@ -4,7 +4,7 @@ use scanner::Token;
 use scanner::TokenKind;
 
 lazy_static! {
-    static ref PARAMS: ASTNode = {
+    static ref EMPTYPARAMS: ASTNode = {
         ASTNode {
             token: Token::new(TokenKind::NonTerminal, Some("ParameterList")),
             children: Vec::new(),
@@ -21,7 +21,7 @@ pub fn go(node: &ASTNode,
           -> Result<(), String> {
     let params = match node.children.len() {
         2 => node.children[1].clone(),
-        _ => PARAMS.clone(),
+        _ => EMPTYPARAMS.clone(),
     };
 
     call(&node.children[0],

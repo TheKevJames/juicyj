@@ -186,6 +186,7 @@ pub fn go(node: &mut ASTNode,
     };
 
     let mut fully_qualified = cls.name.clone();
+    fully_qualified.flatten();
     fully_qualified.children.push(DOT.clone());
     fully_qualified.children.push(method.name.clone());
     match node.children.len() {

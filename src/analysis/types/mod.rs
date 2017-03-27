@@ -17,6 +17,9 @@ lazy_static! {
     static ref ABSTRACT: ASTNode = {
         ASTNode { token: Token::new(TokenKind::Abstract, None), children: Vec::new() }
     };
+    static ref DOT: ASTNode = {
+        ASTNode { token: Token::new(TokenKind::Dot, None), children: Vec::new() }
+    };
     static ref FINAL: ASTNode = {
         ASTNode { token: Token::new(TokenKind::Final, None), children: Vec::new() }
     };
@@ -76,16 +79,18 @@ fn rebuild_env(mut env: &mut Environment) -> Result<(), String> {
     Ok(())
 }
 
-fn verify_env_inheritable(env: &Environment) -> Result<(), String> {
-    for current in &env.kinds {
-        match verify::prefixes::package(&current.name, &current, &env.kinds) {
+fn verify_env_inheritable(mut env: &mut Environment) -> Result<(), String> {
+    let kinds = env.kinds.clone();
+
+    for mut current in &mut env.kinds {
+        match verify::prefixes::package(&current.name, &current, &kinds) {
             Ok(_) => (),
             Err(e) => return Err(e),
         }
 
         if current.kind == ClassOrInterface::CLASS {
             for extended in &current.extends {
-                let found = match lookup::class::in_env(&extended, &current, &env.kinds) {
+                let found = match lookup::class::in_env(&extended, &current, &kinds) {
                     Ok(f) => f,
                     Err(e) => return Err(e),
                 };
@@ -97,9 +102,18 @@ fn verify_env_inheritable(env: &Environment) -> Result<(), String> {
 
                 if current.name != *OBJECT {
                     let mut zero_argument_parent = false;
-                    for constructor in found.constructors {
-                        if constructor.parameters.is_empty() {
+                    for parent_constructor in found.constructors {
+                        if parent_constructor.parameters.is_empty() {
                             zero_argument_parent = true;
+
+                            let mut fully_qualified = found.name.clone();
+                            fully_qualified.flatten();
+                            fully_qualified.children.push(DOT.clone());
+                            fully_qualified.children.push(parent_constructor.name.clone());
+                            for mut constructor in &mut current.constructors {
+                                constructor.parent = Some(fully_qualified.clone());
+                            }
+
                             break;
                         }
                     }
@@ -113,7 +127,7 @@ fn verify_env_inheritable(env: &Environment) -> Result<(), String> {
 
             let mut resolved = Vec::new();
             for implemented in &current.implements {
-                let found = match lookup::class::in_env(&implemented, &current, &env.kinds) {
+                let found = match lookup::class::in_env(&implemented, &current, &kinds) {
                     Ok(f) => f,
                     Err(e) => return Err(e),
                 };
@@ -129,7 +143,7 @@ fn verify_env_inheritable(env: &Environment) -> Result<(), String> {
         } else if current.kind == ClassOrInterface::INTERFACE {
             let mut resolved = Vec::new();
             for extended in &current.extends {
-                let found = match lookup::class::in_env(&extended, &current, &env.kinds) {
+                let found = match lookup::class::in_env(&extended, &current, &kinds) {
                     Ok(f) => f,
                     Err(e) => return Err(e),
                 };
@@ -334,7 +348,7 @@ fn verify_env(mut env: &mut Environment) -> Result<(), String> {
 }
 
 pub fn verify(mut env: &mut Environment) -> Result<(), String> {
-    match verify_env_inheritable(&env) {
+    match verify_env_inheritable(&mut env) {
         Ok(_) => (),
         Err(e) => return Err(e),
     }

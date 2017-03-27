@@ -19,6 +19,7 @@ pub struct MethodEnvironment {
     pub return_type: ASTNode,
     pub name: ASTNode,
     pub parameters: Vec<VariableEnvironment>,
+    pub parent: Option<ASTNode>,
     pub body: Option<ASTNode>,
 }
 
@@ -29,6 +30,7 @@ impl MethodEnvironment {
             return_type: return_type,
             name: name,
             parameters: Vec::new(),
+            parent: None,
             body: None,
         }
     }
