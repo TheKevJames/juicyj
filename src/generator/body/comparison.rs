@@ -42,6 +42,7 @@ pub fn go(node: &ASTNode,
         Err(e) => return Err(e),
     }
 
+    // restore lhs and do comparison
     text.push(format!("  pop {}", "edx"));
     text.push(format!("  cmp {}, {}", "edx", "eax"));
 
