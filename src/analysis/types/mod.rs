@@ -221,7 +221,7 @@ fn verify_env(mut env: &mut Environment) -> Result<(), String> {
             }
         }
 
-        for field in &current.fields {
+        for mut field in &mut current.fields {
             env_builder.push(current_builder.clone());
 
             let result = verify::prefixes::canonical(&field.kind, &current_builder, &env_builder);
@@ -234,14 +234,16 @@ fn verify_env(mut env: &mut Environment) -> Result<(), String> {
             }
 
             // TODO: allow qualified names to be resolved to future fields
-            // TODO<codegen>: allow update of rexpr?
             let mut rexpr = field.clone().value.unwrap();
             let rvalue = match resolve::expression::go(&mut rexpr,
                                                        &field.modifiers,
                                                        &current_builder,
                                                        &env_builder,
                                                        &mut Vec::new()) {
-                Ok(t) => t,
+                Ok(t) => {
+                    field.value = Some(rexpr);
+                    t
+                },
                 Err(e) => return Err(e),
             };
 

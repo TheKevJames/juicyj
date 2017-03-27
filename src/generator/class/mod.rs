@@ -1,6 +1,7 @@
 use generator::asm::Instr;
 
 pub mod constructor;
+pub mod field;
 pub mod method;
 
 pub fn code(text: &Vec<String>,
@@ -40,7 +41,7 @@ pub fn code(text: &Vec<String>,
         bss.sort();
         bss.dedup();
 
-        bss = bss.iter().map(|v| format!("  {}: resb {}", v, "32")).collect();
+        bss = bss.iter().map(|v| format!("{}: resb {}", v, "32")).collect();
         bss.insert(0, format!("{} .{}", Instr::SECTION, "bss"));
 
         generated.push(bss.join("\n"));

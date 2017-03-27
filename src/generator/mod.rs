@@ -12,6 +12,15 @@ use std::io::Write;
 
 use analysis::ClassOrInterfaceEnvironment;
 use analysis::Environment;
+use scanner::ASTNode;
+use scanner::Token;
+use scanner::TokenKind;
+
+lazy_static! {
+    static ref DOT: ASTNode = {
+        ASTNode { token: Token::new(TokenKind::Dot, None), children: Vec::new() }
+    };
+}
 
 trait Generatable {
     fn generate(&self) -> Result<String, String>;
@@ -32,6 +41,27 @@ impl Generatable for ClassOrInterfaceEnvironment {
         // externs.push(format!("extern {}", "__exception"));
         // externs.push(format!("extern {}", "__NATIVEjava.io.OutputStream.nativeWrite"));
 
+        let mut init_fields = Vec::new();
+        for field in &self.fields {
+            let mut name = self.name.clone();
+            name.flatten();
+            name.children.push(DOT.clone());
+            name.children.push(field.name.clone());
+
+            let mut field = field.clone();
+            field.name = name;
+
+            let label = match field.name.to_label() {
+                Ok(l) => l,
+                Err(e) => return Err(e),
+            };
+            match class::field::go(&field, &label, &mut text, &mut externs, &mut bss, &mut data) {
+                Ok(Some(n)) => init_fields.push((label.clone(), n.clone())),
+                Ok(_) => (),
+                Err(e) => return Err(e),
+            }
+        }
+
         for constructor in &self.constructors {
             let label = match class::method::get_label(constructor,
                                                        &class_label,
@@ -42,6 +72,7 @@ impl Generatable for ClassOrInterfaceEnvironment {
             };
             match class::constructor::go(&constructor,
                                          &label,
+                                         &init_fields,
                                          &mut text,
                                          &mut externs,
                                          &mut bss,

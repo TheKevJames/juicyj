@@ -1,4 +1,6 @@
 use analysis::MethodEnvironment;
+use generator::asm::Instr;
+use generator::asm::Reg;
 use generator::asm::helper::call;
 use generator::body;
 use scanner::ASTNode;
@@ -18,6 +20,7 @@ lazy_static! {
 
 pub fn go(method: &MethodEnvironment,
           label: &String,
+          init_fields: &Vec<(String, ASTNode)>,
           mut text: &mut Vec<String>,
           mut externs: &mut Vec<String>,
           mut bss: &mut Vec<String>,
@@ -41,6 +44,24 @@ pub fn go(method: &MethodEnvironment,
             Ok(_) => (),
             Err(e) => return Err(e),
         }
+    }
+
+    // initialize fields
+    for &(ref field, ref init) in init_fields {
+        match call(&init,
+                   &EMPTYPARAMS.clone(),
+                   label,
+                   &mut text,
+                   &mut externs,
+                   &mut bss,
+                   &mut data) {
+            Ok(_) => (),
+            Err(e) => return Err(e),
+        }
+
+        text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EDI, field));
+        text.push(format!("{} [{}], {}", Instr::MOV, Reg::EDI, Reg::EAX));
+        text.push("".to_owned());
     }
 
     // generate body

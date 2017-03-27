@@ -10,6 +10,7 @@ use scanner::AST;
 pub use self::environment::ClassOrInterfaceEnvironment;
 pub use self::environment::Environment;
 pub use self::environment::MethodEnvironment;
+pub use self::environment::FieldEnvironment;
 pub use self::environment::VariableEnvironment;
 use self::types::verify;
 
