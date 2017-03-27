@@ -8,65 +8,61 @@ use scanner::Token;
 use scanner::TokenKind;
 
 lazy_static! {
-    static ref ARGUMENTLIST: ASTNode = {
-        ASTNode {
-            token: Token::new(TokenKind::NonTerminal, Some("ArgumentList")),
-            children: Vec::new()
-        }
+    static ref DOT: ASTNode = {
+        ASTNode { token: Token::new(TokenKind::Dot, None), children: Vec::new() }
     };
 }
 
-// TODO: dedup with methodinvocation::get_args
-fn get_args(node: &ASTNode,
-            modifiers: &Vec<ASTNode>,
-            current: &ClassOrInterfaceEnvironment,
-            kinds: &Vec<ClassOrInterfaceEnvironment>,
-            globals: &mut Vec<VariableEnvironment>)
-            -> Result<Vec<Type>, String> {
-    let mut args = match node.children.len() {
-        2 => node.children[1].clone(),
-        _ => ARGUMENTLIST.clone(),
-    };
-    args.flatten();
-
-    let mut resolved = Vec::new();
-    for mut arg in &mut args.children {
-        if arg.token.kind == TokenKind::Comma {
-            continue;
-        }
-
-        match resolve::expression::go(&mut arg, modifiers, current, kinds, globals) {
-            Ok(t) => resolved.push(t),
-            Err(e) => return Err(e),
-        };
-    }
-
-    Ok(resolved)
-}
-
-pub fn go(node: &mut ASTNode,
+pub fn go(mut node: &mut ASTNode,
           modifiers: &Vec<ASTNode>,
           current: &ClassOrInterfaceEnvironment,
           kinds: &Vec<ClassOrInterfaceEnvironment>,
           globals: &mut Vec<VariableEnvironment>)
           -> Result<Type, String> {
-    let args = match get_args(&node, modifiers, current, kinds, globals) {
+    let idx = match node.children.len() {
+        2 => 1,
+        _ => 0,
+    };
+
+    let args = match resolve::methodinvocation::get_args(&mut node,
+                                                         idx,
+                                                         modifiers,
+                                                         current,
+                                                         kinds,
+                                                         globals) {
         Ok(a) => a,
         Err(e) => return Err(e),
     };
 
     match lookup::class::in_env(&node.children[0], current, kinds) {
         Ok(cls) => {
-            match lookup::method::select_method(&cls.constructors.clone(), &args, &cls, kinds) {
-                Ok(_) => (),
+            let method = match lookup::method::select_method(&cls.constructors.clone(),
+                                                             &args,
+                                                             &cls,
+                                                             kinds) {
+                Ok(m) => m,
                 Err(e) => {
                     return Err(format!("could not find matching constructor\ngot errors:\n\t{:?}",
                                        e))
                 }
             };
 
+            let mut fully_qualified = cls.name.clone();
+            fully_qualified.children.push(DOT.clone());
+            fully_qualified.children.push(method.name.clone());
+            node.children[0] = fully_qualified;
+
             Ok(Type::new(cls))
         }
-        Err(e) => Err(e),
+        Err(e) => {
+            // TODO: duplicate resolve?
+            // remove full qualification
+            let mut node_copy = node.clone();
+            node_copy.children[0].flatten();
+            node_copy.children[0].children.pop();
+            node_copy.children[0].children.pop();
+
+            go(&mut node_copy, modifiers, current, kinds, globals)
+        }
     }
 }

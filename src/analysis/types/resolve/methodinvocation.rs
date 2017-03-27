@@ -12,12 +12,6 @@ lazy_static! {
     static ref ARGUMENT: Token = {
         Token::new(TokenKind::NonTerminal, Some("Argument"))
     };
-    static ref ARGUMENTLIST: ASTNode = {
-        ASTNode {
-            token: Token::new(TokenKind::NonTerminal, Some("ArgumentList")),
-            children: Vec::new()
-        }
-    };
     static ref DOT: ASTNode = {
         ASTNode { token: Token::new(TokenKind::Dot, None), children: Vec::new() }
     };
@@ -32,17 +26,16 @@ lazy_static! {
     };
 }
 
-fn get_args(mut node: &mut ASTNode,
-            modifiers: &Vec<ASTNode>,
-            current: &ClassOrInterfaceEnvironment,
-            kinds: &Vec<ClassOrInterfaceEnvironment>,
-            globals: &mut Vec<VariableEnvironment>)
-            -> Result<Vec<Type>, String> {
-    let mut idx = match node.children.len() {
-        6 => 4,
-        4 => 2,
-        _ => return Ok(Vec::new()),
-    };
+pub fn get_args(mut node: &mut ASTNode,
+                idx: usize,
+                modifiers: &Vec<ASTNode>,
+                current: &ClassOrInterfaceEnvironment,
+                kinds: &Vec<ClassOrInterfaceEnvironment>,
+                globals: &mut Vec<VariableEnvironment>)
+                -> Result<Vec<Type>, String> {
+    if idx == 0 {
+        return Ok(Vec::new());
+    }
 
     node.children[idx].flatten();
 
@@ -54,14 +47,14 @@ fn get_args(mut node: &mut ASTNode,
 
         if arg.clone().token.lexeme.unwrap_or("".to_owned()) == "Argument" {
             // already has type info
-            let kind = match resolve::expression::go(&mut arg.children[1].clone(),
-                                                     modifiers,
-                                                     current,
-                                                     kinds,
-                                                     globals) {
+            match resolve::expression::go(&mut arg.children[1].clone(),
+                                          modifiers,
+                                          current,
+                                          kinds,
+                                          globals) {
                 Ok(t) => resolved.push(t),
                 Err(e) => return Err(e),
-            };
+            }
             continue;
         }
 
@@ -87,7 +80,13 @@ fn get_method(mut node: &mut ASTNode,
               kinds: &Vec<ClassOrInterfaceEnvironment>,
               globals: &mut Vec<VariableEnvironment>)
               -> Result<(ClassOrInterfaceEnvironment, MethodEnvironment), String> {
-    let args = match get_args(node, modifiers, current, kinds, globals) {
+    let idx = match node.children.len() {
+        6 => 4,
+        4 => 2,
+        _ => 0,
+    };
+
+    let args = match get_args(node, idx, modifiers, current, kinds, globals) {
         Ok(a) => a,
         Err(e) => return Err(e),
     };

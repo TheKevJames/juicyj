@@ -145,6 +145,11 @@ pub fn nonblock(mut node: &mut ASTNode,
 
             let mut kind = node.children[0].clone();
             kind.flatten();
+
+            // remove .ClassName
+            kind.children.pop();
+            kind.children.pop();
+
             match lookup::class::in_env(&kind, current, kinds) {
                 Ok(ref k) if k.modifiers.contains(&*ABSTRACT) => {
                     Err(format!("instantiated abstract class {}", k.name))
