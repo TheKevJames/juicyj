@@ -9,6 +9,8 @@ use scanner::AST;
 
 pub use self::environment::ClassOrInterfaceEnvironment;
 pub use self::environment::Environment;
+pub use self::environment::MethodEnvironment;
+pub use self::environment::VariableEnvironment;
 use self::types::verify;
 
 /// Runs a set of ASTs through the analysis stack (environment builder) and
