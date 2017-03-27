@@ -30,6 +30,7 @@ pub fn go(method: &MethodEnvironment,
 
     // call parent constructor
     if let Some(p) = method.parent.clone() {
+        text.push(format!("  ; implicit super()"));
         match call(&p,
                    &EMPTYPARAMS.clone(),
                    label,

@@ -44,6 +44,10 @@ pub fn get_args(parameters: &Vec<VariableEnvironment>,
                 mut text: &mut Vec<String>,
                 mut bss: &mut Vec<String>)
                 -> Result<(), String> {
+    if parameters.is_empty() {
+        return Ok(());
+    }
+
     text.push(format!("  ; get args"));
     for (idx, param) in parameters.iter().enumerate().rev() {
         let variable = match param.name.to_label() {
