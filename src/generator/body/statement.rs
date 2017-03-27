@@ -8,7 +8,7 @@ use super::booleanvalue;
 use super::castexpression;
 use super::charvalue;
 use super::classinstancecreationexpression;
-use super::equality;
+use super::comparison;
 use super::fieldaccess;
 use super::forstatement;
 use super::ifstatement;
@@ -17,6 +17,7 @@ use super::localvariabledeclaration;
 use super::math;
 use super::methodinvocation;
 use super::name;
+use super::not;
 use super::nullvalue;
 use super::numvalue;
 use super::returnstatement;
@@ -115,13 +116,21 @@ pub fn go(node: &ASTNode,
             }
         }
         TokenKind::CharValue => charvalue::go(&node, &mut text, &mut externs, &mut bss, &mut data),
-        TokenKind::Equality => equality::go(&node, &mut text, &mut externs, &mut bss, &mut data),
+        TokenKind::Equality |
+        TokenKind::NotEqual |
+        TokenKind::LessThan |
+        TokenKind::LessThanOrEqual |
+        TokenKind::GreaterThan |
+        TokenKind::GreaterThanOrEqual => {
+            comparison::go(&node, &mut text, &mut externs, &mut bss, &mut data)
+        }
         TokenKind::False | TokenKind::True => {
             booleanvalue::go(&node, &mut text, &mut externs, &mut bss, &mut data)
         }
         TokenKind::Minus | TokenKind::Plus => {
             math::go(&node, &mut text, &mut externs, &mut bss, &mut data)
         }
+        TokenKind::Not => not::go(&node, &mut text, &mut externs, &mut bss, &mut data),
         TokenKind::Null => nullvalue::go(&node, &mut text, &mut externs, &mut bss, &mut data),
         TokenKind::NumValue => numvalue::go(&node, &mut text),
         TokenKind::StrValue => strvalue::go(&node, &mut text, &mut externs, &mut bss, &mut data),
