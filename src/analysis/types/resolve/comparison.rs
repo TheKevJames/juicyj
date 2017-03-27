@@ -136,6 +136,17 @@ pub fn twoarg_boolean(mut node: &mut ASTNode,
             true => Some("true".to_owned()),
         };
 
+        match node.token.kind {
+            // only prune eager comparisons
+            TokenKind::BitAnd | TokenKind::BitOr | TokenKind::BitXor => {
+                node.token = match value {
+                    false => FALSE.clone(),
+                    true => TRUE.clone(),
+                };
+            }
+            _ => (),
+        }
+
         Ok(result)
     } else if BITWISE.contains(&node.token.kind) {
         Err(format!("bitwise operations are not allowed"))
