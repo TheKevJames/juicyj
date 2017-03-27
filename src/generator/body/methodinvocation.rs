@@ -8,7 +8,13 @@ fn build_method(name: &ASTNode, params: &ASTNode) -> Result<String, String> {
 
     method.push("__".to_owned());
     match name.to_label() {
-        Ok(l) => method.push(l),
+        Ok(l) => {
+            if l == "java.io.PrintStream.nativeWrite" {
+                // TODO: more general NATIVE lookup?
+                method.push("NATIVE".to_owned());
+            }
+            method.push(l);
+        }
         Err(e) => return Err(e),
     }
 
