@@ -220,6 +220,7 @@ fn verify_env(mut env: &mut Environment) -> Result<(), String> {
             }
 
             // TODO: allow qualified names to be resolved to future fields
+            // TODO<codegen>: allow update of rexpr?
             let mut rexpr = field.clone().value.unwrap();
             let rvalue = match resolve::expression::go(&mut rexpr,
                                                        &field.modifiers,
@@ -253,13 +254,24 @@ fn verify_env(mut env: &mut Environment) -> Result<(), String> {
                 }
             }
 
+            let globals = method.parameters.clone();
+
             let mut params = Vec::new();
-            for parameter in &method.parameters {
+            for mut parameter in &mut method.parameters {
                 if params.contains(&parameter.name) {
                     return Err(format!("method has multiple parameters with same name {}",
                                        parameter.name));
                 }
                 params.push(parameter.name.clone());
+
+                match resolve::expression::go(&mut parameter.kind,
+                                              &method.modifiers,
+                                              &curr,
+                                              &kinds,
+                                              &mut Vec::new()) {
+                    Ok(t) => parameter.kind = t.kind.name,
+                    Err(e) => return Err(e),
+                }
             }
 
             let result = verify::prefixes::canonical(&method.return_type, &curr, &kinds);
@@ -280,7 +292,6 @@ fn verify_env(mut env: &mut Environment) -> Result<(), String> {
             }
 
             if method.body.is_some() {
-                let globals = method.parameters.clone();
                 let mut body = method.clone().body.unwrap().clone();
                 let return_types =
                     match statement::block(&mut body, &method.modifiers, &curr, &kinds, &globals) {
