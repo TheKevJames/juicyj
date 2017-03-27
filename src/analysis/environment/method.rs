@@ -47,7 +47,8 @@ impl MethodEnvironment {
             return "start".to_owned();
         }
 
-        let mut label = Vec::new();
+        let mut label: Vec<String> = Vec::new();
+        label.push("_".to_owned());
         if self.modifiers.contains(&*NATIVE) {
             label.push("NATIVE".to_owned());
         }
@@ -56,6 +57,7 @@ impl MethodEnvironment {
         label.push(".".to_owned());
         label.push(self.name.to_label());
 
+        // TODO: only when required?
         label.push("_".to_owned());
         label.extend(self.parameters.iter().map(|p| p.kind.to_label()).collect::<Vec<String>>());
         label.push("_".to_owned());

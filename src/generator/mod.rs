@@ -18,26 +18,54 @@ trait Generatable {
 impl Generatable for ClassOrInterfaceEnvironment {
     fn generate(&self) -> String {
         let class_label = self.name.to_label();
-
+        let mut bss: Vec<String> = Vec::new();
         let mut data: Vec<String> = Vec::new();
+        let mut text: Vec<String> = Vec::new();
+        let mut textpre: Vec<String> = Vec::new();
+
+        textpre.push(format!("section .text"));
+        textpre.push(format!("extern {}", "__exception"));
+        textpre.push(format!("extern {}", "__malloc"));
+        textpre.push(format!("extern {}", "__NATIVEjava.io.OutputStream.nativeWrite"));
+
         for method in &self.methods {
             let label = method.to_label(class_label.clone());
-            data.push(format!("global _{}", label));
-            data.push(format!("_{}:", label));
+            textpre.push(format!("global _{}", label));
+            text.push(format!("_{}:", label));
 
             if let Some(b) = method.body.clone() {
-                self::body::go(&b, &mut data);
+                self::body::go(&b, &mut text, &mut bss, &mut data);
             }
             // TODO: else error?
 
             if label == "start" {
-                data.push(format!("mov {}, {}", "eax", "1"));
-                data.push(format!("mov {}, {}", "ebx", "0"));
-                data.push(format!("int {}", "0x80"));
+                // exit with this method's return value
+                text.push(format!("  mov {}, {}", "ebx", "eax"));
+                text.push(format!("  mov {}, {}", "eax", "1"));
+                text.push(format!("  int {}", "0x80"));
             }
+
+            text.push("".to_owned());
         }
 
-        data.join("\n")
+        let mut code = Vec::new();
+        code.push(textpre.join("\n"));
+        code.push(text.join("\n"));
+        if !bss.is_empty() {
+            bss.sort();
+            bss.dedup();
+            bss.insert(0, format!("section .bss"));
+
+            code.push(bss.join("\n"));
+        }
+        if !data.is_empty() {
+            data.sort();
+            data.dedup();
+            data.insert(0, format!("section .data"));
+
+            code.push(data.join("\n"));
+        }
+        code.join("\n\n")
     }
 }
 
