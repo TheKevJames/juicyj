@@ -63,7 +63,8 @@ impl Generatable for ClassOrInterfaceEnvironment {
                 }
             }
 
-            if method.modifiers.contains(&*STATIC) && method.return_type == *INTEGER && method.name == *TEST {
+            if method.modifiers.contains(&*STATIC) && method.return_type == *INTEGER &&
+               method.name == *TEST {
                 // use this method as the entry point
                 externs.push("global _start".to_owned());
                 text.push("_start:".to_owned());

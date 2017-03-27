@@ -18,14 +18,14 @@ pub fn go(node: &ASTNode,
                 Ok(_) => (),
                 Err(e) => return Err(e),
             }
-
-            text.push(format!("  {}", "ret"));
         }
         _ => {
             // TODO: ret a specific value, maybe 0?
-            text.push(format!("  {}", "ret"));
         }
     }
+
+    text.push(format!("  {}", "ret"));
+    text.push("".to_owned());
 
     Ok(())
 }

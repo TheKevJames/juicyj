@@ -43,6 +43,11 @@ pub fn go(node: &ASTNode,
 
     let mut params = Vec::new();
     for param in &node.children[2].children {
+        // TODO: remove commas earlier (ie. in a single place...)
+        if param.token.kind == TokenKind::Comma {
+            continue;
+        }
+
         match param.to_label() {
             Ok(l) => params.push(l),
             Err(e) => return Err(e),
@@ -55,6 +60,10 @@ pub fn go(node: &ASTNode,
     text.push(format!("  mov {}, {}", "ebp", "esp"));
     // push params
     for param in node.children[2].children.iter().rev() {
+        if param.token.kind == TokenKind::Comma {
+            continue;
+        }
+
         match statement::go(&param, &mut text, &mut externs, &mut bss, &mut data) {
             Ok(_) => (),
             Err(e) => return Err(e),

@@ -7,11 +7,14 @@ use super::assignment;
 use super::booleanvalue;
 use super::castexpression;
 use super::charvalue;
+use super::classinstancecreationexpression;
 use super::equality;
+use super::fieldaccess;
 use super::forstatement;
 use super::ifstatement;
 use super::ifelsestatement;
 use super::localvariabledeclaration;
+use super::math;
 use super::methodinvocation;
 use super::name;
 use super::nullvalue;
@@ -53,31 +56,27 @@ pub fn go(node: &ASTNode,
                        &mut bss,
                        &mut data)
                 }
-                Some(ref l) if l == "BlockStatements" && node.children.len() == 1 => {
-                    go(&node.children[0],
-                       &mut text,
-                       &mut externs,
-                       &mut bss,
-                       &mut data)
-                }
                 Some(ref l) if l == "BlockStatements" => {
-                    match go(&node.children[0],
-                             &mut text,
-                             &mut externs,
-                             &mut bss,
-                             &mut data) {
-                        Ok(_) => {
-                            go(&node.children[1],
-                               &mut text,
-                               &mut externs,
-                               &mut bss,
-                               &mut data)
+                    for child in &node.children {
+                        match go(&child, &mut text, &mut externs, &mut bss, &mut data) {
+                            Ok(_) => (),
+                            Err(e) => return Err(e),
                         }
-                        Err(e) => return Err(e),
                     }
+                    Ok(())
                 }
                 Some(ref l) if l == "CastExpression" => {
                     castexpression::go(&node, &mut text, &mut externs, &mut bss, &mut data)
+                }
+                Some(ref l) if l == "ClassInstanceCreationExpression" => {
+                    classinstancecreationexpression::go(&node,
+                                                        &mut text,
+                                                        &mut externs,
+                                                        &mut bss,
+                                                        &mut data)
+                }
+                Some(ref l) if l == "FieldAccess" => {
+                    fieldaccess::go(&node, &mut text, &mut externs, &mut bss, &mut data)
                 }
                 Some(ref l) if l == "ForStatement" => {
                     forstatement::go(&node, &mut text, &mut externs, &mut bss, &mut data)
@@ -109,7 +108,10 @@ pub fn go(node: &ASTNode,
                 }
 
                 Some(ref l) if l == "Block" => Ok(()),
-                _ => Err(format!("TODO<codegen>: body statement (lexeme) {:?}", node.token.lexeme)),
+                _ => {
+                    Err(format!("TODO<codegen>: body statement (lexeme) {:?}",
+                                node.token.lexeme))
+                }
             }
         }
         TokenKind::CharValue => charvalue::go(&node, &mut text, &mut externs, &mut bss, &mut data),
@@ -117,10 +119,13 @@ pub fn go(node: &ASTNode,
         TokenKind::False | TokenKind::True => {
             booleanvalue::go(&node, &mut text, &mut externs, &mut bss, &mut data)
         }
+        TokenKind::Minus | TokenKind::Plus => {
+            math::go(&node, &mut text, &mut externs, &mut bss, &mut data)
+        }
         TokenKind::Null => nullvalue::go(&node, &mut text, &mut externs, &mut bss, &mut data),
         TokenKind::NumValue => numvalue::go(&node, &mut text, &mut externs, &mut bss, &mut data),
-        TokenKind::This => this::go(&node, &mut text, &mut externs, &mut bss, &mut data),
         TokenKind::StrValue => strvalue::go(&node, &mut text, &mut externs, &mut bss, &mut data),
+        TokenKind::This => this::go(&node, &mut text, &mut externs, &mut bss, &mut data),
         _ => Err(format!("TODO<codegen>: body statement (kind) {:?}", node.token.kind)),
     }
 }
