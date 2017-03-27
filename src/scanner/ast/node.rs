@@ -378,7 +378,7 @@ impl ASTNode {
             // TODO<codegen>: enable error handling
             // _ => return Err(format!("could not create label for {:?}", self)),
             _ => {
-                println!("TODO<codegen>: could not create label for {:?}", self);
+                // println!("TODO<codegen>: could not create label for {:?}", self);
                 "".to_owned()
             }
         };
@@ -421,7 +421,7 @@ impl ASTNode {
                     // TODO<codegen>: enable error handling
                     // Err(_) => return Err(format!("could not create param label for {:?}", self)),
                     Err(_) => {
-                        println!("TODO<codegen>: could not create param label for {:?}", self);
+                        // println!("TODO<codegen>: could not create param label for {:?}", self);
                         "".to_owned()
                     }
                 }

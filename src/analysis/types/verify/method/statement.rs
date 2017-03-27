@@ -465,8 +465,7 @@ pub fn nonblock(mut node: &mut ASTNode,
                 return Ok(vec![(NULL.clone(), true)]);
             }
 
-            let mut expr = node.children[1].clone();
-            match nonblock(&mut expr,
+            match nonblock(&mut node.children[1],
                            modifiers,
                            current,
                            kinds,
@@ -478,7 +477,7 @@ pub fn nonblock(mut node: &mut ASTNode,
 
             let mut block_globals = globals.clone();
             block_globals.extend(locals.clone());
-            match resolve::expression::go(&mut expr,
+            match resolve::expression::go(&mut node.children[1],
                                           modifiers,
                                           current,
                                           kinds,
