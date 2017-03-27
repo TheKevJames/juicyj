@@ -1,6 +1,5 @@
 use analysis::FieldEnvironment;
 use analysis::MethodEnvironment;
-use generator::asm::Instr;
 use scanner::ASTNode;
 use scanner::Token;
 use scanner::TokenKind;
@@ -8,9 +7,6 @@ use scanner::TokenKind;
 use super::method;
 
 lazy_static! {
-    static ref DOT: ASTNode = {
-        ASTNode { token: Token::new(TokenKind::Dot, None), children: Vec::new() }
-    };
     static ref INIT: ASTNode = {
         ASTNode { token: Token::new(TokenKind::Identifier, Some("INIT")), children: Vec::new() }
     };
@@ -35,17 +31,17 @@ pub fn go(field: &FieldEnvironment,
           mut bss: &mut Vec<String>,
           mut data: &mut Vec<String>)
           -> Result<Option<ASTNode>, String> {
+    bss.push(label.clone());
+
     if let Some(v) = field.value.clone() {
         let mut init = field.name.clone();
         init.flatten();
-        init.children.push(DOT.clone());
-        init.children.push(INIT.clone());
         let init_label = match init.to_label() {
             Ok(l) => l,
             Err(e) => return Err(e),
         };
 
-        let mut init_method = MethodEnvironment::new(init.clone(), field.kind.clone());
+        let mut init_method = MethodEnvironment::new(INIT.clone(), field.kind.clone());
         let mut body = RETURNSATEMENT.clone();
         body.children.push(RETURN.clone());
         body.children.push(v.clone());
@@ -53,8 +49,6 @@ pub fn go(field: &FieldEnvironment,
         init_method.body = Some(body);
 
         // build init method
-        externs.push(format!("{} __{}__", Instr::GLOBAL, &init_label));
-        text.push(format!("__{}__:", &init_label));
         match method::go(&init_method,
                          &init_label,
                          &mut text,
@@ -65,10 +59,8 @@ pub fn go(field: &FieldEnvironment,
             Err(e) => return Err(e),
         }
 
-        bss.push(label.clone());
-        Ok(Some(init.clone()))
+        Ok(Some(INIT.clone()))
     } else {
-        bss.push(label.clone());
         Ok(None)
     }
 }

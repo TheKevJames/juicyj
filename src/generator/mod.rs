@@ -56,7 +56,12 @@ impl Generatable for ClassOrInterfaceEnvironment {
                 Err(e) => return Err(e),
             };
             match class::field::go(&field, &label, &mut text, &mut externs, &mut bss, &mut data) {
-                Ok(Some(n)) => init_fields.push((label.clone(), n.clone())),
+                Ok(Some(n)) => {
+                    let mut name = field.name.clone();
+                    name.children.push(DOT.clone());
+                    name.children.push(n.clone());
+                    init_fields.push((label.clone(), name.clone()))
+                },
                 Ok(_) => (),
                 Err(e) => return Err(e),
             }
