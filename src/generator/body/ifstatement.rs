@@ -28,6 +28,8 @@ pub fn go(node: &ASTNode,
 
     text.push(format!("  cmp {}, {}", "eax", "1"));
     text.push(format!("  jne .{}", label));
+    text.push("".to_owned());
+
     match statement::go(&node.children[4],
                         &mut text,
                         &mut externs,
