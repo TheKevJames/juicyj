@@ -4,6 +4,7 @@ use scanner::TokenKind;
 use super::arrayaccess;
 use super::arraycreationexpression;
 use super::assignment;
+use super::booleanoperation;
 use super::booleanvalue;
 use super::castexpression;
 use super::charvalue;
@@ -126,6 +127,10 @@ pub fn go(node: &ASTNode,
                 }
             }
         }
+        TokenKind::And | TokenKind::BitAnd | TokenKind::Or | TokenKind::BitOr |
+        TokenKind::BitXor => {
+            booleanoperation::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
+        }
         TokenKind::CharValue => {
             charvalue::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
         }
@@ -138,7 +143,7 @@ pub fn go(node: &ASTNode,
             comparison::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
         }
         TokenKind::False | TokenKind::True => {
-            booleanvalue::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
+            booleanvalue::go(&node, &mut text)
         }
         TokenKind::Instanceof => {
             instanceof::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)

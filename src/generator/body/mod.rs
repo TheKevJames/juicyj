@@ -1,6 +1,7 @@
 mod arrayaccess;
 mod arraycreationexpression;
 mod assignment;
+mod booleanoperation;
 mod booleanvalue;
 mod castexpression;
 mod charvalue;

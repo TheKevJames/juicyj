@@ -1,11 +1,14 @@
 use scanner::ASTNode;
+use scanner::TokenKind;
 
 pub fn go(node: &ASTNode,
-          label: &String,
-          mut text: &mut Vec<String>,
-          mut externs: &mut Vec<String>,
-          mut bss: &mut Vec<String>,
-          mut data: &mut Vec<String>)
+          mut text: &mut Vec<String>)
           -> Result<(), String> {
+    match node.token.kind {
+        TokenKind::False => text.push(format!("  mov {}, {}", "eax", "0")),
+        TokenKind::True => text.push(format!("  mov {}, {}", "eax", "1")),
+        _ => return Err(format!("attempted to parse {:?} as boolean", node)),
+    }
+
     Ok(())
 }

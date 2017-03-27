@@ -1,5 +1,4 @@
 // PARSER_WEEDER,CODE_GENERATION
-// Returns 123
 public class J1_01 {
     public J1_01() {}
     public static int test() {
