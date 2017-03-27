@@ -28,7 +28,7 @@ pub fn go(node: &ASTNode,
     let jmplabel = format!("if{}",
                            rand::thread_rng().gen_ascii_chars().take(32).collect::<String>());
 
-    text.push(format!("  cmp {}, {}", "eax", "1"));
+    text.push(format!("  cmp {}, {}", "al", "1"));
     text.push(format!("  jne .{}", jmplabel));
     text.push("".to_owned());
 

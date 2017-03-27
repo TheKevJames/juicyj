@@ -10,7 +10,7 @@ pub fn go(node: &ASTNode,
           mut data: &mut Vec<String>)
           -> Result<(), String> {
     let variable = match node.children[0].to_label() {
-        Ok(l) => format!("{}{}", label, l),
+        Ok(l) => format!("{}.{}", label, l),
         Err(e) => return Err(e),
     };
 

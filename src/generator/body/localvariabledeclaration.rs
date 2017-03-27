@@ -21,7 +21,7 @@ pub fn go(node: &ASTNode,
     text.push(format!("  ; {} {} = x", kind, name));
 
     let variable = match node.children[1].children[0].to_label() {
-        Ok(l) => format!("{}{}", label, l),
+        Ok(l) => format!("{}.{}", label, l),
         Err(e) => return Err(e),
     };
     bss.push(variable.clone());
