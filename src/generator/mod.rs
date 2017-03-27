@@ -55,6 +55,21 @@ impl Generatable for ClassOrInterfaceEnvironment {
             externs.push(format!("global {}", label));
             text.push(format!("{}:", label));
 
+            // get args from stack
+            text.push(format!("  ; get args"));
+            for (idx, param) in method.parameters.iter().enumerate().rev() {
+                let variable = match param.name.to_label() {
+                    Ok(l) => l,
+                    Err(e) => return Err(e),
+                };
+                bss.push(variable.clone());
+
+                text.push(format!("  mov {}, {}", "esi", "esp"));
+                text.push(format!("  add {}, {}", "esi", 4 * (idx + 1)));
+                text.push(format!("  mov [{}], {}", variable, "esi"));
+            }
+            text.push("".to_owned());
+
             // TODO<codegen>: else error?
             if let Some(b) = method.body.clone() {
                 match self::body::go(&b, &mut text, &mut externs, &mut bss, &mut data) {
