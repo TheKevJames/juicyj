@@ -10,6 +10,7 @@ mod fieldaccess;
 mod forstatement;
 mod ifelsestatement;
 mod ifstatement;
+mod instanceof;
 mod localvariabledeclaration;
 mod math;
 mod methodinvocation;

@@ -11,8 +11,9 @@ use super::classinstancecreationexpression;
 use super::comparison;
 use super::fieldaccess;
 use super::forstatement;
-use super::ifstatement;
 use super::ifelsestatement;
+use super::ifstatement;
+use super::instanceof;
 use super::localvariabledeclaration;
 use super::math;
 use super::methodinvocation;
@@ -138,6 +139,9 @@ pub fn go(node: &ASTNode,
         }
         TokenKind::False | TokenKind::True => {
             booleanvalue::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
+        }
+        TokenKind::Instanceof => {
+            instanceof::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
         }
         TokenKind::Minus | TokenKind::Plus => {
             math::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
