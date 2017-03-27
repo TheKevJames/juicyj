@@ -1,4 +1,10 @@
+extern crate rand;
+
+use self::rand::Rng;
+
 use scanner::ASTNode;
+
+use super::statement;
 
 pub fn go(node: &ASTNode,
           label: &String,
@@ -7,5 +13,53 @@ pub fn go(node: &ASTNode,
           mut bss: &mut Vec<String>,
           mut data: &mut Vec<String>)
           -> Result<(), String> {
+    text.push(format!("  ; if-else"));
+
+    match statement::go(&node.children[2],
+                        label,
+                        &mut text,
+                        &mut externs,
+                        &mut bss,
+                        &mut data) {
+        Ok(_) => (),
+        Err(e) => return Err(e),
+    }
+
+    let elselabel = format!("ifelse{}",
+                            rand::thread_rng().gen_ascii_chars().take(32).collect::<String>());
+    let donelabel = format!("ifelse{}",
+                            rand::thread_rng().gen_ascii_chars().take(32).collect::<String>());
+
+    text.push(format!("  cmp {}, {}", "al", "1"));
+    text.push(format!("  jne .{}", elselabel));
+    text.push("".to_owned());
+
+    match statement::go(&node.children[4],
+                        label,
+                        &mut text,
+                        &mut externs,
+                        &mut bss,
+                        &mut data) {
+        Ok(_) => (),
+        Err(e) => return Err(e),
+    }
+    text.push(format!("  jmp .{}", donelabel));
+    text.push("".to_owned());
+
+    text.push(format!(".{}:", elselabel));
+
+    match statement::go(&node.children[6],
+                        label,
+                        &mut text,
+                        &mut externs,
+                        &mut bss,
+                        &mut data) {
+        Ok(_) => (),
+        Err(e) => return Err(e),
+    }
+
+    text.push(format!(".{}:", donelabel));
+    text.push("".to_owned());
+
     Ok(())
 }
