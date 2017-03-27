@@ -20,6 +20,9 @@ lazy_static! {
         let node = ASTNode { token: Token::new(TokenKind::Char, None), children: Vec::new() };
         Type::new(ClassOrInterfaceEnvironment::new(node, ClassOrInterface::CLASS))
     };
+    static ref FALSE: Token = {
+        Token::new(TokenKind::False, None)
+    };
     static ref INTEGER: Type = {
         let node = ASTNode { token: Token::new(TokenKind::Int, None), children: Vec::new() };
         Type::new(ClassOrInterfaceEnvironment::new(node, ClassOrInterface::CLASS))
@@ -27,6 +30,9 @@ lazy_static! {
     static ref SHORT: Type = {
         let node = ASTNode { token: Token::new(TokenKind::Short, None), children: Vec::new() };
         Type::new(ClassOrInterfaceEnvironment::new(node, ClassOrInterface::CLASS))
+    };
+    static ref TRUE: Token = {
+        Token::new(TokenKind::True, None)
     };
     static ref PRIMITIVES: [Type; 5] = [BOOLEAN.clone(), BYTE.clone(), CHAR.clone(),
                                         INTEGER.clone(), SHORT.clone()];
@@ -162,5 +168,17 @@ pub fn twoarg_instanceof(mut node: &mut ASTNode,
         return Err(format!("can not apply instanceof to primitive types"));
     }
 
-    Ok(BOOLEAN.clone())
+    let mut result = BOOLEAN.clone();
+    match lhs.assign(&rhs, current, kinds) {
+        Ok(_) => {
+            node.token = TRUE.clone();
+            result.kind.name.token.lexeme = Some("true".to_owned());
+        }
+        Err(_) => {
+            node.token = FALSE.clone();
+            result.kind.name.token.lexeme = Some("false".to_owned());
+        }
+    }
+
+    Ok(result)
 }
