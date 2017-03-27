@@ -12,12 +12,16 @@ use analysis::ClassOrInterfaceEnvironment;
 use analysis::Environment;
 
 trait Generatable {
-    fn generate(&self) -> String;
+    fn generate(&self) -> Result<String, String>;
 }
 
 impl Generatable for ClassOrInterfaceEnvironment {
-    fn generate(&self) -> String {
-        let class_label = self.name.to_label();
+    fn generate(&self) -> Result<String, String> {
+        let class_label = match self.name.to_label() {
+            Ok(l) => l,
+            Err(e) => return Err(e),
+        };
+
         let mut bss: Vec<String> = Vec::new();
         let mut data: Vec<String> = Vec::new();
         let mut text: Vec<String> = Vec::new();
@@ -29,14 +33,21 @@ impl Generatable for ClassOrInterfaceEnvironment {
         textpre.push(format!("extern {}", "__NATIVEjava.io.OutputStream.nativeWrite"));
 
         for method in &self.methods {
-            let label = method.to_label(class_label.clone());
+            let label = match method.to_label(class_label.clone()) {
+                Ok(l) => l,
+                Err(e) => return Err(e),
+            };
+
             textpre.push(format!("global _{}", label));
             text.push(format!("_{}:", label));
 
+            // TODO<codegen>: else error?
             if let Some(b) = method.body.clone() {
-                self::body::go(&b, &mut text, &mut bss, &mut data);
+                match self::body::go(&b, &mut text, &mut bss, &mut data) {
+                    Ok(_) => (),
+                    Err(e) => return Err(e),
+                }
             }
-            // TODO: else error?
 
             if label == "start" {
                 // exit with this method's return value
@@ -65,7 +76,7 @@ impl Generatable for ClassOrInterfaceEnvironment {
 
             code.push(data.join("\n"));
         }
-        code.join("\n\n")
+        Ok(code.join("\n\n"))
     }
 }
 
@@ -109,7 +120,15 @@ pub fn generate_or_exit(env: &Environment) {
             }
         };
 
-        match f.write_all(kind.generate().as_bytes()) {
+        let source = match kind.generate() {
+            Ok(s) => s,
+            Err(e) => {
+                println!("{}", e);
+                std::process::exit(42);
+            }
+        };
+
+        match f.write_all(source.as_bytes()) {
             Ok(_) => (),
             Err(e) => {
                 println!("{}", e);

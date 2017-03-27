@@ -42,9 +42,9 @@ impl MethodEnvironment {
         }
     }
 
-    pub fn to_label(&self, class_label: String) -> String {
+    pub fn to_label(&self, class_label: String) -> Result<String, String> {
         if self.modifiers.contains(&*STATIC) && self.return_type == *INTEGER && self.name == *TEST {
-            return "start".to_owned();
+            return Ok("start".to_owned());
         }
 
         let mut label: Vec<String> = Vec::new();
@@ -55,14 +55,22 @@ impl MethodEnvironment {
 
         label.push(class_label);
         label.push(".".to_owned());
-        label.push(self.name.to_label());
+        match self.name.to_label() {
+            Ok(l) => label.push(l),
+            Err(e) => return Err(e),
+        }
 
-        // TODO: only when required?
+        // TODO<codegen>: only when required? Also see methodinvocation.rs/build_method
         label.push("_".to_owned());
-        label.extend(self.parameters.iter().map(|p| p.kind.to_label()).collect::<Vec<String>>());
+        for param in &self.parameters {
+            match param.kind.to_param() {
+                Ok(p) => label.push(p),
+                Err(e) => return Err(e),
+            }
+        }
         label.push("_".to_owned());
 
-        label.join("")
+        Ok(label.join(""))
     }
 }
 

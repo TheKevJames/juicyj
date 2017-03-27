@@ -343,30 +343,79 @@ impl ASTNode {
         Ok(())
     }
 
-    /// Creates a label to be used in code generation.
-    pub fn to_label(&self) -> String {
+    /// Creates a label to be used in code generation. Should be called on
+    /// method names ("Name" or "Identifier") and to get the names of
+    /// parameters.
+    pub fn to_label(&self) -> Result<String, String> {
         let mut parent = self.clone();
         parent.flatten();
 
-        return match parent.token.kind {
-            TokenKind::Boolean => "BOOL".to_owned(),
-            TokenKind::Byte => "BYTE".to_owned(),
-            TokenKind::Char => "CHAR".to_owned(),
+        let label = match parent.token.kind {
+            TokenKind::CharValue => parent.token.lexeme.unwrap_or("".to_owned()),
             TokenKind::Dot => ".".to_owned(),
+            TokenKind::False => "false".to_owned(),
             TokenKind::Identifier => parent.token.lexeme.unwrap_or("".to_owned()),
-            TokenKind::Int => "INT".to_owned(),
-            TokenKind::NonTerminal if parent.token.lexeme == Some("ArrayType".to_owned()) => {
-                format!("{}__", parent.children[0].to_label())
-            }
             TokenKind::NonTerminal if parent.token.lexeme == Some("Name".to_owned()) => {
-                parent.children.iter().map(|c| c.to_label()).collect::<Vec<String>>().join("")
+                let mut labels = Vec::new();
+                for child in &parent.children {
+                    match child.to_label() {
+                        Ok(l) => labels.push(l),
+                        Err(e) => return Err(e),
+                    }
+                }
+                labels.join("")
+            }
+            TokenKind::NumValue => parent.token.lexeme.unwrap_or("".to_owned()),
+            TokenKind::StrValue => parent.token.lexeme.unwrap_or("".to_owned()),
+            TokenKind::True => "true".to_owned(),
+            // TODO: enable error handling
+            // _ => return Err(format!("could not create label for {:?}", self)),
+            _ => {
+                println!("TODO<codegen>: could not create label for {:?}", self);
+                "".to_owned()
+            },
+        };
+
+        // TODO<codegen>: fully qualify label, or do in analyzer
+        Ok(label)
+    }
+
+    /// Creates a label of a parameter to be used in code generation. Should be
+    /// called on parameters to get their type.
+    pub fn to_param(&self) -> Result<String, String> {
+        let mut parent = self.clone();
+        parent.flatten();
+
+        let param = match parent.token.kind {
+            TokenKind::Boolean | TokenKind::False | TokenKind::True => "BOOL".to_owned(),
+            TokenKind::Byte => "BYTE".to_owned(),
+            TokenKind::Char | TokenKind::CharValue => "CHAR".to_owned(),
+            TokenKind::Int | TokenKind::NumValue => "INT".to_owned(),
+            TokenKind::NonTerminal if parent.token.lexeme == Some("ArrayType".to_owned()) => {
+                match parent.children[0].to_param() {
+                    Ok(p) => format!("{}__", p),
+                    Err(e) => return Err(e),
+                }
             }
             TokenKind::Short => "SHORT".to_owned(),
+            TokenKind::StrValue => "String".to_owned(),
             _ => {
-                println!("Could not convert {:?} to label", self);
-                "".to_owned()
+                match self.to_label() {
+                    Ok(l) => {
+                        // TODO<codegen>: resolve label
+                        l
+                    }
+                    // TODO: enable error handling
+                    // Err(_) => return Err(format!("could not create param label for {:?}", self)),
+                    Err(_) => {
+                        println!("TODO<codegen>: could not create param label for {:?}", self);
+                        "".to_owned()
+                    },
+                }
             }
         };
+
+        Ok(param)
     }
 }
 
