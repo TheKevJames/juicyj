@@ -4,6 +4,7 @@ use scanner::TokenKind;
 use super::statement;
 
 pub fn go(node: &ASTNode,
+          label: &String,
           mut text: &mut Vec<String>,
           mut externs: &mut Vec<String>,
           mut bss: &mut Vec<String>,
@@ -21,6 +22,7 @@ pub fn go(node: &ASTNode,
 
     // get lhs
     match statement::go(&node.children[0],
+                        label,
                         &mut text,
                         &mut externs,
                         &mut bss,
@@ -34,6 +36,7 @@ pub fn go(node: &ASTNode,
 
     // get rhs
     match statement::go(&node.children[1],
+                        label,
                         &mut text,
                         &mut externs,
                         &mut bss,

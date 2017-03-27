@@ -59,7 +59,7 @@ impl Generatable for ClassOrInterfaceEnvironment {
             text.push(format!("  ; get args"));
             for (idx, param) in method.parameters.iter().enumerate().rev() {
                 let variable = match param.name.to_label() {
-                    Ok(l) => l,
+                    Ok(l) => format!("{}.{}", label, l),
                     Err(e) => return Err(e),
                 };
                 bss.push(variable.clone());
@@ -72,7 +72,7 @@ impl Generatable for ClassOrInterfaceEnvironment {
 
             // TODO<codegen>: else error?
             if let Some(b) = method.body.clone() {
-                match self::body::go(&b, &mut text, &mut externs, &mut bss, &mut data) {
+                match self::body::go(&b, &label, &mut text, &mut externs, &mut bss, &mut data) {
                     Ok(_) => (),
                     Err(e) => return Err(e),
                 }

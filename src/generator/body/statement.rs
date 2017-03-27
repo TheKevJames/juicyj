@@ -26,6 +26,7 @@ use super::this;
 use super::whilestatement;
 
 pub fn go(node: &ASTNode,
+          label: &String,
           mut text: &mut Vec<String>,
           mut externs: &mut Vec<String>,
           mut bss: &mut Vec<String>,
@@ -36,22 +37,29 @@ pub fn go(node: &ASTNode,
             match node.token.lexeme {
                 Some(ref l) if l == "Argument" => {
                     go(&node.children[1],
+                       label,
                        &mut text,
                        &mut externs,
                        &mut bss,
                        &mut data)
                 }
                 Some(ref l) if l == "ArrayAccess" => {
-                    arrayaccess::go(&node, &mut text, &mut externs, &mut bss, &mut data)
+                    arrayaccess::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
                 }
                 Some(ref l) if l == "ArrayCreationExpression" => {
-                    arraycreationexpression::go(&node, &mut text, &mut externs, &mut bss, &mut data)
+                    arraycreationexpression::go(&node,
+                                                label,
+                                                &mut text,
+                                                &mut externs,
+                                                &mut bss,
+                                                &mut data)
                 }
                 Some(ref l) if l == "Assignment" => {
-                    assignment::go(&node, &mut text, &mut externs, &mut bss, &mut data)
+                    assignment::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
                 }
                 Some(ref l) if l == "Block" && node.children.len() == 3 => {
                     go(&node.children[1],
+                       label,
                        &mut text,
                        &mut externs,
                        &mut bss,
@@ -59,7 +67,7 @@ pub fn go(node: &ASTNode,
                 }
                 Some(ref l) if l == "BlockStatements" => {
                     for child in &node.children {
-                        match go(&child, &mut text, &mut externs, &mut bss, &mut data) {
+                        match go(&child, label, &mut text, &mut externs, &mut bss, &mut data) {
                             Ok(_) => (),
                             Err(e) => return Err(e),
                         }
@@ -67,45 +75,47 @@ pub fn go(node: &ASTNode,
                     Ok(())
                 }
                 Some(ref l) if l == "CastExpression" => {
-                    castexpression::go(&node, &mut text, &mut externs, &mut bss, &mut data)
+                    castexpression::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
                 }
                 Some(ref l) if l == "ClassInstanceCreationExpression" => {
                     classinstancecreationexpression::go(&node,
+                                                        label,
                                                         &mut text,
                                                         &mut externs,
                                                         &mut bss,
                                                         &mut data)
                 }
                 Some(ref l) if l == "FieldAccess" => {
-                    fieldaccess::go(&node, &mut text, &mut externs, &mut bss, &mut data)
+                    fieldaccess::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
                 }
                 Some(ref l) if l == "ForStatement" => {
-                    forstatement::go(&node, &mut text, &mut externs, &mut bss, &mut data)
+                    forstatement::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
                 }
                 Some(ref l) if l == "IfElseStatement" => {
-                    ifelsestatement::go(&node, &mut text, &mut externs, &mut bss, &mut data)
+                    ifelsestatement::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
                 }
                 Some(ref l) if l == "IfStatement" => {
-                    ifstatement::go(&node, &mut text, &mut externs, &mut bss, &mut data)
+                    ifstatement::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
                 }
                 Some(ref l) if l == "LocalVariableDeclaration" => {
                     localvariabledeclaration::go(&node,
+                                                 label,
                                                  &mut text,
                                                  &mut externs,
                                                  &mut bss,
                                                  &mut data)
                 }
                 Some(ref l) if l == "MethodInvocation" => {
-                    methodinvocation::go(&node, &mut text, &mut externs, &mut bss, &mut data)
+                    methodinvocation::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
                 }
                 Some(ref l) if l == "Name" => {
-                    name::go(&node, &mut text, &mut externs, &mut bss, &mut data)
+                    name::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
                 }
                 Some(ref l) if l == "ReturnStatement" => {
-                    returnstatement::go(&node, &mut text, &mut externs, &mut bss, &mut data)
+                    returnstatement::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
                 }
                 Some(ref l) if l == "WhileStatement" => {
-                    whilestatement::go(&node, &mut text, &mut externs, &mut bss, &mut data)
+                    whilestatement::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
                 }
 
                 Some(ref l) if l == "Block" => Ok(()),
@@ -115,26 +125,32 @@ pub fn go(node: &ASTNode,
                 }
             }
         }
-        TokenKind::CharValue => charvalue::go(&node, &mut text, &mut externs, &mut bss, &mut data),
+        TokenKind::CharValue => {
+            charvalue::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
+        }
         TokenKind::Equality |
         TokenKind::NotEqual |
         TokenKind::LessThan |
         TokenKind::LessThanOrEqual |
         TokenKind::GreaterThan |
         TokenKind::GreaterThanOrEqual => {
-            comparison::go(&node, &mut text, &mut externs, &mut bss, &mut data)
+            comparison::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
         }
         TokenKind::False | TokenKind::True => {
-            booleanvalue::go(&node, &mut text, &mut externs, &mut bss, &mut data)
+            booleanvalue::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
         }
         TokenKind::Minus | TokenKind::Plus => {
-            math::go(&node, &mut text, &mut externs, &mut bss, &mut data)
+            math::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
         }
-        TokenKind::Not => not::go(&node, &mut text, &mut externs, &mut bss, &mut data),
-        TokenKind::Null => nullvalue::go(&node, &mut text, &mut externs, &mut bss, &mut data),
+        TokenKind::Not => not::go(&node, label, &mut text, &mut externs, &mut bss, &mut data),
+        TokenKind::Null => {
+            nullvalue::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
+        }
         TokenKind::NumValue => numvalue::go(&node, &mut text),
-        TokenKind::StrValue => strvalue::go(&node, &mut text, &mut externs, &mut bss, &mut data),
-        TokenKind::This => this::go(&node, &mut text, &mut externs, &mut bss, &mut data),
+        TokenKind::StrValue => {
+            strvalue::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
+        }
+        TokenKind::This => this::go(&node, label, &mut text, &mut externs, &mut bss, &mut data),
         _ => Err(format!("TODO<codegen>: body statement (kind) {:?}", node.token.kind)),
     }
 }
