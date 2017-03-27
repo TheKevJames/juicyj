@@ -8,17 +8,8 @@ use scanner::Token;
 use scanner::TokenKind;
 
 lazy_static! {
-    static ref INTEGER: ASTNode = {
-        ASTNode { token: Token::new(TokenKind::Int, None), children: Vec::new() }
-    };
     static ref NATIVE: ASTNode = {
         ASTNode { token: Token::new(TokenKind::Native, None), children: Vec::new() }
-    };
-    static ref STATIC: ASTNode = {
-        ASTNode { token: Token::new(TokenKind::Static, None), children: Vec::new() }
-    };
-    static ref TEST: ASTNode = {
-        ASTNode { token: Token::new(TokenKind::Identifier, Some("test")), children: Vec::new() }
     };
 }
 
@@ -43,12 +34,8 @@ impl MethodEnvironment {
     }
 
     pub fn to_label(&self, class_label: String) -> Result<String, String> {
-        if self.modifiers.contains(&*STATIC) && self.return_type == *INTEGER && self.name == *TEST {
-            return Ok("start".to_owned());
-        }
-
         let mut label: Vec<String> = Vec::new();
-        label.push("_".to_owned());
+        label.push("__".to_owned());
         if self.modifiers.contains(&*NATIVE) {
             label.push("NATIVE".to_owned());
         }

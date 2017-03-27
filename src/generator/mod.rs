@@ -11,6 +11,22 @@ use std::io::Write;
 use analysis::ClassOrInterfaceEnvironment;
 use analysis::Environment;
 
+use scanner::ASTNode;
+use scanner::Token;
+use scanner::TokenKind;
+
+lazy_static! {
+    static ref INTEGER: ASTNode = {
+        ASTNode { token: Token::new(TokenKind::Int, None), children: Vec::new() }
+    };
+    static ref STATIC: ASTNode = {
+        ASTNode { token: Token::new(TokenKind::Static, None), children: Vec::new() }
+    };
+    static ref TEST: ASTNode = {
+        ASTNode { token: Token::new(TokenKind::Identifier, Some("test")), children: Vec::new() }
+    };
+}
+
 trait Generatable {
     fn generate(&self) -> Result<String, String>;
 }
@@ -36,8 +52,8 @@ impl Generatable for ClassOrInterfaceEnvironment {
                 Err(e) => return Err(e),
             };
 
-            externs.push(format!("global _{}", label));
-            text.push(format!("_{}:", label));
+            externs.push(format!("global {}", label));
+            text.push(format!("{}:", label));
 
             // TODO<codegen>: else error?
             if let Some(b) = method.body.clone() {
@@ -47,11 +63,23 @@ impl Generatable for ClassOrInterfaceEnvironment {
                 }
             }
 
-            if label == "start" {
+            if method.modifiers.contains(&*STATIC) && method.return_type == *INTEGER && method.name == *TEST {
+                // use this method as the entry point
+                externs.push("global _start".to_owned());
+                text.push("_start:".to_owned());
+
+                text.push(format!("  push {}", "ebp"));
+                text.push(format!("  mov {}, {}", "ebp", "esp"));
+                text.push(format!("  call {}", label));
+                text.push(format!("  mov {}, {}", "esp", "ebp"));
+                text.push(format!("  pop {}", "ebp"));
+                text.push("".to_owned());
+
                 // exit with this method's return value
                 text.push(format!("  mov {}, {}", "ebx", "eax"));
                 text.push(format!("  mov {}, {}", "eax", "1"));
                 text.push(format!("  int {}", "0x80"));
+                text.push("".to_owned());
             }
 
             text.push("".to_owned());
