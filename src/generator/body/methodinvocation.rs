@@ -6,7 +6,7 @@ use super::statement;
 fn build_method(name: &ASTNode, params: &ASTNode) -> Result<String, String> {
     let mut method: Vec<String> = Vec::new();
 
-    method.push("_".to_owned());
+    method.push("__".to_owned());
     match name.to_label() {
         Ok(l) => method.push(l),
         Err(e) => return Err(e),

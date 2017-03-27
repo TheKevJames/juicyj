@@ -62,17 +62,18 @@ lazy_static! {
     };
 }
 
-fn rebuild_env(env: &Environment) -> Result<Environment, String> {
-    let mut new = Environment { kinds: Vec::new() };
+fn rebuild_env(mut env: &mut Environment) -> Result<(), String> {
+    let old = env.clone();
 
-    for current in &env.kinds {
-        match inheritance::verify(env, &current, &mut Vec::new()) {
-            Ok(inherit) => new.kinds.push(inherit),
+    env.kinds = Vec::new();
+    for current in &old.kinds {
+        match inheritance::verify(&old, &current, &mut Vec::new()) {
+            Ok(inherit) => env.kinds.push(inherit),
             Err(e) => return Err(e),
         };
     }
 
-    Ok(new)
+    Ok(())
 }
 
 fn verify_env_inheritable(env: &Environment) -> Result<(), String> {
@@ -147,8 +148,10 @@ fn verify_env_inheritable(env: &Environment) -> Result<(), String> {
     Ok(())
 }
 
-fn verify_env(env: &Environment) -> Result<(), String> {
-    for current in &env.kinds {
+fn verify_env(mut env: &mut Environment) -> Result<(), String> {
+    let kinds = env.kinds.clone();
+
+    for mut current in &mut env.kinds {
         for constructor in &current.constructors {
             let mut params = Vec::new();
             for parameter in &constructor.parameters {
@@ -158,7 +161,7 @@ fn verify_env(env: &Environment) -> Result<(), String> {
                 }
                 params.push(parameter.name.clone());
 
-                let result = verify::prefixes::canonical(&parameter.kind, &current, &env.kinds);
+                let result = verify::prefixes::canonical(&parameter.kind, &current, &kinds);
                 if result.is_err() {
                     return result;
                 }
@@ -175,7 +178,7 @@ fn verify_env(env: &Environment) -> Result<(), String> {
                 match statement::block(&mut constructor.clone().body.unwrap().clone(),
                                        &constructor.modifiers,
                                        &current,
-                                       &env.kinds,
+                                       &kinds,
                                        &globals) {
                     Ok(rts) => rts,
                     Err(e) => return Err(e),
@@ -183,7 +186,7 @@ fn verify_env(env: &Environment) -> Result<(), String> {
 
             let constructor_return_type = Type::new(current.clone());
             for return_type in &return_types {
-                match constructor_return_type.assign(&return_type, current, &env.kinds) {
+                match constructor_return_type.assign(&return_type, current, &kinds) {
                     Ok(_) => (),
                     Err(e) => {
                         return Err(format!("constructor {} has invalid return type\nerror: {:?}",
@@ -198,7 +201,7 @@ fn verify_env(env: &Environment) -> Result<(), String> {
         current_builder.fields = Vec::new();
 
         let mut env_builder = Vec::new();
-        for cls in &env.kinds {
+        for cls in &kinds {
             if cls.name != current.name {
                 env_builder.push(cls.clone());
             }
@@ -217,8 +220,8 @@ fn verify_env(env: &Environment) -> Result<(), String> {
             }
 
             // TODO: allow qualified names to be resolved to future fields
-            let rexpr = field.clone().value.unwrap();
-            let rvalue = match resolve::expression::go(&rexpr,
+            let mut rexpr = field.clone().value.unwrap();
+            let rvalue = match resolve::expression::go(&mut rexpr,
                                                        &field.modifiers,
                                                        &current_builder,
                                                        &env_builder,
@@ -242,7 +245,8 @@ fn verify_env(env: &Environment) -> Result<(), String> {
             env_builder.pop();
         }
 
-        for method in &current.methods {
+        let curr = current.clone();
+        for mut method in &mut current.methods {
             if method.body.is_none() {
                 if !method.modifiers.contains(&*ABSTRACT) && !method.modifiers.contains(&*NATIVE) {
                     return Err(format!("concrete method {} has no body", method));
@@ -258,7 +262,7 @@ fn verify_env(env: &Environment) -> Result<(), String> {
                 params.push(parameter.name.clone());
             }
 
-            let result = verify::prefixes::canonical(&method.return_type, &current, &env.kinds);
+            let result = verify::prefixes::canonical(&method.return_type, &curr, &kinds);
             if result.is_err() {
                 return result;
             }
@@ -277,28 +281,32 @@ fn verify_env(env: &Environment) -> Result<(), String> {
 
             if method.body.is_some() {
                 let globals = method.parameters.clone();
+                let mut body = method.clone().body.unwrap().clone();
                 let return_types =
-                    match statement::block(&mut method.clone().body.unwrap().clone(),
+                    match statement::block(&mut body,
                                            &method.modifiers,
-                                           &current,
-                                           &env.kinds,
+                                           &curr,
+                                           &kinds,
                                            &globals) {
-                        Ok(rts) => rts,
+                        Ok(rts) => {
+                            method.body = Some(body);
+                            rts
+                        }
                         Err(e) => return Err(e),
                     };
 
                 let method_return_type =
-                    match lookup::class::in_env(&method.return_type, current, &env.kinds) {
+                    match lookup::class::in_env(&method.return_type, &curr, &kinds) {
                         Ok(rt) => Type::new(rt),
                         Err(e) => return Err(e),
                     };
 
                 for return_type in &return_types {
-                    match method_return_type.assign(&return_type, current, &env.kinds) {
+                    match method_return_type.assign(&return_type, &curr, &kinds) {
                         Ok(_) => (),
                         Err(e) => {
                             return Err(format!("{} method {} has invalid return type\nerror: {:?}",
-                                               current.name,
+                                               curr.name,
                                                method.name,
                                                e))
                         }
@@ -307,7 +315,7 @@ fn verify_env(env: &Environment) -> Result<(), String> {
 
                 if return_types.is_empty() && method_return_type != *VOID {
                     return Err(format!("non-void {} method {} has no return type",
-                                       current.name,
+                                       curr.name,
                                        method.name));
                 }
             }
@@ -318,16 +326,16 @@ fn verify_env(env: &Environment) -> Result<(), String> {
     Ok(())
 }
 
-pub fn verify(env: &Environment) -> Result<(), String> {
-    match verify_env_inheritable(env) {
+pub fn verify(mut env: &mut Environment) -> Result<(), String> {
+    match verify_env_inheritable(&env) {
         Ok(_) => (),
         Err(e) => return Err(e),
     }
 
-    let env = match rebuild_env(env) {
-        Ok(e) => e,
+    match rebuild_env(&mut env) {
+        Ok(_) => (),
         Err(e) => return Err(e),
     };
 
-    verify_env(&env)
+    verify_env(&mut env)
 }

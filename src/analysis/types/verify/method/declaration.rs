@@ -7,7 +7,7 @@ use analysis::types::verify;
 use scanner::ASTNode;
 use scanner::TokenKind;
 
-pub fn go(node: &ASTNode,
+pub fn go(mut node: &mut ASTNode,
           modifiers: &Vec<ASTNode>,
           kinds: &Vec<ClassOrInterfaceEnvironment>,
           current: &ClassOrInterfaceEnvironment,
@@ -37,8 +37,7 @@ pub fn go(node: &ASTNode,
 
     match node.children[1].clone().token.kind {
         TokenKind::Assignment => {
-            let mut rvalue = node.children[1].clone().children[1].clone();
-            match verify::method::statement::nonblock(&mut rvalue,
+            match verify::method::statement::nonblock(&mut node.children[1].children[1],
                                                       modifiers,
                                                       current,
                                                       kinds,
@@ -48,6 +47,7 @@ pub fn go(node: &ASTNode,
                 Err(e) => return Err(e),
             }
 
+            let rvalue = node.children[1].clone().children[1].clone();
             match verify::variable::initialized(&rvalue, current, globals) {
                 Ok(_) => {
                     match verify::variable::initialized(&rvalue, current, locals) {
@@ -65,7 +65,7 @@ pub fn go(node: &ASTNode,
 
             let mut block_globals = globals.clone();
             block_globals.extend(locals.clone());
-            let rhs = match resolve::expression::go(&rvalue,
+            let rhs = match resolve::expression::go(&mut node.children[1].children[1],
                                                     modifiers,
                                                     current,
                                                     kinds,

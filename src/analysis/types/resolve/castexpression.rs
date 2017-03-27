@@ -11,20 +11,20 @@ lazy_static! {
     static ref ARRAYTYPE: Token = Token::new(TokenKind::NonTerminal, Some("ArrayType"));
 }
 
-pub fn go(node: &ASTNode,
+pub fn go(mut node: &mut ASTNode,
           modifiers: &Vec<ASTNode>,
           current: &ClassOrInterfaceEnvironment,
           kinds: &Vec<ClassOrInterfaceEnvironment>,
           globals: &mut Vec<VariableEnvironment>)
           -> Result<Type, String> {
-    let expr = node.children.last().unwrap().clone();
-    let rhs = match resolve::expression::go(&expr, modifiers, current, kinds, globals) {
+    let idx = node.children.len() - 1;
+    let rhs = match resolve::expression::go(&mut node.children[idx], modifiers, current, kinds, globals) {
         Ok(t) => t,
         Err(e) => return Err(e),
     };
 
     let lhs =
-        match resolve::expression::go(&node.children[1], modifiers, current, kinds, globals) {
+        match resolve::expression::go(&mut node.children[1], modifiers, current, kinds, globals) {
             // CastExpression has 5 children iff it contains a DimExpr
             Ok(ref t) if node.children.len() == 5 => {
                 let kind = ASTNode {

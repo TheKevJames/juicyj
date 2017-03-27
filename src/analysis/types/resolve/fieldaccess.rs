@@ -20,7 +20,7 @@ lazy_static! {
 //           kinds: &Vec<ClassOrInterfaceEnvironment>,
 //           globals: &Vec<VariableEnvironment>)
 //           -> Result<Type, String> {
-//     let lhs = match resolve::expression::go(&node.children[0],
+//     let lhs = match resolve::expression::go(&mut node.children[0],
 //                                             modifiers, current, kinds, globals) {
 //         Ok(t) => t,
 //         Err(e) => return Err(e),
@@ -30,7 +30,7 @@ lazy_static! {
 //     lookup::field::in_env(&lhs.kind.name, &node.children[2], current, kinds)
 // }
 
-pub fn go(node: &ASTNode,
+pub fn go(node: &mut ASTNode,
           modifiers: &Vec<ASTNode>,
           current: &ClassOrInterfaceEnvironment,
           kinds: &Vec<ClassOrInterfaceEnvironment>,
@@ -42,7 +42,7 @@ pub fn go(node: &ASTNode,
         }
         TokenKind::This => current.clone(),
         _ => {
-            let lhs = match resolve::expression::go(&node.children[0],
+            let lhs = match resolve::expression::go(&mut node.children[0],
                                                     modifiers,
                                                     current,
                                                     kinds,

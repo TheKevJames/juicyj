@@ -13,13 +13,13 @@ lazy_static! {
     };
 }
 
-pub fn go(node: &ASTNode,
+pub fn go(mut node: &mut ASTNode,
           modifiers: &Vec<ASTNode>,
           current: &ClassOrInterfaceEnvironment,
           kinds: &Vec<ClassOrInterfaceEnvironment>,
           globals: &mut Vec<VariableEnvironment>)
           -> Result<Type, String> {
-    match node.token.lexeme {
+    match node.clone().token.lexeme {
         Some(ref l) if l == "ArrayAccess" => {
             resolve::arrayaccess::go(node, modifiers, current, kinds, globals)
         }
@@ -42,7 +42,7 @@ pub fn go(node: &ASTNode,
             resolve::fieldaccess::go(node, modifiers, current, kinds, globals)
         }
         Some(ref l) if l == "MethodInvocation" => {
-            resolve::methodinvocation::go(node, modifiers, current, kinds, globals)
+            resolve::methodinvocation::go(&mut node, modifiers, current, kinds, globals)
         }
         Some(ref l) if l == "Name" => resolve::name::go(node, modifiers, current, kinds, globals),
         _ => {

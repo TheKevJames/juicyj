@@ -5,20 +5,20 @@ use analysis::types::resolve;
 use analysis::types::verify;
 use scanner::ASTNode;
 
-pub fn go(node: &ASTNode,
+pub fn go(mut node: &mut ASTNode,
           modifiers: &Vec<ASTNode>,
           current: &ClassOrInterfaceEnvironment,
           kinds: &Vec<ClassOrInterfaceEnvironment>,
           globals: &mut Vec<VariableEnvironment>)
           -> Result<Type, String> {
     let lhs =
-        match resolve::expression::go(&node.children[0], modifiers, current, kinds, globals) {
+        match resolve::expression::go(&mut node.children[0], modifiers, current, kinds, globals) {
             Ok(l) => l,
             Err(e) => return Err(e),
         };
 
     let rhs =
-        match resolve::expression::go(&node.children[2], modifiers, current, kinds, globals) {
+        match resolve::expression::go(&mut node.children[2], modifiers, current, kinds, globals) {
             Ok(r) => r,
             Err(e) => return Err(e),
         };

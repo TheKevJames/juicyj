@@ -15,6 +15,9 @@ lazy_static! {
             children: Vec::new()
         }
     };
+    static ref DOT: ASTNode = {
+        ASTNode { token: Token::new(TokenKind::Dot, None), children: Vec::new() }
+    };
     static ref NAME: ASTNode = {
         ASTNode { token: Token::new(TokenKind::NonTerminal, Some("Name")), children: Vec::new() }
     };
@@ -40,12 +43,12 @@ fn get_args(node: &ASTNode,
     args.flatten();
 
     let mut resolved = Vec::new();
-    for arg in args.children {
+    for mut arg in &mut args.children {
         if arg.token.kind == TokenKind::Comma {
             continue;
         }
 
-        match resolve::expression::go(&arg, modifiers, current, kinds, globals) {
+        match resolve::expression::go(&mut arg, modifiers, current, kinds, globals) {
             Ok(t) => resolved.push(t),
             Err(e) => return Err(e),
         };
@@ -54,7 +57,7 @@ fn get_args(node: &ASTNode,
     Ok(resolved)
 }
 
-fn get_method(node: &ASTNode,
+fn get_method(mut node: &mut ASTNode,
               modifiers: &Vec<ASTNode>,
               current: &ClassOrInterfaceEnvironment,
               kinds: &Vec<ClassOrInterfaceEnvironment>,
@@ -121,7 +124,7 @@ fn get_method(node: &ASTNode,
                 return Err(format!("can not use 'this' in static method"));
             }
 
-            let lhs = match resolve::expression::go(&node.children[0],
+            let lhs = match resolve::expression::go(&mut node.children[0],
                                                     modifiers,
                                                     current,
                                                     kinds,
@@ -148,7 +151,7 @@ fn get_method(node: &ASTNode,
     }
 }
 
-pub fn go(node: &ASTNode,
+pub fn go(node: &mut ASTNode,
           modifiers: &Vec<ASTNode>,
           current: &ClassOrInterfaceEnvironment,
           kinds: &Vec<ClassOrInterfaceEnvironment>,
@@ -158,6 +161,19 @@ pub fn go(node: &ASTNode,
         Ok(m) => m,
         Err(e) => return Err(e),
     };
+
+    let mut fully_qualified = cls.name.clone();
+    fully_qualified.children.push(DOT.clone());
+    fully_qualified.children.push(method.name.clone());
+    match node.children.len() {
+        3 | 4 => node.children[0] = fully_qualified,
+        5 | 6 => {
+            node.children[0] = fully_qualified;
+            node.children.remove(2);
+            node.children.remove(1);
+        }
+        _ => (),
+    }
 
     if cls.modifiers.contains(&*PROTECTED) || method.modifiers.contains(&*PROTECTED) {
         let mut current_package = current.name.clone();

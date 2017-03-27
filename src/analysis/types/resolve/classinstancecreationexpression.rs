@@ -30,12 +30,12 @@ fn get_args(node: &ASTNode,
     args.flatten();
 
     let mut resolved = Vec::new();
-    for arg in args.children {
+    for mut arg in &mut args.children {
         if arg.token.kind == TokenKind::Comma {
             continue;
         }
 
-        match resolve::expression::go(&arg, modifiers, current, kinds, globals) {
+        match resolve::expression::go(&mut arg, modifiers, current, kinds, globals) {
             Ok(t) => resolved.push(t),
             Err(e) => return Err(e),
         };
@@ -44,13 +44,13 @@ fn get_args(node: &ASTNode,
     Ok(resolved)
 }
 
-pub fn go(node: &ASTNode,
+pub fn go(node: &mut ASTNode,
           modifiers: &Vec<ASTNode>,
           current: &ClassOrInterfaceEnvironment,
           kinds: &Vec<ClassOrInterfaceEnvironment>,
           globals: &mut Vec<VariableEnvironment>)
           -> Result<Type, String> {
-    let args = match get_args(node, modifiers, current, kinds, globals) {
+    let args = match get_args(&node, modifiers, current, kinds, globals) {
         Ok(a) => a,
         Err(e) => return Err(e),
     };

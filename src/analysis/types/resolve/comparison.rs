@@ -33,14 +33,14 @@ lazy_static! {
 }
 const BITWISE: [TokenKind; 3] = [TokenKind::BitAnd, TokenKind::BitOr, TokenKind::BitXor];
 
-pub fn onearg_boolean(node: &ASTNode,
+pub fn onearg_boolean(mut node: &mut ASTNode,
                       modifiers: &Vec<ASTNode>,
                       current: &ClassOrInterfaceEnvironment,
                       kinds: &Vec<ClassOrInterfaceEnvironment>,
                       globals: &mut Vec<VariableEnvironment>)
                       -> Result<Type, String> {
     let arg =
-        match resolve::expression::go(&node.children[0], modifiers, current, kinds, globals) {
+        match resolve::expression::go(&mut node.children[0], modifiers, current, kinds, globals) {
             Ok(l) => l,
             Err(e) => return Err(e),
         };
@@ -66,19 +66,19 @@ pub fn onearg_boolean(node: &ASTNode,
     }
 }
 
-pub fn twoarg(node: &ASTNode,
+pub fn twoarg(mut node: &mut ASTNode,
               modifiers: &Vec<ASTNode>,
               current: &ClassOrInterfaceEnvironment,
               kinds: &Vec<ClassOrInterfaceEnvironment>,
               globals: &mut Vec<VariableEnvironment>)
               -> Result<Type, String> {
     let lhs =
-        match resolve::expression::go(&node.children[0], modifiers, current, kinds, globals) {
+        match resolve::expression::go(&mut node.children[0], modifiers, current, kinds, globals) {
             Ok(l) => l,
             Err(e) => return Err(e),
         };
     let rhs =
-        match resolve::expression::go(&node.children[1], modifiers, current, kinds, globals) {
+        match resolve::expression::go(&mut node.children[1], modifiers, current, kinds, globals) {
             Ok(r) => r,
             Err(e) => return Err(e),
         };
@@ -86,19 +86,19 @@ pub fn twoarg(node: &ASTNode,
     lhs.apply_comparison(&node.token.kind, &rhs, current, kinds)
 }
 
-pub fn twoarg_boolean(node: &ASTNode,
+pub fn twoarg_boolean(mut node: &mut ASTNode,
                       modifiers: &Vec<ASTNode>,
                       current: &ClassOrInterfaceEnvironment,
                       kinds: &Vec<ClassOrInterfaceEnvironment>,
                       globals: &mut Vec<VariableEnvironment>)
                       -> Result<Type, String> {
     let lhs =
-        match resolve::expression::go(&node.children[0], modifiers, current, kinds, globals) {
+        match resolve::expression::go(&mut node.children[0], modifiers, current, kinds, globals) {
             Ok(l) => l,
             Err(e) => return Err(e),
         };
     let rhs =
-        match resolve::expression::go(&node.children[1], modifiers, current, kinds, globals) {
+        match resolve::expression::go(&mut node.children[1], modifiers, current, kinds, globals) {
             Ok(r) => r,
             Err(e) => return Err(e),
         };
@@ -141,19 +141,19 @@ pub fn twoarg_boolean(node: &ASTNode,
     }
 }
 
-pub fn twoarg_instanceof(node: &ASTNode,
+pub fn twoarg_instanceof(mut node: &mut ASTNode,
                          modifiers: &Vec<ASTNode>,
                          current: &ClassOrInterfaceEnvironment,
                          kinds: &Vec<ClassOrInterfaceEnvironment>,
                          globals: &mut Vec<VariableEnvironment>)
                          -> Result<Type, String> {
     let lhs =
-        match resolve::expression::go(&node.children[0], modifiers, current, kinds, globals) {
+        match resolve::expression::go(&mut node.children[0], modifiers, current, kinds, globals) {
             Ok(t) => t,
             Err(e) => return Err(e),
         };
     let rhs =
-        match resolve::expression::go(&node.children[1], modifiers, current, kinds, globals) {
+        match resolve::expression::go(&mut node.children[1], modifiers, current, kinds, globals) {
             Ok(t) => t,
             Err(e) => return Err(e),
         };

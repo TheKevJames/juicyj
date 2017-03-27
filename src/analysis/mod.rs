@@ -23,7 +23,7 @@ use self::types::verify;
 /// juicyj::analysis::analyze_or_exit(&vec![ast])
 /// ```
 pub fn analyze_or_exit(asts: &Vec<AST>) -> Environment {
-    let env = match Environment::new(asts) {
+    let mut env = match Environment::new(asts) {
         Ok(e) => e,
         Err(e) => {
             println!("{}", e);
@@ -31,7 +31,7 @@ pub fn analyze_or_exit(asts: &Vec<AST>) -> Environment {
         }
     };
 
-    match verify(&env) {
+    match verify(&mut env) {
         Ok(_) => (),
         Err(e) => {
             println!("{}", e);
@@ -54,7 +54,7 @@ pub mod tests {
     use super::types::verify;
 
     pub fn analyze_and_assert(asts: &Vec<AST>) {
-        let env = match Environment::new(asts) {
+        let mut env = match Environment::new(asts) {
             Ok(e) => e,
             Err(e) => {
                 println!("Annotation Error");
@@ -64,7 +64,7 @@ pub mod tests {
             }
         };
 
-        match verify(&env) {
+        match verify(&mut env) {
             Ok(_) => (),
             Err(e) => {
                 println!("Verification Error");
@@ -79,7 +79,7 @@ pub mod tests {
     }
 
     pub fn analyze_or_assert(asts: &Vec<AST>) {
-        let env = match Environment::new(asts) {
+        let mut env = match Environment::new(asts) {
             Ok(e) => e,
             Err(e) => {
                 println!("Annotation Error");
@@ -89,7 +89,7 @@ pub mod tests {
             }
         };
 
-        match verify(&env) {
+        match verify(&mut env) {
             Ok(_) => (),
             Err(e) => {
                 println!("Verification Error");
