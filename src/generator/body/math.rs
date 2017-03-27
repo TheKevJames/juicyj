@@ -43,8 +43,8 @@ pub fn go(node: &ASTNode,
     text.push(format!("  pop {}", "eax"));
 
     match node.token.kind {
-        TokenKind::Minus => text.push(format!("  add {}, {}", "eax", "edx")),
-        TokenKind::Plus => text.push(format!("  sub {}, {}", "eax", "edx")),
+        TokenKind::Minus => text.push(format!("  sub {}, {}", "eax", "edx")),
+        TokenKind::Plus => text.push(format!("  add {}, {}", "eax", "edx")),
         _ => return Err(format!("attempted to parse {:?} as math", node)),
     }
 
