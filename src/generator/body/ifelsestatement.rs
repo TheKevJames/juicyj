@@ -2,6 +2,8 @@ extern crate rand;
 
 use self::rand::Rng;
 
+use generator::asm::Instr;
+use generator::asm::Reg;
 use scanner::ASTNode;
 
 use super::statement;
@@ -30,8 +32,8 @@ pub fn go(node: &ASTNode,
     let donelabel = format!("ifelse{}",
                             rand::thread_rng().gen_ascii_chars().take(32).collect::<String>());
 
-    text.push(format!("  cmp {}, {}", "al", "1"));
-    text.push(format!("  jne .{}", elselabel));
+    text.push(format!("{} {}, {}", Instr::CMP, Reg::AL, "1"));
+    text.push(format!("{} .{}", Instr::JNE, elselabel));
     text.push("".to_owned());
 
     match statement::go(&node.children[4],
@@ -43,7 +45,7 @@ pub fn go(node: &ASTNode,
         Ok(_) => (),
         Err(e) => return Err(e),
     }
-    text.push(format!("  jmp .{}", donelabel));
+    text.push(format!("{} .{}", Instr::JMP, donelabel));
     text.push("".to_owned());
 
     text.push(format!(".{}:", elselabel));

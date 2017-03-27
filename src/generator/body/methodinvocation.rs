@@ -1,3 +1,5 @@
+use generator::asm::Instr;
+use generator::asm::Reg;
 use scanner::ASTNode;
 use scanner::TokenKind;
 
@@ -57,8 +59,8 @@ pub fn go(node: &ASTNode,
     text.push(format!("  ; {}({})", method, params.join(", ")));
 
     // push stack frame
-    text.push(format!("  push {}", "ebp"));
-    text.push(format!("  mov {}, {}", "ebp", "esp"));
+    text.push(format!("{} {}", Instr::PUSH, Reg::EBP));
+    text.push(format!("{} {}, {}", Instr::MOV, Reg::EBP, Reg::ESP));
     // push params
     for param in node.children[2].children.iter().rev() {
         if param.token.kind == TokenKind::Comma {
@@ -69,17 +71,20 @@ pub fn go(node: &ASTNode,
             Ok(_) => (),
             Err(e) => return Err(e),
         }
-        text.push(format!("  push {}", "eax"));
+        text.push(format!("{} {}", Instr::PUSH, Reg::EAX));
     }
 
-    externs.push(format!("extern {}", method));
-    text.push(format!("  call {}", method));
+    externs.push(format!("{} {}", Instr::EXTERN, method));
+    text.push(format!("{} {}", Instr::CALL, method));
 
     // pop stack by number of params
-    text.push(format!("  add {}, {}", "esp", 4 * node.children[2].children.len()));
+    text.push(format!("{} {}, {}",
+                      Instr::ADD,
+                      Reg::ESP,
+                      4 * node.children[2].children.len()));
     // pop stack frame
-    text.push(format!("  mov {}, {}", "esp", "ebp"));
-    text.push(format!("  pop {}", "ebp"));
+    text.push(format!("{} {}, {}", Instr::MOV, Reg::ESP, Reg::EBP));
+    text.push(format!("{} {}", Instr::POP, Reg::EBP));
     text.push("".to_owned());
 
     Ok(())

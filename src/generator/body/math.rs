@@ -1,3 +1,5 @@
+use generator::asm::Instr;
+use generator::asm::Reg;
 use scanner::ASTNode;
 use scanner::TokenKind;
 
@@ -31,7 +33,7 @@ pub fn go(node: &ASTNode,
     }
 
     // store lhs while we get rhs
-    text.push(format!("  push {}", "eax"));
+    text.push(format!("{} {}", Instr::PUSH, Reg::EAX));
 
     // get rhs
     match statement::go(&node.children[1],
@@ -45,22 +47,22 @@ pub fn go(node: &ASTNode,
     }
 
     // restore lhs
-    text.push(format!("  mov {}, {}", "ecx", "eax"));
-    text.push(format!("  pop {}", "eax"));
+    text.push(format!("{} {}, {}", Instr::MOV, Reg::ECX, Reg::EAX));
+    text.push(format!("{} {}", Instr::POP, Reg::EAX));
 
     match node.token.kind {
         TokenKind::FSlash => {
-            text.push(format!("  xor {}, {}", "edx", "edx"));
-            text.push(format!("  div {}", "ecx"));
+            text.push(format!("{} {}, {}", Instr::XOR, Reg::EDX, Reg::EDX));
+            text.push(format!("{} {}", Instr::DIV, Reg::ECX));
         }
-        TokenKind::Minus => text.push(format!("  sub {}, {}", "eax", "ecx")),
+        TokenKind::Minus => text.push(format!("{} {}, {}", Instr::SUB, Reg::EAX, Reg::ECX)),
         TokenKind::Percent => {
-            text.push(format!("  xor {}, {}", "edx", "edx"));
-            text.push(format!("  div {}", "ecx"));
-            text.push(format!("  mov {}, {}", "eax", "edx"));
+            text.push(format!("{} {}, {}", Instr::XOR, Reg::EDX, Reg::EDX));
+            text.push(format!("{} {}", Instr::DIV, Reg::ECX));
+            text.push(format!("{} {}, {}", Instr::MOV, Reg::EAX, Reg::EDX));
         }
-        TokenKind::Plus => text.push(format!("  add {}, {}", "eax", "ecx")),
-        TokenKind::Star => text.push(format!("  imul {}, {}", "eax", "ecx")),
+        TokenKind::Plus => text.push(format!("{} {}, {}", Instr::ADD, Reg::EAX, Reg::ECX)),
+        TokenKind::Star => text.push(format!("{} {}, {}", Instr::MUL, Reg::EAX, Reg::ECX)),
         _ => return Err(format!("attempted to parse {:?} as math", node)),
     }
 

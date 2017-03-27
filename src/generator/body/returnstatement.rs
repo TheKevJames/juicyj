@@ -1,3 +1,4 @@
+use generator::asm::Instr;
 use scanner::ASTNode;
 
 use super::statement;
@@ -26,7 +27,7 @@ pub fn go(node: &ASTNode,
         }
     }
 
-    text.push(format!("  {}", "ret"));
+    text.push(format!("{}", Instr::RET));
     text.push("".to_owned());
 
     Ok(())

@@ -1,6 +1,68 @@
 use std::fmt;
 
-pub enum Register {
+pub enum Instr {
+    // structure
+    EXTERN,
+    GLOBAL,
+    SECTION,
+
+    // general
+    CALL,
+    INT,
+    MOV,
+    POP,
+    PUSH,
+    RET,
+
+    // math
+    ADD,
+    DIV,
+    MUL,
+    SUB,
+
+    // comparison
+    AND,
+    CMP,
+    JE,
+    JMP,
+    JNE,
+    OR,
+    SETE,
+    XOR,
+}
+
+impl fmt::Display for Instr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Instr::EXTERN => write!(f, "{}", "extern"),
+            Instr::GLOBAL => write!(f, "{}", "global"),
+            Instr::SECTION => write!(f, "{}", "section"),
+
+            Instr::CALL => write!(f, "  {}", "call"),
+            Instr::INT => write!(f, "  {}", "int"),
+            Instr::MOV => write!(f, "  {}", "mov"),
+            Instr::POP => write!(f, "  {}", "pop"),
+            Instr::PUSH => write!(f, "  {}", "push"),
+            Instr::RET => write!(f, "  {}", "ret"),
+
+            Instr::ADD => write!(f, "  {}", "add"),
+            Instr::DIV => write!(f, "  {}", "div"),
+            Instr::MUL => write!(f, "  {}", "imul"),
+            Instr::SUB => write!(f, "  {}", "sub"),
+
+            Instr::AND => write!(f, "  {}", "and"),
+            Instr::CMP => write!(f, "  {}", "cmp"),
+            Instr::JE => write!(f, "  {}", "je"),
+            Instr::JMP => write!(f, "  {}", "jmp"),
+            Instr::JNE => write!(f, "  {}", "jne"),
+            Instr::OR => write!(f, "  {}", "or"),
+            Instr::SETE => write!(f, "  {}", "sete"),
+            Instr::XOR => write!(f, "  {}", "xor"),
+        }
+    }
+}
+
+pub enum Reg {
     // general
     EAX, // Accumulator
     AL,
@@ -21,24 +83,24 @@ pub enum Register {
     EIP, // Index Pointer
 }
 
-impl fmt::Display for Register {
+impl fmt::Display for Reg {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Register::EAX => write!(f, "{}", "eax"),
-            Register::AL => write!(f, "{}", "al"),
-            Register::EBX => write!(f, "{}", "ebx"),
-            Register::BL => write!(f, "{}", "bl"),
-            Register::ECX => write!(f, "{}", "ecx"),
-            Register::CL => write!(f, "{}", "cl"),
-            Register::EDX => write!(f, "{}", "edx"),
-            Register::DL => write!(f, "{}", "dl"),
+            Reg::EAX => write!(f, "{}", "eax"),
+            Reg::AL => write!(f, "{}", "al"),
+            Reg::EBX => write!(f, "{}", "ebx"),
+            Reg::BL => write!(f, "{}", "bl"),
+            Reg::ECX => write!(f, "{}", "ecx"),
+            Reg::CL => write!(f, "{}", "cl"),
+            Reg::EDX => write!(f, "{}", "edx"),
+            Reg::DL => write!(f, "{}", "dl"),
 
-            Register::EDI => write!(f, "{}", "edi"),
-            Register::ESI => write!(f, "{}", "esi"),
+            Reg::EDI => write!(f, "{}", "edi"),
+            Reg::ESI => write!(f, "{}", "esi"),
 
-            Register::EBP => write!(f, "{}", "ebp"),
-            Register::ESP => write!(f, "{}", "esp"),
-            Register::EIP => write!(f, "{}", "eip"),
+            Reg::EBP => write!(f, "{}", "ebp"),
+            Reg::ESP => write!(f, "{}", "esp"),
+            Reg::EIP => write!(f, "{}", "eip"),
         }
     }
 }

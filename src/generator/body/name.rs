@@ -1,3 +1,5 @@
+use generator::asm::Instr;
+use generator::asm::Reg;
 use scanner::ASTNode;
 
 pub fn go(node: &ASTNode,
@@ -15,8 +17,8 @@ pub fn go(node: &ASTNode,
     if bss.contains(&variable) {
         text.push(format!("  ; {}", variable));
 
-        text.push(format!("  mov {}, [{}]", "esi", variable));
-        text.push(format!("  mov {}, [{}]", "eax", "esi"));
+        text.push(format!("{} {}, [{}]", Instr::MOV, Reg::ESI, variable));
+        text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EAX, Reg::ESI));
         text.push("".to_owned());
 
         return Ok(());

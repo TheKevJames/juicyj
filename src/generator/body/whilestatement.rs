@@ -2,6 +2,8 @@ extern crate rand;
 
 use self::rand::Rng;
 
+use generator::asm::Instr;
+use generator::asm::Reg;
 use scanner::ASTNode;
 
 use super::statement;
@@ -31,8 +33,8 @@ pub fn go(node: &ASTNode,
         Err(e) => return Err(e),
     }
 
-    text.push(format!("  cmp {}, {}", "al", "1"));
-    text.push(format!("  jne .{}", endlabel));
+    text.push(format!("{} {}, {}", Instr::CMP, Reg::AL, "1"));
+    text.push(format!("{} .{}", Instr::JNE, endlabel));
     text.push("".to_owned());
 
     match statement::go(&node.children[4],
@@ -44,7 +46,7 @@ pub fn go(node: &ASTNode,
         Ok(_) => (),
         Err(e) => return Err(e),
     }
-    text.push(format!("  jmp .{}", startlabel));
+    text.push(format!("{} .{}", Instr::JMP, startlabel));
     text.push(format!(".{}:", endlabel));
     text.push("".to_owned());
 

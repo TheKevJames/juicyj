@@ -15,7 +15,7 @@ pub fn go(method: &MethodEnvironment,
         Err(e) => return Err(e),
     }
 
-    // TODO: call parent constructor!
+    // TODO<codegen>: call parent constructor!
 
     // generate body
     if let Some(b) = method.body.clone() {

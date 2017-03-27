@@ -2,6 +2,8 @@ extern crate rand;
 
 use self::rand::Rng;
 
+use generator::asm::Instr;
+use generator::asm::Reg;
 use scanner::ASTNode;
 
 pub fn go(node: &ASTNode,
@@ -13,9 +15,9 @@ pub fn go(node: &ASTNode,
 
     match node.token.lexeme {
         Some(ref l) => {
-            data.push(format!("  {}: dw '{}'", charlabel, l));
+            data.push(format!("{}: dw '{}'", charlabel, l));
 
-            text.push(format!("  mov {}, [{}]", "eax", charlabel));
+            text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EAX, charlabel));
             Ok(())
         }
         _ => Err(format!("CharValue {:?} has no value", node)),

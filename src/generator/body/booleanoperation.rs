@@ -2,6 +2,8 @@ extern crate rand;
 
 use self::rand::Rng;
 
+use generator::asm::Instr;
+use generator::asm::Reg;
 use scanner::ASTNode;
 use scanner::TokenKind;
 
@@ -39,18 +41,18 @@ pub fn go(node: &ASTNode,
 
     match node.token.kind {
         TokenKind::And => {
-            text.push(format!("  cmp {}, {}", "eax", "0"));
-            text.push(format!("  je .{}", lazylabel));
+            text.push(format!("{} {}, {}", Instr::CMP, Reg::EAX, "0"));
+            text.push(format!("{} .{}", Instr::JE, lazylabel));
         }
         TokenKind::Or => {
-            text.push(format!("  cmp {}, {}", "eax", "0"));
-            text.push(format!("  jne .{}", lazylabel));
+            text.push(format!("{} {}, {}", Instr::CMP, Reg::EAX, "0"));
+            text.push(format!("{} .{}", Instr::JNE, lazylabel));
         }
         _ => (),
     }
 
     // store lhs while we get rhs
-    text.push(format!("  push {}", "eax"));
+    text.push(format!("{} {}", Instr::PUSH, Reg::EAX));
 
     // get rhs
     match statement::go(&node.children[1],
@@ -64,13 +66,13 @@ pub fn go(node: &ASTNode,
     }
 
     // restore lhs and do operation
-    text.push(format!("  pop {}", "edx"));
+    text.push(format!("{} {}", Instr::POP, Reg::EDX));
 
     match node.token.kind {
         TokenKind::And => text.push(format!(".{}:", lazylabel)),
-        TokenKind::BitAnd => text.push(format!("  and {}, {}", "eax", "edx")),
-        TokenKind::BitOr => text.push(format!("  or {}, {}", "eax", "edx")),
-        TokenKind::BitXor => text.push(format!("  xor {}, {}", "eax", "edx")),
+        TokenKind::BitAnd => text.push(format!("{} {}, {}", Instr::AND, Reg::EAX, Reg::EDX)),
+        TokenKind::BitOr => text.push(format!("{} {}, {}", Instr::OR, Reg::EAX, Reg::EDX)),
+        TokenKind::BitXor => text.push(format!("{} {}, {}", Instr::XOR, Reg::EAX, Reg::EDX)),
         TokenKind::Or => text.push(format!(".{}:", lazylabel)),
         _ => return Err(format!("attempted to parse {:?} as boolean operation", node)),
     }

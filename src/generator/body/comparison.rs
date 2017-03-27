@@ -1,5 +1,7 @@
 use scanner::ASTNode;
 use scanner::TokenKind;
+use generator::asm::Instr;
+use generator::asm::Reg;
 
 use super::statement;
 
@@ -32,7 +34,7 @@ pub fn go(node: &ASTNode,
     }
 
     // store lhs while we get rhs
-    text.push(format!("  push {}", "eax"));
+    text.push(format!("{} {}", Instr::PUSH, Reg::EAX));
 
     // get rhs
     match statement::go(&node.children[1],
@@ -46,8 +48,8 @@ pub fn go(node: &ASTNode,
     }
 
     // restore lhs and do comparison
-    text.push(format!("  pop {}", "edx"));
-    text.push(format!("  cmp {}, {}", "edx", "eax"));
+    text.push(format!("{} {}", Instr::POP, Reg::EDX));
+    text.push(format!("{} {}, {}", Instr::CMP, Reg::EDX, Reg::EAX));
 
     match node.token.kind {
         TokenKind::Equality => {

@@ -1,3 +1,5 @@
+use generator::asm::Instr;
+use generator::asm::Reg;
 use scanner::ASTNode;
 
 use super::statement;
@@ -28,8 +30,8 @@ pub fn go(node: &ASTNode,
             Err(e) => return Err(e),
         }
 
-        text.push(format!("  mov {}, [{}]", "edi", variable));
-        text.push(format!("  mov [{}], {}", "edi", "eax"));
+        text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EDI, variable));
+        text.push(format!("{} [{}], {}", Instr::MOV, Reg::EDI, Reg::EAX));
         text.push("".to_owned());
 
         return Ok(());

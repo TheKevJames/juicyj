@@ -1,3 +1,5 @@
+use generator::asm::Instr;
+
 pub mod constructor;
 pub mod method;
 
@@ -26,7 +28,7 @@ pub fn code(text: &Vec<String>,
             }
         }
 
-        externs.insert(0, format!("section .text"));
+        externs.insert(0, format!("{} .{}", Instr::SECTION, "text"));
 
         generated.push(externs.join("\n"));
     }
@@ -39,7 +41,7 @@ pub fn code(text: &Vec<String>,
         bss.dedup();
 
         bss = bss.iter().map(|v| format!("  {}: resb {}", v, "32")).collect();
-        bss.insert(0, format!("section .bss"));
+        bss.insert(0, format!("{} .{}", Instr::SECTION, "bss"));
 
         generated.push(bss.join("\n"));
     }
@@ -48,7 +50,7 @@ pub fn code(text: &Vec<String>,
         let mut data = data.clone();
         data.sort();
         data.dedup();
-        data.insert(0, format!("section .data"));
+        data.insert(0, format!("{} .{}", Instr::SECTION, "data"));
 
         generated.push(data.join("\n"));
     }

@@ -1,3 +1,5 @@
+use generator::asm::Instr;
+use generator::asm::Reg;
 use scanner::ASTNode;
 
 use super::statement;
@@ -27,10 +29,10 @@ pub fn go(node: &ASTNode,
     bss.push(variable.clone());
 
     // allocate 32 bytes for lhs
-    text.push(format!("  mov {}, {}", "eax", "32"));
-    externs.push(format!("extern {}", "__malloc"));
-    text.push(format!("  call {}", "__malloc"));
-    text.push(format!("  mov [{}], {}", variable, "eax"));
+    text.push(format!("{} {}, {}", Instr::MOV, Reg::EAX, "32"));
+    externs.push(format!("{} {}", Instr::EXTERN, "__malloc"));
+    text.push(format!("{} {}", Instr::CALL, "__malloc"));
+    text.push(format!("{} [{}], {}", Instr::MOV, variable, Reg::EAX));
     text.push("".to_owned());
 
     // resolve rhs and store in lhs
@@ -44,8 +46,8 @@ pub fn go(node: &ASTNode,
         Err(e) => return Err(e),
     }
 
-    text.push(format!("  mov {}, [{}]", "edi", variable));
-    text.push(format!("  mov [{}], {}", "edi", "eax"));
+    text.push(format!("{} {}, [{}]", Instr::MOV, "edi", variable));
+    text.push(format!("{} [{}], {}", Instr::MOV, "edi", Reg::EAX));
     text.push("".to_owned());
 
     Ok(())

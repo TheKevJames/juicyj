@@ -50,6 +50,7 @@ impl Generatable for ClassOrInterfaceEnvironment {
                 Err(e) => return Err(e),
             }
         }
+
         for method in &self.methods {
             let label =
                 match class::method::get_label(method, &class_label, &mut text, &mut externs) {

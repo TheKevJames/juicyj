@@ -1,3 +1,5 @@
+use generator::asm::Instr;
+use generator::asm::Reg;
 use scanner::ASTNode;
 
 use super::statement;
@@ -21,8 +23,8 @@ pub fn go(node: &ASTNode,
         Err(e) => return Err(e),
     }
 
-    text.push(format!("  cmp {}, {}", "eax", "0"));
-    text.push(format!("  sete {}", "al"));
+    text.push(format!("{} {}, {}", Instr::CMP, Reg::EAX, "0"));
+    text.push(format!("{} {}", Instr::SETE, Reg::AL));
     text.push("".to_owned());
 
     Ok(())
