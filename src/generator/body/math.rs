@@ -11,8 +11,11 @@ pub fn go(node: &ASTNode,
           mut data: &mut Vec<String>)
           -> Result<(), String> {
     match node.token.kind {
+        TokenKind::FSlash => text.push("  ; /".to_owned()),
         TokenKind::Minus => text.push("  ; -".to_owned()),
+        TokenKind::Percent => text.push("  ; %".to_owned()),
         TokenKind::Plus => text.push("  ; +".to_owned()),
+        TokenKind::Star => text.push("  ; *".to_owned()),
         _ => return Err(format!("attempted to parse {:?} as math", node)),
     }
 
@@ -42,12 +45,22 @@ pub fn go(node: &ASTNode,
     }
 
     // restore lhs
-    text.push(format!("  mov {}, {}", "edx", "eax"));
+    text.push(format!("  mov {}, {}", "ecx", "eax"));
     text.push(format!("  pop {}", "eax"));
 
     match node.token.kind {
-        TokenKind::Minus => text.push(format!("  sub {}, {}", "eax", "edx")),
-        TokenKind::Plus => text.push(format!("  add {}, {}", "eax", "edx")),
+        TokenKind::FSlash => {
+            text.push(format!("  xor {}, {}", "edx", "edx"));
+            text.push(format!("  div {}", "ecx"));
+        }
+        TokenKind::Minus => text.push(format!("  sub {}, {}", "eax", "ecx")),
+        TokenKind::Percent => {
+            text.push(format!("  xor {}, {}", "edx", "edx"));
+            text.push(format!("  div {}", "ecx"));
+            text.push(format!("  mov {}, {}", "eax", "edx"));
+        }
+        TokenKind::Plus => text.push(format!("  add {}, {}", "eax", "ecx")),
+        TokenKind::Star => text.push(format!("  imul {}, {}", "eax", "ecx")),
         _ => return Err(format!("attempted to parse {:?} as math", node)),
     }
 

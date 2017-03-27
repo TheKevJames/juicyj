@@ -144,9 +144,8 @@ pub fn go(node: &ASTNode,
         TokenKind::Instanceof => {
             instanceof::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
         }
-        TokenKind::Minus | TokenKind::Plus => {
-            math::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
-        }
+        TokenKind::FSlash | TokenKind::Minus | TokenKind::Percent | TokenKind::Plus |
+        TokenKind::Star => math::go(&node, label, &mut text, &mut externs, &mut bss, &mut data),
         TokenKind::Not => not::go(&node, label, &mut text, &mut externs, &mut bss, &mut data),
         TokenKind::Null => {
             nullvalue::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
