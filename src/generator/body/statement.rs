@@ -131,9 +131,7 @@ pub fn go(node: &ASTNode,
         TokenKind::BitXor => {
             booleanoperation::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
         }
-        TokenKind::CharValue => {
-            charvalue::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
-        }
+        TokenKind::CharValue => charvalue::go(&node, &mut text, &mut data),
         TokenKind::Equality |
         TokenKind::NotEqual |
         TokenKind::LessThan |
@@ -142,9 +140,7 @@ pub fn go(node: &ASTNode,
         TokenKind::GreaterThanOrEqual => {
             comparison::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
         }
-        TokenKind::False | TokenKind::True => {
-            booleanvalue::go(&node, &mut text)
-        }
+        TokenKind::False | TokenKind::True => booleanvalue::go(&node, &mut text),
         TokenKind::Instanceof => {
             instanceof::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
         }
