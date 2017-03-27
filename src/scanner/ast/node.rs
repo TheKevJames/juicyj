@@ -358,6 +358,10 @@ impl ASTNode {
             TokenKind::NonTerminal if parent.token.lexeme == Some("Argument".to_owned()) => {
                 return parent.children[1].to_label();
             }
+            TokenKind::NonTerminal if parent.token.lexeme == Some("CastExpression".to_owned()) => {
+                let idx = parent.children.len() - 1;
+                return parent.children[idx].to_label();
+            }
             TokenKind::NonTerminal if parent.token.lexeme == Some("Name".to_owned()) => {
                 let mut labels = Vec::new();
                 for child in &parent.children {
@@ -371,7 +375,7 @@ impl ASTNode {
             TokenKind::NumValue => parent.token.lexeme.unwrap_or("".to_owned()),
             TokenKind::StrValue => parent.token.lexeme.unwrap_or("".to_owned()),
             TokenKind::True => "true".to_owned(),
-            // TODO: enable error handling
+            // TODO<codegen>: enable error handling
             // _ => return Err(format!("could not create label for {:?}", self)),
             _ => {
                 println!("TODO<codegen>: could not create label for {:?}", self);
@@ -402,6 +406,10 @@ impl ASTNode {
                     Err(e) => return Err(e),
                 }
             }
+            TokenKind::NonTerminal if parent.token.lexeme == Some("CastExpression".to_owned()) => {
+                // TODO<codegen>: can this have child2 = Dim or is it already an ArrayType?
+                return parent.children[1].to_param();
+            }
             TokenKind::Short => "SHORT".to_owned(),
             TokenKind::StrValue => "String".to_owned(),
             _ => {
@@ -410,7 +418,7 @@ impl ASTNode {
                         // TODO<codegen>: resolve label
                         l
                     }
-                    // TODO: enable error handling
+                    // TODO<codegen>: enable error handling
                     // Err(_) => return Err(format!("could not create param label for {:?}", self)),
                     Err(_) => {
                         println!("TODO<codegen>: could not create param label for {:?}", self);

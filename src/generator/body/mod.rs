@@ -1,18 +1,22 @@
+mod arrayaccess;
 mod arraycreationexpression;
 mod assignment;
 mod booleanvalue;
 mod castexpression;
 mod charvalue;
+mod equality;
 mod forstatement;
 mod ifelsestatement;
 mod ifstatement;
 mod localvariabledeclaration;
 mod methodinvocation;
 mod name;
+mod nullvalue;
 mod numvalue;
 mod returnstatement;
 mod statement;
 mod strvalue;
+mod this;
 mod whilestatement;
 
 pub use self::statement::go;

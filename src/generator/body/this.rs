@@ -7,11 +7,5 @@ pub fn go(node: &ASTNode,
           mut bss: &mut Vec<String>,
           mut data: &mut Vec<String>)
           -> Result<(), String> {
-    match node.token.lexeme {
-        Some(ref l) => {
-            text.push(format!("  mov {}, {}", "eax", l));
-            Ok(())
-        }
-        _ => Err(format!("could not parse NumValue from {:?}", node)),
-    }
+    Ok(())
 }

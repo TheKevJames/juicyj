@@ -1,20 +1,24 @@
 use scanner::ASTNode;
 use scanner::TokenKind;
 
+use super::arrayaccess;
 use super::arraycreationexpression;
 use super::assignment;
 use super::booleanvalue;
 use super::castexpression;
 use super::charvalue;
+use super::equality;
 use super::forstatement;
 use super::ifstatement;
 use super::ifelsestatement;
 use super::localvariabledeclaration;
 use super::methodinvocation;
 use super::name;
+use super::nullvalue;
 use super::numvalue;
 use super::returnstatement;
 use super::strvalue;
+use super::this;
 use super::whilestatement;
 
 pub fn go(node: &ASTNode,
@@ -32,6 +36,9 @@ pub fn go(node: &ASTNode,
                        &mut externs,
                        &mut bss,
                        &mut data)
+                }
+                Some(ref l) if l == "ArrayAccess" => {
+                    arrayaccess::go(&node, &mut text, &mut externs, &mut bss, &mut data)
                 }
                 Some(ref l) if l == "ArrayCreationExpression" => {
                     arraycreationexpression::go(&node, &mut text, &mut externs, &mut bss, &mut data)
@@ -102,15 +109,18 @@ pub fn go(node: &ASTNode,
                 }
 
                 Some(ref l) if l == "Block" => Ok(()),
-                _ => Err(format!("TODO<codegen>: {:?}", node.token.lexeme)),
+                _ => Err(format!("TODO<codegen>: body statement (lexeme) {:?}", node.token.lexeme)),
             }
         }
         TokenKind::CharValue => charvalue::go(&node, &mut text, &mut externs, &mut bss, &mut data),
+        TokenKind::Equality => equality::go(&node, &mut text, &mut externs, &mut bss, &mut data),
         TokenKind::False | TokenKind::True => {
             booleanvalue::go(&node, &mut text, &mut externs, &mut bss, &mut data)
         }
+        TokenKind::Null => nullvalue::go(&node, &mut text, &mut externs, &mut bss, &mut data),
         TokenKind::NumValue => numvalue::go(&node, &mut text, &mut externs, &mut bss, &mut data),
+        TokenKind::This => this::go(&node, &mut text, &mut externs, &mut bss, &mut data),
         TokenKind::StrValue => strvalue::go(&node, &mut text, &mut externs, &mut bss, &mut data),
-        _ => Err(format!("TODO<codegen>: {:?}", node.token.kind)),
+        _ => Err(format!("TODO<codegen>: body statement (kind) {:?}", node.token.kind)),
     }
 }
