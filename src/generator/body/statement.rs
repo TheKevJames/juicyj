@@ -28,6 +28,7 @@ use super::this;
 use super::whilestatement;
 
 pub fn go(node: &ASTNode,
+          class_label: &String,
           label: &String,
           mut text: &mut Vec<String>,
           mut externs: &mut Vec<String>,
@@ -39,6 +40,7 @@ pub fn go(node: &ASTNode,
             match node.token.lexeme {
                 Some(ref l) if l == "Argument" => {
                     go(&node.children[1],
+                       class_label,
                        label,
                        &mut text,
                        &mut externs,
@@ -46,10 +48,17 @@ pub fn go(node: &ASTNode,
                        &mut data)
                 }
                 Some(ref l) if l == "ArrayAccess" => {
-                    arrayaccess::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
+                    arrayaccess::go(&node,
+                                    class_label,
+                                    label,
+                                    &mut text,
+                                    &mut externs,
+                                    &mut bss,
+                                    &mut data)
                 }
                 Some(ref l) if l == "ArrayCreationExpression" => {
                     arraycreationexpression::go(&node,
+                                                class_label,
                                                 label,
                                                 &mut text,
                                                 &mut externs,
@@ -57,10 +66,17 @@ pub fn go(node: &ASTNode,
                                                 &mut data)
                 }
                 Some(ref l) if l == "Assignment" => {
-                    assignment::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
+                    assignment::go(&node,
+                                   class_label,
+                                   label,
+                                   &mut text,
+                                   &mut externs,
+                                   &mut bss,
+                                   &mut data)
                 }
                 Some(ref l) if l == "Block" && node.children.len() == 3 => {
                     go(&node.children[1],
+                       class_label,
                        label,
                        &mut text,
                        &mut externs,
@@ -69,7 +85,13 @@ pub fn go(node: &ASTNode,
                 }
                 Some(ref l) if l == "BlockStatements" => {
                     for child in &node.children {
-                        match go(&child, label, &mut text, &mut externs, &mut bss, &mut data) {
+                        match go(&child,
+                                 class_label,
+                                 label,
+                                 &mut text,
+                                 &mut externs,
+                                 &mut bss,
+                                 &mut data) {
                             Ok(_) => (),
                             Err(e) => return Err(e),
                         }
@@ -77,10 +99,17 @@ pub fn go(node: &ASTNode,
                     Ok(())
                 }
                 Some(ref l) if l == "CastExpression" => {
-                    castexpression::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
+                    castexpression::go(&node,
+                                       class_label,
+                                       label,
+                                       &mut text,
+                                       &mut externs,
+                                       &mut bss,
+                                       &mut data)
                 }
                 Some(ref l) if l == "ClassInstanceCreationExpression" => {
                     classinstancecreationexpression::go(&node,
+                                                        class_label,
                                                         label,
                                                         &mut text,
                                                         &mut externs,
@@ -88,19 +117,44 @@ pub fn go(node: &ASTNode,
                                                         &mut data)
                 }
                 Some(ref l) if l == "FieldAccess" => {
-                    fieldaccess::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
+                    fieldaccess::go(&node,
+                                    class_label,
+                                    label,
+                                    &mut text,
+                                    &mut externs,
+                                    &mut bss,
+                                    &mut data)
                 }
                 Some(ref l) if l == "ForStatement" || l == "ForStatementNoShortIf" => {
-                    forstatement::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
+                    forstatement::go(&node,
+                                     class_label,
+                                     label,
+                                     &mut text,
+                                     &mut externs,
+                                     &mut bss,
+                                     &mut data)
                 }
                 Some(ref l) if l == "IfElseStatement" || l == "IfElseStatementNoShortIf" => {
-                    ifelsestatement::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
+                    ifelsestatement::go(&node,
+                                        class_label,
+                                        label,
+                                        &mut text,
+                                        &mut externs,
+                                        &mut bss,
+                                        &mut data)
                 }
                 Some(ref l) if l == "IfStatement" => {
-                    ifstatement::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
+                    ifstatement::go(&node,
+                                    class_label,
+                                    label,
+                                    &mut text,
+                                    &mut externs,
+                                    &mut bss,
+                                    &mut data)
                 }
                 Some(ref l) if l == "LocalVariableDeclaration" => {
                     localvariabledeclaration::go(&node,
+                                                 class_label,
                                                  label,
                                                  &mut text,
                                                  &mut externs,
@@ -108,16 +162,40 @@ pub fn go(node: &ASTNode,
                                                  &mut data)
                 }
                 Some(ref l) if l == "MethodInvocation" => {
-                    methodinvocation::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
+                    methodinvocation::go(&node,
+                                         class_label,
+                                         label,
+                                         &mut text,
+                                         &mut externs,
+                                         &mut bss,
+                                         &mut data)
                 }
                 Some(ref l) if l == "Name" => {
-                    name::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
+                    name::go(&node,
+                             class_label,
+                             label,
+                             &mut text,
+                             &mut externs,
+                             &mut bss,
+                             &mut data)
                 }
                 Some(ref l) if l == "ReturnStatement" => {
-                    returnstatement::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
+                    returnstatement::go(&node,
+                                        class_label,
+                                        label,
+                                        &mut text,
+                                        &mut externs,
+                                        &mut bss,
+                                        &mut data)
                 }
                 Some(ref l) if l == "WhileStatement" || l == "WhileStatementNoShortIf" => {
-                    whilestatement::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
+                    whilestatement::go(&node,
+                                       class_label,
+                                       label,
+                                       &mut text,
+                                       &mut externs,
+                                       &mut bss,
+                                       &mut data)
                 }
 
                 Some(ref l) if l == "Block" => Ok(()),
@@ -126,7 +204,13 @@ pub fn go(node: &ASTNode,
         }
         TokenKind::And | TokenKind::BitAnd | TokenKind::Or | TokenKind::BitOr |
         TokenKind::BitXor => {
-            booleanoperation::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
+            booleanoperation::go(&node,
+                                 class_label,
+                                 label,
+                                 &mut text,
+                                 &mut externs,
+                                 &mut bss,
+                                 &mut data)
         }
         TokenKind::CharValue => charvalue::go(&node, &mut text, &mut data),
         TokenKind::Equality |
@@ -135,24 +219,72 @@ pub fn go(node: &ASTNode,
         TokenKind::LessThanOrEqual |
         TokenKind::GreaterThan |
         TokenKind::GreaterThanOrEqual => {
-            comparison::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
+            comparison::go(&node,
+                           class_label,
+                           label,
+                           &mut text,
+                           &mut externs,
+                           &mut bss,
+                           &mut data)
         }
         TokenKind::False | TokenKind::True => booleanvalue::go(&node, &mut text),
         TokenKind::Identifier => {
-            name::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
+            name::go(&node,
+                     class_label,
+                     label,
+                     &mut text,
+                     &mut externs,
+                     &mut bss,
+                     &mut data)
         }
         TokenKind::Instanceof => {
-            instanceof::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
+            instanceof::go(&node,
+                           class_label,
+                           label,
+                           &mut text,
+                           &mut externs,
+                           &mut bss,
+                           &mut data)
         }
         TokenKind::FSlash | TokenKind::Minus | TokenKind::Percent | TokenKind::Plus |
-        TokenKind::Star => math::go(&node, label, &mut text, &mut externs, &mut bss, &mut data),
-        TokenKind::Not => not::go(&node, label, &mut text, &mut externs, &mut bss, &mut data),
+        TokenKind::Star => {
+            math::go(&node,
+                     class_label,
+                     label,
+                     &mut text,
+                     &mut externs,
+                     &mut bss,
+                     &mut data)
+        }
+        TokenKind::Not => {
+            not::go(&node,
+                    class_label,
+                    label,
+                    &mut text,
+                    &mut externs,
+                    &mut bss,
+                    &mut data)
+        }
         TokenKind::Null => {
-            nullvalue::go(&node, label, &mut text, &mut externs, &mut bss, &mut data)
+            nullvalue::go(&node,
+                          class_label,
+                          label,
+                          &mut text,
+                          &mut externs,
+                          &mut bss,
+                          &mut data)
         }
         TokenKind::NumValue => numvalue::go(&node, &mut text),
         TokenKind::StrValue => strvalue::go(&node, &mut text, &mut data),
-        TokenKind::This => this::go(&node, label, &mut text, &mut externs, &mut bss, &mut data),
+        TokenKind::This => {
+            this::go(&node,
+                     class_label,
+                     label,
+                     &mut text,
+                     &mut externs,
+                     &mut bss,
+                     &mut data)
+        }
 
         // TODO<codegen>: prune AST
         TokenKind::Boolean | TokenKind::Char | TokenKind::Byte | TokenKind::Int |

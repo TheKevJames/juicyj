@@ -243,7 +243,7 @@ fn verify_env(mut env: &mut Environment) -> Result<(), String> {
                 Ok(t) => {
                     field.value = Some(rexpr);
                     t
-                },
+                }
                 Err(e) => return Err(e),
             };
 

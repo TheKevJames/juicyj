@@ -34,6 +34,7 @@ fn build_method(name: &ASTNode, params: &ASTNode) -> Result<String, String> {
 
 pub fn call(method: &ASTNode,
             params: &ASTNode,
+            class_label: &String,
             label: &String,
             mut text: &mut Vec<String>,
             mut externs: &mut Vec<String>,
@@ -70,7 +71,13 @@ pub fn call(method: &ASTNode,
             continue;
         }
 
-        match body::go(&param, label, &mut text, &mut externs, &mut bss, &mut data) {
+        match body::go(&param,
+                       class_label,
+                       label,
+                       &mut text,
+                       &mut externs,
+                       &mut bss,
+                       &mut data) {
             Ok(_) => (),
             Err(e) => return Err(e),
         }

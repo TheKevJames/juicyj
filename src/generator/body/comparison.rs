@@ -6,6 +6,7 @@ use generator::asm::Reg;
 use super::statement;
 
 pub fn go(node: &ASTNode,
+          class_label: &String,
           label: &String,
           mut text: &mut Vec<String>,
           mut externs: &mut Vec<String>,
@@ -24,6 +25,7 @@ pub fn go(node: &ASTNode,
 
     // get lhs
     match statement::go(&node.children[0],
+                        class_label,
                         label,
                         &mut text,
                         &mut externs,
@@ -38,6 +40,7 @@ pub fn go(node: &ASTNode,
 
     // get rhs
     match statement::go(&node.children[1],
+                        class_label,
                         label,
                         &mut text,
                         &mut externs,

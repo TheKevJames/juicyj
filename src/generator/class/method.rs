@@ -82,27 +82,36 @@ pub fn get_label(method: &MethodEnvironment,
 }
 
 pub fn go(method: &MethodEnvironment,
-          label: &String,
+          class_label: &String,
           mut text: &mut Vec<String>,
           mut externs: &mut Vec<String>,
           mut bss: &mut Vec<String>,
           mut data: &mut Vec<String>)
           -> Result<(), String> {
-    match get_args(&method.parameters, label, &mut text, &mut bss) {
+    let label = match get_label(method, &class_label, &mut text, &mut externs) {
+        Ok(l) => l,
+        Err(e) => return Err(e),
+    };
+
+    match get_args(&method.parameters, &label, &mut text, &mut bss) {
         Ok(_) => (),
         Err(e) => return Err(e),
     }
 
     // generate body
     if let Some(b) = method.body.clone() {
-        match body::go(&b, &label, &mut text, &mut externs, &mut bss, &mut data) {
+        match body::go(&b,
+                       &class_label,
+                       &label,
+                       &mut text,
+                       &mut externs,
+                       &mut bss,
+                       &mut data) {
             Ok(_) => (),
             Err(e) => return Err(e),
         }
     }
     // TODO<codegen>: else error?
-
-    text.push("".to_owned());
 
     if method.modifiers.contains(&*STATIC) && method.return_type == *INTEGER &&
        method.name == *TEST {

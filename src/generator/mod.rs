@@ -63,15 +63,8 @@ impl Generatable for ClassOrInterfaceEnvironment {
         }
 
         for constructor in &self.constructors {
-            let label = match class::method::get_label(constructor,
-                                                       &class_label,
-                                                       &mut text,
-                                                       &mut externs) {
-                Ok(l) => l,
-                Err(e) => return Err(e),
-            };
             match class::constructor::go(&constructor,
-                                         &label,
+                                         &class_label,
                                          &init_fields,
                                          &mut text,
                                          &mut externs,
@@ -83,13 +76,8 @@ impl Generatable for ClassOrInterfaceEnvironment {
         }
 
         for method in &self.methods {
-            let label =
-                match class::method::get_label(method, &class_label, &mut text, &mut externs) {
-                    Ok(l) => l,
-                    Err(e) => return Err(e),
-                };
             match class::method::go(&method,
-                                    &label,
+                                    &class_label,
                                     &mut text,
                                     &mut externs,
                                     &mut bss,

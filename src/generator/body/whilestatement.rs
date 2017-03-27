@@ -9,6 +9,7 @@ use scanner::ASTNode;
 use super::statement;
 
 pub fn go(node: &ASTNode,
+          class_label: &String,
           label: &String,
           mut text: &mut Vec<String>,
           mut externs: &mut Vec<String>,
@@ -24,6 +25,7 @@ pub fn go(node: &ASTNode,
 
     text.push(format!(".{}:", startlabel));
     match statement::go(&node.children[2],
+                        class_label,
                         label,
                         &mut text,
                         &mut externs,
@@ -38,6 +40,7 @@ pub fn go(node: &ASTNode,
     text.push("".to_owned());
 
     match statement::go(&node.children[4],
+                        class_label,
                         label,
                         &mut text,
                         &mut externs,
