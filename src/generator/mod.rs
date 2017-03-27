@@ -2,6 +2,8 @@
 //! of the original CS444 project.
 extern crate walkdir;
 
+mod body;
+
 use std;
 use std::fs;
 use std::io::Write;
@@ -20,13 +22,19 @@ impl Generatable for ClassOrInterfaceEnvironment {
         let mut data: Vec<String> = Vec::new();
         for method in &self.methods {
             let label = method.to_label(class_label.clone());
-
             data.push(format!("global _{}", label));
             data.push(format!("_{}:", label));
 
-            data.push(format!("mov {}, {}", "eax", "1"));
-            data.push(format!("mov {}, {}", "ebx", "0"));
-            data.push(format!("int {}", "0x80"));
+            if let Some(b) = method.body.clone() {
+                self::body::go(&b, &mut data);
+            }
+            // TODO: else error?
+
+            if label == "start" {
+                data.push(format!("mov {}, {}", "eax", "1"));
+                data.push(format!("mov {}, {}", "ebx", "0"));
+                data.push(format!("int {}", "0x80"));
+            }
         }
 
         data.join("\n")
