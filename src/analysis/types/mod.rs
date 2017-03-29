@@ -166,7 +166,9 @@ fn verify_env(mut env: &mut Environment) -> Result<(), String> {
     let kinds = env.kinds.clone();
 
     for mut current in &mut env.kinds {
-        for constructor in &current.constructors {
+        let curr = current.clone();
+
+        for mut constructor in &mut current.constructors {
             let mut params = Vec::new();
             for parameter in &constructor.parameters {
                 if params.contains(&parameter.name) {
@@ -175,36 +177,39 @@ fn verify_env(mut env: &mut Environment) -> Result<(), String> {
                 }
                 params.push(parameter.name.clone());
 
-                let result = verify::prefixes::canonical(&parameter.kind, &current, &kinds);
+                let result = verify::prefixes::canonical(&parameter.kind, &curr, &kinds);
                 if result.is_err() {
                     return result;
                 }
             }
 
-            if &constructor.name != current.name.children.last().unwrap() {
+            if &constructor.name != curr.name.children.last().unwrap() {
                 return Err(format!("constructor {} does not share class name {}",
                                    constructor.name,
-                                   current.name));
+                                   curr.name));
             }
 
             let globals = constructor.parameters.clone();
-            let return_types =
-                match statement::block(&mut constructor.clone().body.unwrap().clone(),
-                                       &constructor.modifiers,
-                                       &current,
-                                       &kinds,
-                                       &globals) {
-                    Ok(rts) => rts,
-                    Err(e) => return Err(e),
-                };
+            let mut body = constructor.clone().body.unwrap().clone();
+            let return_types = match statement::block(&mut body,
+                                                      &constructor.modifiers,
+                                                      &curr,
+                                                      &kinds,
+                                                      &globals) {
+                Ok(rts) => {
+                    constructor.body = Some(body);
+                    rts
+                }
+                Err(e) => return Err(e),
+            };
 
-            let constructor_return_type = Type::new(current.clone());
+            let constructor_return_type = Type::new(curr.clone());
             for return_type in &return_types {
-                match constructor_return_type.assign(&return_type, current, &kinds) {
+                match constructor_return_type.assign(&return_type, &curr, &kinds) {
                     Ok(_) => (),
                     Err(e) => {
                         return Err(format!("constructor {} has invalid return type\nerror: {:?}",
-                                           current.name,
+                                           curr.name,
                                            e))
                     }
                 }
@@ -262,7 +267,6 @@ fn verify_env(mut env: &mut Environment) -> Result<(), String> {
             env_builder.pop();
         }
 
-        let curr = current.clone();
         for mut method in &mut current.methods {
             if method.body.is_none() {
                 if !method.modifiers.contains(&*ABSTRACT) && !method.modifiers.contains(&*NATIVE) {
