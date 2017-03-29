@@ -1,7 +1,3 @@
-extern crate rand;
-
-use self::rand::Rng;
-
 use generator::asm::Instr;
 use generator::asm::Reg;
 use scanner::ASTNode;

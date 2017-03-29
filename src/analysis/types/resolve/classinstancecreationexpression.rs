@@ -55,7 +55,7 @@ pub fn go(mut node: &mut ASTNode,
 
             Ok(Type::new(cls))
         }
-        Err(e) => {
+        Err(_) => {
             // TODO: duplicate resolve?
             // remove full qualification
             let mut node_copy = node.clone();

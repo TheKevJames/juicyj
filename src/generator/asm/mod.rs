@@ -69,11 +69,11 @@ pub enum Reg {
     EAX, // Accumulator
     AL,
     EBX, // Base
-    BL,
+    // BL,
     ECX, // Counter
-    CL,
+    // CL,
     EDX, // Data
-    DL,
+    // DL,
 
     // indexes
     EDI, // Destination
@@ -82,7 +82,7 @@ pub enum Reg {
     // pointers
     EBP, // Stack Base
     ESP, // Stack Pointer
-    EIP, // Index Pointer
+         // EIP, // Index Pointer
 }
 
 impl fmt::Display for Reg {
@@ -91,18 +91,17 @@ impl fmt::Display for Reg {
             Reg::EAX => write!(f, "{}", "eax"),
             Reg::AL => write!(f, "{}", "al"),
             Reg::EBX => write!(f, "{}", "ebx"),
-            Reg::BL => write!(f, "{}", "bl"),
+            // Reg::BL => write!(f, "{}", "bl"),
             Reg::ECX => write!(f, "{}", "ecx"),
-            Reg::CL => write!(f, "{}", "cl"),
+            // Reg::CL => write!(f, "{}", "cl"),
             Reg::EDX => write!(f, "{}", "edx"),
-            Reg::DL => write!(f, "{}", "dl"),
-
+            // Reg::DL => write!(f, "{}", "dl"),
             Reg::EDI => write!(f, "{}", "edi"),
             Reg::ESI => write!(f, "{}", "esi"),
 
             Reg::EBP => write!(f, "{}", "ebp"),
             Reg::ESP => write!(f, "{}", "esp"),
-            Reg::EIP => write!(f, "{}", "eip"),
+            // Reg::EIP => write!(f, "{}", "eip"),
         }
     }
 }
