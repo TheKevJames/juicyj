@@ -19,10 +19,24 @@ lazy_static! {
     };
 }
 
-fn build_entrypoint(label: &String, mut text: &mut Vec<String>, mut externs: &mut Vec<String>) {
+fn build_entrypoint(class_label: &String,
+                    label: &String,
+                    mut text: &mut Vec<String>,
+                    mut externs: &mut Vec<String>) {
     // use this method as the entry point
     externs.push(format!("{} {}", Instr::GLOBAL, "_start"));
     text.push(format!("{}", "_start:"));
+
+    // TODO<codegen>: catch panic()
+    let constructor_label = class_label.split_at(class_label.rfind(".").unwrap()).1;
+    let constructor_label = format!("__{}{}__", class_label, constructor_label);
+
+    text.push(format!("{} {}", Instr::PUSH, Reg::EBP));
+    text.push(format!("{} {}, {}", Instr::MOV, Reg::EBP, Reg::ESP));
+    text.push(format!("{} {}", Instr::CALL, constructor_label));
+    text.push(format!("{} {}, {}", Instr::MOV, Reg::ESP, Reg::EBP));
+    text.push(format!("{} {}", Instr::POP, Reg::EBP));
+    text.push("".to_owned());
 
     // call this method
     text.push(format!("{} {}", Instr::PUSH, Reg::EBP));
@@ -115,7 +129,7 @@ pub fn go(method: &MethodEnvironment,
 
     if method.modifiers.contains(&*STATIC) && method.return_type == *INTEGER &&
        method.name == *TEST {
-        build_entrypoint(&label, text, externs);
+        build_entrypoint(&class_label, &label, text, externs);
     }
 
     Ok(())

@@ -10,6 +10,9 @@ lazy_static! {
     static ref INIT: ASTNode = {
         ASTNode { token: Token::new(TokenKind::Identifier, Some("INIT")), children: Vec::new() }
     };
+    static ref NUMVALUEZERO: ASTNode = {
+        ASTNode { token: Token::new(TokenKind::NumValue, Some("0")), children: Vec::new() }
+    };
     static ref RETURN: ASTNode = {
         ASTNode { token: Token::new(TokenKind::Return, None), children: Vec::new() }
     };
@@ -33,34 +36,35 @@ pub fn go(field: &FieldEnvironment,
           -> Result<Option<ASTNode>, String> {
     bss.push(label.clone());
 
-    if let Some(v) = field.value.clone() {
-        let mut init = field.name.clone();
-        init.flatten();
-        let init_label = match init.to_label() {
-            Ok(l) => l,
-            Err(e) => return Err(e),
-        };
+    let mut init = field.name.clone();
+    init.flatten();
+    let init_label = match init.to_label() {
+        Ok(l) => l,
+        Err(e) => return Err(e),
+    };
 
-        let mut init_method = MethodEnvironment::new(INIT.clone(), field.kind.clone());
-        let mut body = RETURNSATEMENT.clone();
-        body.children.push(RETURN.clone());
-        body.children.push(v.clone());
-        body.children.push(SEMICOLON.clone());
-        init_method.body = Some(body);
+    let mut init_method = MethodEnvironment::new(INIT.clone(), field.kind.clone());
+    let mut body = RETURNSATEMENT.clone();
 
-        // build init method
-        match method::go(&init_method,
-                         &init_label,
-                         &mut text,
-                         &mut externs,
-                         &mut bss,
-                         &mut data) {
-            Ok(_) => (),
-            Err(e) => return Err(e),
-        }
-
-        Ok(Some(INIT.clone()))
-    } else {
-        Ok(None)
+    body.children.push(RETURN.clone());
+    match field.value {
+        Some(ref v) => body.children.push(v.clone()),
+        None => body.children.push(NUMVALUEZERO.clone()),
     }
+    body.children.push(SEMICOLON.clone());
+
+    init_method.body = Some(body);
+
+    // build init method
+    match method::go(&init_method,
+                     &init_label,
+                     &mut text,
+                     &mut externs,
+                     &mut bss,
+                     &mut data) {
+        Ok(_) => (),
+        Err(e) => return Err(e),
+    }
+
+    Ok(Some(INIT.clone()))
 }

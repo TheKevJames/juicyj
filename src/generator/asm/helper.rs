@@ -89,7 +89,9 @@ pub fn call(method: &ASTNode,
     text.push(format!("{} {}", Instr::CALL, method));
 
     // pop stack by number of params
-    text.push(format!("{} {}, {}", Instr::ADD, Reg::ESP, 4 * params.children.len()));
+    if !params.children.is_empty() {
+        text.push(format!("{} {}, {}", Instr::ADD, Reg::ESP, 4 * params.children.len()));
+    }
 
     // pop stack frame
     text.push(format!("{} {}, {}", Instr::MOV, Reg::ESP, Reg::EBP));

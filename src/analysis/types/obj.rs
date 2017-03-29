@@ -226,6 +226,7 @@ impl Type {
             };
 
             result.kind.name.token.lexeme = match *operation {
+                TokenKind::FSlash if vrhs == 0 => None,
                 TokenKind::FSlash => Some((vlhs / vrhs).to_string()),
                 TokenKind::Minus => Some((vlhs - vrhs).to_string()),
                 TokenKind::Percent => Some((vlhs % vrhs).to_string()),

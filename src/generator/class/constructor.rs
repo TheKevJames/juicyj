@@ -64,6 +64,16 @@ pub fn go(method: &MethodEnvironment,
 
     // initialize fields
     for &(ref field, ref init) in init_fields {
+        text.push(format!("  ; init {}", field));
+
+        // allocate space
+        text.push(format!("{} {}, {}", Instr::MOV, Reg::EAX, "32"));
+        externs.push(format!("{} {}", Instr::EXTERN, "__malloc"));
+        text.push(format!("{} {}", Instr::CALL, "__malloc"));
+        text.push(format!("{} [{}], {}", Instr::MOV, &field, Reg::EAX));
+        text.push("".to_owned());
+
+        // get initial value
         match call(&init,
                    &EMPTYPARAMS.clone(),
                    &class_label,
@@ -76,7 +86,8 @@ pub fn go(method: &MethodEnvironment,
             Err(e) => return Err(e),
         }
 
-        text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EDI, field));
+        // assign initial value
+        text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EDI, &field));
         text.push(format!("{} [{}], {}", Instr::MOV, Reg::EDI, Reg::EAX));
         text.push("".to_owned());
     }
