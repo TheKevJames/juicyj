@@ -56,6 +56,12 @@ pub fn go(node: &ASTNode,
     match node.token.kind {
         TokenKind::FSlash => {
             text.push(format!("{} {}, {}", Instr::XOR, Reg::EDX, Reg::EDX));
+
+            // catch division by zero
+            text.push(format!("{} {}, {}", Instr::CMP, Reg::ECX, Reg::EDX));
+            text.push(format!("{} {}", Instr::JE, "__exception"));
+            externs.push(format!("{} {}", Instr::EXTERN, "__exception"));
+
             text.push(format!("{} {}", Instr::DIV, Reg::ECX));
         }
         TokenKind::Minus => text.push(format!("{} {}, {}", Instr::SUB, Reg::EAX, Reg::ECX)),

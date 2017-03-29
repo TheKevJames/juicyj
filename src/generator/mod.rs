@@ -38,7 +38,6 @@ impl Generatable for ClassOrInterfaceEnvironment {
         let mut externs: Vec<String> = Vec::new();
         let mut text: Vec<String> = Vec::new();
 
-        // externs.push(format!("extern {}", "__exception"));
         // externs.push(format!("extern {}", "__NATIVEjava.io.OutputStream.nativeWrite"));
 
         let mut init_fields = Vec::new();
