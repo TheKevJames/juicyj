@@ -61,7 +61,7 @@ impl Generatable for ClassOrInterfaceEnvironment {
                     name.children.push(DOT.clone());
                     name.children.push(n.clone());
                     init_fields.push((label.clone(), name.clone()))
-                },
+                }
                 Ok(_) => (),
                 Err(e) => return Err(e),
             }
