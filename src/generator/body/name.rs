@@ -1,16 +1,8 @@
 use generator::asm::Instr;
 use generator::asm::Reg;
 use scanner::ASTNode;
-use scanner::Token;
-use scanner::TokenKind;
 
 use super::statement;
-
-lazy_static! {
-    static ref NAME: ASTNode = {
-        ASTNode { token: Token::new(TokenKind::NonTerminal, Some("Name")), children: Vec::new() }
-    };
-}
 
 pub fn go(node: &ASTNode,
           class_label: &String,

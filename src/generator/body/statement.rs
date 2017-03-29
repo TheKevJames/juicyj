@@ -265,15 +265,7 @@ pub fn go(node: &ASTNode,
                     &mut bss,
                     &mut data)
         }
-        TokenKind::Null => {
-            nullvalue::go(&node,
-                          class_label,
-                          label,
-                          &mut text,
-                          &mut externs,
-                          &mut bss,
-                          &mut data)
-        }
+        TokenKind::Null => nullvalue::go(&mut text),
         TokenKind::NumValue => numvalue::go(&node, &mut text),
         TokenKind::StrValue => strvalue::go(&node, &mut text, &mut data),
         TokenKind::This => this::go(class_label, &mut text, &mut bss),

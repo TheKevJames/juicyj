@@ -1,14 +1,9 @@
-use scanner::ASTNode;
+use generator::asm::Instr;
+use generator::asm::Reg;
 
-pub fn go(node: &ASTNode,
-          class_label: &String,
-          label: &String,
-          mut text: &mut Vec<String>,
-          mut externs: &mut Vec<String>,
-          mut bss: &mut Vec<String>,
-          mut data: &mut Vec<String>)
-          -> Result<(), String> {
-    // TODO<codegen>
-    // Err(format!("NotImplemented Null {:?}", node))
+pub fn go(mut text: &mut Vec<String>) -> Result<(), String> {
+    // TODO<codegen>: actually do this correctly.
+    text.push(format!("{} {}, {}", Instr::MOV, Reg::EAX, "-42"));
+
     Ok(())
 }
