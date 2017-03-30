@@ -20,9 +20,11 @@ pub fn go(node: &ASTNode,
     }
 
     let mut instance = node.children[0].children[0].clone();
-    instance.flatten();
-    instance.children.pop();
-    instance.children.pop();
+    if instance.clone().token.lexeme.unwrap_or("".to_owned()) == "Name" {
+        instance.flatten();
+        instance.children.pop();
+        instance.children.pop();
+    }
 
     // get instance address
     match statement::go(&instance,

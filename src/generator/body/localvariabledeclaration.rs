@@ -21,7 +21,7 @@ lazy_static! {
                     token: Token::new(TokenKind::NonTerminal, Some("DimExpr")),
                     children: vec![
                         ASTNode {
-                            token: Token::new(TokenKind::LBrace, None),
+                            token: Token::new(TokenKind::LBracket, None),
                             children: Vec::new(),
                         },
                     ],
