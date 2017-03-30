@@ -47,11 +47,11 @@ pub fn go(node: &ASTNode,
 
     match node.token.kind {
         TokenKind::And => {
-            text.push(format!("{} {}, {}", Instr::CMP, Reg::EAX, "0"));
+            text.push(format!("{} {}, {}", Instr::CMP, Reg::AL, "0"));
             text.push(format!("{} .{}", Instr::JE, lazylabel));
         }
         TokenKind::Or => {
-            text.push(format!("{} {}, {}", Instr::CMP, Reg::EAX, "0"));
+            text.push(format!("{} {}, {}", Instr::CMP, Reg::AL, "0"));
             text.push(format!("{} .{}", Instr::JNE, lazylabel));
         }
         _ => (),

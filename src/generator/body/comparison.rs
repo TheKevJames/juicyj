@@ -62,22 +62,22 @@ pub fn go(node: &ASTNode,
 
     match node.token.kind {
         TokenKind::Equality => {
-            text.push(format!("  sete {}", "al"));
+            text.push(format!("{} {}", Instr::SETE, Reg::AL));
         }
         TokenKind::NotEqual => {
-            text.push(format!("  setne {}", "al"));
+            text.push(format!("{} {}", Instr::SETNE, Reg::AL));
         }
         TokenKind::LessThan => {
-            text.push(format!("  setl {}", "al"));
+            text.push(format!("{} {}", Instr::SETL, Reg::AL));
         }
         TokenKind::LessThanOrEqual => {
-            text.push(format!("  setle {}", "al"));
+            text.push(format!("{} {}", Instr::SETLE, Reg::AL));
         }
         TokenKind::GreaterThan => {
-            text.push(format!("  setg {}", "al"));
+            text.push(format!("{} {}", Instr::SETG, Reg::AL));
         }
         TokenKind::GreaterThanOrEqual => {
-            text.push(format!("  setge {}", "al"));
+            text.push(format!("{} {}", Instr::SETGE, Reg::AL));
         }
         _ => return Err(format!("attempted to parse {:?} as comparison", node)),
     }

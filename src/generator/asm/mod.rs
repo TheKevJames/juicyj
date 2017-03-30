@@ -29,8 +29,15 @@ pub enum Instr {
     JMP,
     JNE,
     OR,
-    SETE,
     XOR,
+
+    // conditional sets
+    SETE,
+    SETNE,
+    SETL,
+    SETLE,
+    SETG,
+    SETGE,
 }
 
 impl fmt::Display for Instr {
@@ -58,8 +65,14 @@ impl fmt::Display for Instr {
             Instr::JMP => write!(f, "  {}", "jmp"),
             Instr::JNE => write!(f, "  {}", "jne"),
             Instr::OR => write!(f, "  {}", "or"),
-            Instr::SETE => write!(f, "  {}", "sete"),
             Instr::XOR => write!(f, "  {}", "xor"),
+
+            Instr::SETE => write!(f, "  {}", "sete"),
+            Instr::SETNE => write!(f, "  {}", "setne"),
+            Instr::SETL => write!(f, "  {}", "setl"),
+            Instr::SETLE => write!(f, "  {}", "setle"),
+            Instr::SETG => write!(f, "  {}", "setg"),
+            Instr::SETGE => write!(f, "  {}", "setge"),
         }
     }
 }

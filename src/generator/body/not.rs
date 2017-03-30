@@ -29,7 +29,7 @@ pub fn go(node: &ASTNode,
         Err(e) => return Err(e),
     }
 
-    text.push(format!("{} {}, {}", Instr::CMP, Reg::EAX, "0"));
+    text.push(format!("{} {}, {}", Instr::CMP, Reg::AL, "0"));
     text.push(format!("{} {}", Instr::SETE, Reg::AL));
     text.push("".to_owned());
 
