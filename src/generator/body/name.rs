@@ -28,7 +28,8 @@ pub fn go(node: &ASTNode,
         // local
         text.push(format!("  ; {}", variable));
 
-        text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EAX, variable));
+        text.push(format!("{} {}, {}", Instr::MOV, Reg::ESI, variable));
+        text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EAX, Reg::ESI));
         text.push("".to_owned());
 
         return Ok(Some(bss[vidx.unwrap()].1.clone()));
@@ -40,11 +41,9 @@ pub fn go(node: &ASTNode,
         if fidx.is_some() {
             text.push(format!("  ; <this>.{}", field));
 
-            text.push(format!("{} {}, [{}+4*{}]",
-                              Instr::MOV,
-                              Reg::EAX,
-                              Reg::EBX,
-                              fidx.unwrap() + 1));
+            text.push(format!("{} {}, {}", Instr::MOV, Reg::ESI, Reg::EBX));
+            text.push(format!("{} {}, {}", Instr::ADD, Reg::ESI, 4 * (fidx.unwrap() + 1)));
+            text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EAX, Reg::ESI));
             text.push("".to_owned());
 
             return Ok(Some(myfields[fidx.unwrap()].1.clone()));
