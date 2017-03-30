@@ -5,6 +5,8 @@ use generator::asm::Reg;
 use scanner::ASTNode;
 use scanner::TokenKind;
 
+// use super::statement;
+
 pub fn go(node: &ASTNode,
           class_label: &String,
           label: &String,
@@ -14,6 +16,26 @@ pub fn go(node: &ASTNode,
           mut bss: &mut Vec<String>,
           mut data: &mut Vec<String>)
           -> Result<(), String> {
+    // println!("----");
+    // println!("object: {:?}", &node.children[0]);
+
+    // match statement::go(&node.children[0],
+    //               class_label,
+    //               label,
+    //               fields,
+    //               &mut text,
+    //               &mut externs,
+    //               &mut bss,
+    //               &mut data) {
+    //     Ok(_) => (),
+    //     Err(e) => return Err(e),
+    // }
+
+    // println!("success! but what type? {:?}", fields);
+
+    // let field = node.children[2].clone();
+    // println!("{:?}", field);
+
     Ok(())
 
     // if let Some((value, children)) = node.children.split_last() {

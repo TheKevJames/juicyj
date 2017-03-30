@@ -60,6 +60,4 @@ pub fn go(node: &ASTNode,
                   &mut externs,
                   &mut bss,
                   &mut data)
-
-    // Err(format!("NotImplemented Name {:?}", node))
 }
