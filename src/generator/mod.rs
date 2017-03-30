@@ -57,7 +57,6 @@ impl Generatable for ClassOrInterfaceEnvironment {
                 Err(e) => return Err(e),
             };
             match class::field::go(&field,
-                                   &flabel,
                                    &fields,
                                    &mut text,
                                    &mut externs,

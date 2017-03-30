@@ -30,7 +30,6 @@ lazy_static! {
 }
 
 pub fn go(field: &FieldEnvironment,
-          label: &String,
           fields: &HashMap<String, Vec<(String, String)>>,
           mut text: &mut Vec<String>,
           mut externs: &mut Vec<String>,
