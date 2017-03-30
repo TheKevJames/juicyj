@@ -36,7 +36,26 @@ pub fn go(node: &ASTNode,
                         &mut bss,
                         &mut data) {
         Ok(_) => (),
-        Err(e) => return Err(e),
+        Err(_) => {
+            let mut qinstance = node.children[0].children[1].clone();
+            if qinstance.clone().token.lexeme.unwrap_or("".to_owned()) == "Name" {
+                qinstance.flatten();
+                qinstance.children.pop();
+                qinstance.children.pop();
+            }
+
+            match statement::go(&qinstance,
+                                class_label,
+                                label,
+                                fields,
+                                &mut text,
+                                &mut externs,
+                                &mut bss,
+                                &mut data) {
+                Ok(_) => (),
+                Err(e) => return Err(e),
+            }
+        }
     }
 
     call(&Reg::EAX,
