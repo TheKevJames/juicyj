@@ -36,8 +36,8 @@ pub fn go(node: &ASTNode,
     let iflabel = format!("if{}",
                           rand::thread_rng().gen_ascii_chars().take(32).collect::<String>());
 
-    text.push(format!("{} {}, {}", Instr::CMP, Reg::AL, "1"));
-    text.push(format!("{} .{}", Instr::JNE, iflabel));
+    text.push(format!("{} {}, {}", Instr::CMP, Reg::EAX, "0"));
+    text.push(format!("{} .{}", Instr::JE, iflabel));
     text.push("".to_owned());
 
     match statement::go(&node.children[4],

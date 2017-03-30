@@ -55,6 +55,8 @@ pub fn go(node: &ASTNode,
                                fields));
         }
 
+        text.push(format!("  ; .{}", field));
+
         text.push(format!("{} {}, {}", Instr::ADD, Reg::ESI, 4 * (fidx.unwrap() + 1)));
         text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EAX, Reg::ESI));
         text.push("".to_owned());

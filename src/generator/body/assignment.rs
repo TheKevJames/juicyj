@@ -29,6 +29,7 @@ pub fn go(node: &ASTNode,
 
     // store lhs address
     text.push(format!("{} {}", Instr::PUSH, Reg::ESI));
+    text.push("".to_owned());
 
     // get rhs
     match statement::go(&node.children[2],
