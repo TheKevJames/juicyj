@@ -33,8 +33,8 @@ pub fn go(node: &ASTNode,
             // store size
             text.push(format!("{} {}", Instr::PUSH, Reg::EAX));
 
-            // allocate 32 + 32*l bytes
-            text.push(format!("{} {}, {}", Instr::MOV, Reg::ECX, "32"));
+            // allocate 4 + 4*l bytes
+            text.push(format!("{} {}, {}", Instr::MOV, Reg::ECX, "4"));
             text.push(format!("{} {}, {}", Instr::MUL, Reg::EAX, Reg::ECX));
             text.push(format!("{} {}, {}", Instr::ADD, Reg::EAX, Reg::ECX));
 

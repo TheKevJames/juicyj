@@ -45,7 +45,7 @@ pub fn go(method: &MethodEnvironment,
         return Err(format!("could not find own fields for {:?}", class_label));
     }
 
-    let space = 32 * (myfields.unwrap().len() + 1);
+    let space = 4 * (myfields.unwrap().len() + 1);
     text.push(format!("{} {}, {}", Instr::MOV, Reg::EAX, space));
 
     text.push(format!("{} {}", Instr::PUSH, Reg::EBX));
@@ -54,7 +54,7 @@ pub fn go(method: &MethodEnvironment,
     text.push(format!("{} {}", Instr::POP, Reg::EBX));
 
     text.push(format!("{} {}, {}", Instr::MOV, Reg::EBX, Reg::EAX));
-    text.push(format!("{} dword [{}], {}", Instr::MOV, Reg::EBX, "0xBEEF"));
+    text.push(format!("{} dword [{}], {}", Instr::MOV, Reg::EBX, "0xDEADBEEF"));
     text.push("".to_owned());
 
     // call parent constructor
@@ -93,16 +93,8 @@ pub fn go(method: &MethodEnvironment,
             text.push(format!("  ; copy super() fields into this"));
             text.push(format!("{} {}, {}", Instr::MOV, Reg::ESI, Reg::EAX));
             for idx in 0..pfields.unwrap().len() {
-                text.push(format!("{} {}, [{}+{}]",
-                                  Instr::MOV,
-                                  Reg::EAX,
-                                  Reg::ESI,
-                                  32 * (idx + 1)));
-                text.push(format!("{} [{}+{}], {}",
-                                  Instr::MOV,
-                                  Reg::EBX,
-                                  32 * (idx + 1),
-                                  Reg::EAX));
+                text.push(format!("{} {}, [{}+4*{}]", Instr::MOV, Reg::EAX, Reg::ESI, idx + 1));
+                text.push(format!("{} [{}+4*{}], {}", Instr::MOV, Reg::EBX, idx + 1, Reg::EAX));
             }
             text.push("".to_owned());
         }
@@ -141,11 +133,10 @@ pub fn go(method: &MethodEnvironment,
                                fields));
         }
 
-        // store value at offset
-        text.push(format!("{} [{} + {}], {}",
+        text.push(format!("{} [{}+4*{}], {}",
                           Instr::MOV,
                           Reg::EBX,
-                          32 * (fidx.unwrap() + 1),
+                          fidx.unwrap() + 1,
                           Reg::EAX));
         text.push("".to_owned());
     }

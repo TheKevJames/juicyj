@@ -36,8 +36,8 @@ pub fn go(node: &ASTNode,
     };
     bss.push((variable.clone(), vkind.clone()));
 
-    // allocate 32 bytes for lhs
-    text.push(format!("{} {}, {}", Instr::MOV, Reg::EAX, "32"));
+    // allocate 4 bytes for lhs
+    text.push(format!("{} {}, {}", Instr::MOV, Reg::EAX, "4"));
 
     text.push(format!("{} {}", Instr::PUSH, Reg::EBX));
     externs.push(format!("{} {}", Instr::EXTERN, "__malloc"));

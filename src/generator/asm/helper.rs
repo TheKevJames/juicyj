@@ -90,7 +90,7 @@ pub fn call(method: &ASTNode,
 
     // call method
     text.push(format!("{} {}", Instr::PUSH, Reg::EBX));
-    // TODO<codegen>: push called this, not own this
+    // TODO<codegen>: push correct "this" when calling other class method
     text.push(format!("{} {}", Instr::PUSH, Reg::EBX));
     externs.push(format!("{} {}", Instr::EXTERN, method));
     text.push(format!("{} {}", Instr::CALL, method));

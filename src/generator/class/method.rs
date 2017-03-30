@@ -67,7 +67,7 @@ pub fn get_args(parameters: &Vec<VariableEnvironment>,
                 mut bss: &mut Vec<(String, String)>)
                 -> Result<(), String> {
     text.push(format!("  ; get this"));
-    text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EBX, Reg::ESP));
+    text.push(format!("{} {}, [{}+4]", Instr::MOV, Reg::EBX, Reg::ESP));
     text.push("".to_owned());
 
     if parameters.is_empty() {
@@ -88,7 +88,7 @@ pub fn get_args(parameters: &Vec<VariableEnvironment>,
 
         text.push(format!("{} {}, {}", Instr::MOV, Reg::ESI, Reg::ESP));
         // "this", "this", "esp", "args.."
-        text.push(format!("{} {}, {}", Instr::ADD, Reg::ESI, 4 * (idx + 3)));
+        text.push(format!("{} {}, {}", Instr::ADD, Reg::ESI, 4 * (idx + 4)));
         text.push(format!("{} [{}], {}", Instr::MOV, variable, Reg::ESI));
     }
     text.push("".to_owned());

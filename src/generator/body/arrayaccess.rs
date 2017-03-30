@@ -29,7 +29,7 @@ pub fn go(node: &ASTNode,
     }
 
     // increment index to address offset
-    text.push(format!("{} {}, {}", Instr::MOV, Reg::ECX, "32"));
+    text.push(format!("{} {}, {}", Instr::MOV, Reg::ECX, "4"));
     text.push(format!("{} {}, {}", Instr::MUL, Reg::EAX, Reg::ECX));
     text.push(format!("{} {}, {}", Instr::ADD, Reg::EAX, Reg::ECX));
 
