@@ -23,10 +23,10 @@ lazy_static! {
 pub fn go(method: &MethodEnvironment,
           class_label: &String,
           init_fields: &Vec<(String, ASTNode)>,
-          fields: &HashMap<String, Vec<String>>,
+          fields: &HashMap<String, Vec<(String, String)>>,
           mut text: &mut Vec<String>,
           mut externs: &mut Vec<String>,
-          mut bss: &mut Vec<String>,
+          mut bss: &mut Vec<(String, String)>,
           mut data: &mut Vec<String>)
           -> Result<(), String> {
     let label = match method::get_label(method, &class_label, &mut text, &mut externs) {
@@ -134,7 +134,7 @@ pub fn go(method: &MethodEnvironment,
 
         let mut key = flookup.1.to_owned();
         key.remove(0);
-        let fidx = fclass.unwrap().iter().position(|fld| fld == &key);
+        let fidx = fclass.unwrap().iter().position(|fld| fld.0 == key);
         if fidx.is_none() {
             return Err(format!("could not find matching field for {:?} in {:?}",
                                field,

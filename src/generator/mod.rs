@@ -26,19 +26,19 @@ lazy_static! {
 trait Generatable {
     fn generate(&self,
                 label: &String,
-                fields: &HashMap<String, Vec<String>>)
+                fields: &HashMap<String, Vec<(String, String)>>)
                 -> Result<String, String>;
 }
 
 impl Generatable for ClassOrInterfaceEnvironment {
     fn generate(&self,
                 label: &String,
-                fields: &HashMap<String, Vec<String>>)
+                fields: &HashMap<String, Vec<(String, String)>>)
                 -> Result<String, String> {
-        let mut bss: Vec<String> = Vec::new();
-        let mut data: Vec<String> = Vec::new();
-        let mut externs: Vec<String> = Vec::new();
-        let mut text: Vec<String> = Vec::new();
+        let mut bss = Vec::new();
+        let mut data = Vec::new();
+        let mut externs = Vec::new();
+        let mut text = Vec::new();
 
         // externs.push(format!("extern {}", "__NATIVEjava.io.OutputStream.nativeWrite"));
 
@@ -142,14 +142,22 @@ pub fn generate_or_exit(env: &Environment) {
         fields.insert(label,
                       kind.fields
                           .iter()
-                          .map(|f| match f.name.to_label() {
-                              Ok(f) => f,
+                          .map(|fld| match fld.name.to_label() {
+                              Ok(n) => {
+                                  match fld.kind.to_label() {
+                                      Ok(k) => (n, k),
+                                      Err(e) => {
+                                          println!("{:?}", e);
+                                          std::process::exit(42);
+                                      }
+                                  }
+                              }
                               Err(e) => {
                                   println!("{:?}", e);
                                   std::process::exit(42);
                               }
                           })
-                          .collect::<Vec<String>>());
+                          .collect::<Vec<(String, String)>>());
     }
 
     for kind in &env.kinds {

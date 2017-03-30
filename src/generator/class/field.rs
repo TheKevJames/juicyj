@@ -31,10 +31,10 @@ lazy_static! {
 
 pub fn go(field: &FieldEnvironment,
           label: &String,
-          fields: &HashMap<String, Vec<String>>,
+          fields: &HashMap<String, Vec<(String, String)>>,
           mut text: &mut Vec<String>,
           mut externs: &mut Vec<String>,
-          mut bss: &mut Vec<String>,
+          mut bss: &mut Vec<(String, String)>,
           mut data: &mut Vec<String>)
           -> Result<Option<ASTNode>, String> {
     let mut init = field.name.clone();

@@ -9,12 +9,12 @@ use super::statement;
 pub fn go(node: &ASTNode,
           class_label: &String,
           label: &String,
-          fields: &HashMap<String, Vec<String>>,
+          fields: &HashMap<String, Vec<(String, String)>>,
           mut text: &mut Vec<String>,
           mut externs: &mut Vec<String>,
-          mut bss: &mut Vec<String>,
+          mut bss: &mut Vec<(String, String)>,
           mut data: &mut Vec<String>)
-          -> Result<(), String> {
+          -> Result<Option<String>, String> {
     let kind = match node.children[0].to_param() {
         Ok(p) => p,
         Err(e) => return Err(e),
@@ -30,7 +30,11 @@ pub fn go(node: &ASTNode,
         Ok(l) => format!("{}.{}", label, l),
         Err(e) => return Err(e),
     };
-    bss.push(variable.clone());
+    let vkind = match node.children[0].to_label() {
+        Ok(k) => k,
+        Err(e) => return Err(e),
+    };
+    bss.push((variable.clone(), vkind.clone()));
 
     // allocate 32 bytes for lhs
     text.push(format!("{} {}, {}", Instr::MOV, Reg::EAX, "32"));
@@ -60,5 +64,6 @@ pub fn go(node: &ASTNode,
     text.push(format!("{} [{}], {}", Instr::MOV, Reg::EDI, Reg::EAX));
     text.push("".to_owned());
 
-    Ok(())
+    // TODO<codegen>: kind is either lhs kind or null
+    Ok(None)
 }

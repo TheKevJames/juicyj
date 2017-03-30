@@ -32,12 +32,12 @@ use super::whilestatement;
 pub fn go(node: &ASTNode,
           class_label: &String,
           label: &String,
-          fields: &HashMap<String, Vec<String>>,
+          fields: &HashMap<String, Vec<(String, String)>>,
           mut text: &mut Vec<String>,
           mut externs: &mut Vec<String>,
-          mut bss: &mut Vec<String>,
+          mut bss: &mut Vec<(String, String)>,
           mut data: &mut Vec<String>)
-          -> Result<(), String> {
+          -> Result<Option<String>, String> {
     match node.token.kind {
         TokenKind::NonTerminal => {
             match node.token.lexeme {
@@ -105,7 +105,7 @@ pub fn go(node: &ASTNode,
                             Err(e) => return Err(e),
                         }
                     }
-                    Ok(())
+                    Ok(None)
                 }
                 Some(ref l) if l == "CastExpression" => {
                     castexpression::go(&node,
@@ -218,7 +218,7 @@ pub fn go(node: &ASTNode,
                                        &mut data)
                 }
 
-                Some(ref l) if l == "Block" => Ok(()),
+                Some(ref l) if l == "Block" => Ok(None),
                 _ => Err(format!("attempted to generate code for {:?}", node)),
             }
         }
@@ -294,7 +294,7 @@ pub fn go(node: &ASTNode,
         TokenKind::Null => nullvalue::go(&mut text),
         TokenKind::NumValue => numvalue::go(&node, &mut text),
         TokenKind::StrValue => strvalue::go(&node, &mut text, &mut data),
-        TokenKind::This => this::go(class_label, &mut text, &mut bss),
+        TokenKind::This => this::go(class_label, &mut text),
 
         // TODO<codegen>: prune AST
         TokenKind::Boolean | TokenKind::Char | TokenKind::Byte | TokenKind::Int |

@@ -9,12 +9,12 @@ use super::statement;
 pub fn go(node: &ASTNode,
           class_label: &String,
           label: &String,
-          fields: &HashMap<String, Vec<String>>,
+          fields: &HashMap<String, Vec<(String, String)>>,
           mut text: &mut Vec<String>,
           mut externs: &mut Vec<String>,
-          mut bss: &mut Vec<String>,
+          mut bss: &mut Vec<(String, String)>,
           mut data: &mut Vec<String>)
-          -> Result<(), String> {
+          -> Result<Option<String>, String> {
     match node.children[1].token.lexeme {
         Some(ref l) if l == "DimExpr" => {
             // resolve array length
@@ -30,6 +30,9 @@ pub fn go(node: &ASTNode,
                 Err(e) => return Err(e),
             }
 
+            // store size
+            text.push(format!("{} {}", Instr::PUSH, Reg::EAX));
+
             // allocate 32 + 32*l bytes
             text.push(format!("{} {}, {}", Instr::MOV, Reg::ECX, "32"));
             text.push(format!("{} {}, {}", Instr::MUL, Reg::EAX, Reg::ECX));
@@ -39,6 +42,11 @@ pub fn go(node: &ASTNode,
             externs.push(format!("{} {}", Instr::EXTERN, "__malloc"));
             text.push(format!("{} {}", Instr::CALL, "__malloc"));
             text.push(format!("{} {}", Instr::POP, Reg::EBX));
+
+            // set size in array memory
+            text.push(format!("{} {}", Instr::POP, Reg::ECX));
+            text.push(format!("{} {}, [{}]", Instr::MOV, Reg::ESI, Reg::EAX));
+            text.push(format!("{} [{}], {}", Instr::MOV, Reg::ESI, Reg::ECX));
         }
         Some(ref l) if l == "Dim" => return Err(format!("found Dim in ArrayCreation {:?}", node)),
         _ => {
@@ -47,5 +55,6 @@ pub fn go(node: &ASTNode,
         }
     }
 
-    Ok(())
+    // TODO<codegen>: kind is ArrayType of subexpr
+    Ok(None)
 }

@@ -17,12 +17,12 @@ lazy_static! {
 pub fn go(node: &ASTNode,
           class_label: &String,
           label: &String,
-          fields: &HashMap<String, Vec<String>>,
+          fields: &HashMap<String, Vec<(String, String)>>,
           mut text: &mut Vec<String>,
           mut externs: &mut Vec<String>,
-          mut bss: &mut Vec<String>,
+          mut bss: &mut Vec<(String, String)>,
           mut data: &mut Vec<String>)
-          -> Result<(), String> {
+          -> Result<Option<String>, String> {
     let params = match node.children.len() {
         2 => node.children[1].clone(),
         _ => EMPTYPARAMS.clone(),

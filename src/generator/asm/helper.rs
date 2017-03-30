@@ -38,12 +38,12 @@ pub fn call(method: &ASTNode,
             params: &ASTNode,
             class_label: &String,
             label: &String,
-            fields: &HashMap<String, Vec<String>>,
+            fields: &HashMap<String, Vec<(String, String)>>,
             mut text: &mut Vec<String>,
             mut externs: &mut Vec<String>,
-            mut bss: &mut Vec<String>,
+            mut bss: &mut Vec<(String, String)>,
             mut data: &mut Vec<String>)
-            -> Result<(), String> {
+            -> Result<Option<String>, String> {
     let method = match build_method(&method, &params) {
         Ok(m) => m,
         Err(e) => return Err(e),
@@ -107,5 +107,6 @@ pub fn call(method: &ASTNode,
     text.push(format!("{} {}", Instr::POP, Reg::EBP));
     text.push("".to_owned());
 
-    Ok(())
+    // TODO<codegen>: kind is return_type of method
+    Ok(None)
 }

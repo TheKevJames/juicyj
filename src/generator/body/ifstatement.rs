@@ -13,12 +13,12 @@ use super::statement;
 pub fn go(node: &ASTNode,
           class_label: &String,
           label: &String,
-          fields: &HashMap<String, Vec<String>>,
+          fields: &HashMap<String, Vec<(String, String)>>,
           mut text: &mut Vec<String>,
           mut externs: &mut Vec<String>,
-          mut bss: &mut Vec<String>,
+          mut bss: &mut Vec<(String, String)>,
           mut data: &mut Vec<String>)
-          -> Result<(), String> {
+          -> Result<Option<String>, String> {
     text.push(format!("  ; if"));
 
     match statement::go(&node.children[2],
@@ -54,5 +54,5 @@ pub fn go(node: &ASTNode,
     text.push(format!(".{}:", iflabel));
     text.push("".to_owned());
 
-    Ok(())
+    Ok(None)
 }

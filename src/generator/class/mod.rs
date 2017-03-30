@@ -6,7 +6,7 @@ pub mod method;
 
 pub fn code(text: &Vec<String>,
             externs: &Vec<String>,
-            bss: &Vec<String>,
+            bss: &Vec<(String, String)>,
             data: &Vec<String>)
             -> String {
     let mut generated = Vec::new();
@@ -37,11 +37,10 @@ pub fn code(text: &Vec<String>,
     generated.push(text.join("\n"));
 
     if !bss.is_empty() {
-        let mut bss = bss.clone();
+        let mut bss: Vec<String> = bss.iter().map(|v| format!("{}: resb {}", v.0, "16")).collect();
         bss.sort();
         bss.dedup();
 
-        bss = bss.iter().map(|v| format!("{}: resb {}", v, "16")).collect();
         bss.insert(0, format!("{} .{}", Instr::SECTION, "bss"));
 
         generated.push(bss.join("\n"));

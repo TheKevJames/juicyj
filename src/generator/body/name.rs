@@ -9,12 +9,12 @@ use super::statement;
 pub fn go(node: &ASTNode,
           class_label: &String,
           label: &String,
-          fields: &HashMap<String, Vec<String>>,
+          fields: &HashMap<String, Vec<(String, String)>>,
           mut text: &mut Vec<String>,
           mut externs: &mut Vec<String>,
-          mut bss: &mut Vec<String>,
+          mut bss: &mut Vec<(String, String)>,
           mut data: &mut Vec<String>)
-          -> Result<(), String> {
+          -> Result<Option<String>, String> {
     let mut node = node.clone();
     node.flatten();
 
@@ -23,7 +23,8 @@ pub fn go(node: &ASTNode,
         Err(e) => return Err(e),
     };
 
-    if bss.contains(&variable) {
+    let vidx = bss.iter().position(|v| v.0 == variable);
+    if vidx.is_some() {
         // local
         text.push(format!("  ; {}", variable));
 
@@ -31,21 +32,21 @@ pub fn go(node: &ASTNode,
         text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EAX, Reg::ESI));
         text.push("".to_owned());
 
-        return Ok(());
+        return Ok(Some(bss[vidx.unwrap()].1.clone()));
     }
 
     if let Some(myfields) = fields.get(class_label) {
         // implicit-this field
-        let fidx = myfields.iter().position(|fld| fld == &field);
+        let fidx = myfields.iter().position(|fld| fld.0 == field);
         if fidx.is_some() {
             text.push(format!("  ; <this>.{}", field));
 
             text.push(format!("{} {}, {}", Instr::MOV, Reg::ESI, Reg::EBX));
-            text.push(format!("{} {}, {}", Instr::ADD, Reg::ESI, 32 * fidx.unwrap()));
+            text.push(format!("{} {}, {}", Instr::ADD, Reg::ESI, 32 * (fidx.unwrap() + 1)));
             text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EAX, Reg::ESI));
             text.push("".to_owned());
 
-            return Ok(());
+            return Ok(Some(myfields[fidx.unwrap()].1.clone()));
         }
     }
 

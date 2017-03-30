@@ -8,12 +8,12 @@ use super::statement;
 pub fn go(node: &ASTNode,
           class_label: &String,
           label: &String,
-          fields: &HashMap<String, Vec<String>>,
+          fields: &HashMap<String, Vec<(String, String)>>,
           mut text: &mut Vec<String>,
           mut externs: &mut Vec<String>,
-          mut bss: &mut Vec<String>,
+          mut bss: &mut Vec<(String, String)>,
           mut data: &mut Vec<String>)
-          -> Result<(), String> {
+          -> Result<Option<String>, String> {
     match node.children.len() {
         3 => {
             match statement::go(&node.children[1],
@@ -36,5 +36,6 @@ pub fn go(node: &ASTNode,
     text.push(format!("{}", Instr::RET));
     text.push("".to_owned());
 
-    Ok(())
+    // TODO<codegen>: kind is null or kind of child
+    Ok(None)
 }

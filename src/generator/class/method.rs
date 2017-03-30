@@ -64,7 +64,7 @@ fn build_entrypoint(class_label: &String,
 pub fn get_args(parameters: &Vec<VariableEnvironment>,
                 label: &String,
                 mut text: &mut Vec<String>,
-                mut bss: &mut Vec<String>)
+                mut bss: &mut Vec<(String, String)>)
                 -> Result<(), String> {
     text.push(format!("  ; get this"));
     text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EBX, Reg::ESP));
@@ -80,7 +80,11 @@ pub fn get_args(parameters: &Vec<VariableEnvironment>,
             Ok(l) => format!("{}.{}", label, l),
             Err(e) => return Err(e),
         };
-        bss.push(variable.clone());
+        let pkind = match param.kind.to_label() {
+            Ok(k) => k,
+            Err(e) => return Err(e),
+        };
+        bss.push((variable.clone(), pkind.clone()));
 
         text.push(format!("{} {}, {}", Instr::MOV, Reg::ESI, Reg::ESP));
         // "this", "this", "esp", "args.."
@@ -110,10 +114,10 @@ pub fn get_label(method: &MethodEnvironment,
 
 pub fn go(method: &MethodEnvironment,
           class_label: &String,
-          fields: &HashMap<String, Vec<String>>,
+          fields: &HashMap<String, Vec<(String, String)>>,
           mut text: &mut Vec<String>,
           mut externs: &mut Vec<String>,
-          mut bss: &mut Vec<String>,
+          mut bss: &mut Vec<(String, String)>,
           mut data: &mut Vec<String>)
           -> Result<(), String> {
     let label = match get_label(method, &class_label, &mut text, &mut externs) {
