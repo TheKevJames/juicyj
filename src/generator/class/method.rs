@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use analysis::MethodEnvironment;
 use analysis::VariableEnvironment;
 use generator::asm::Instr;
@@ -33,7 +35,10 @@ fn build_entrypoint(class_label: &String,
 
     text.push(format!("{} {}", Instr::PUSH, Reg::EBP));
     text.push(format!("{} {}, {}", Instr::MOV, Reg::EBP, Reg::ESP));
+
+    text.push(format!("{} {}", Instr::PUSH, Reg::EAX)); // fake this
     text.push(format!("{} {}", Instr::CALL, constructor_label));
+
     text.push(format!("{} {}, {}", Instr::MOV, Reg::ESP, Reg::EBP));
     text.push(format!("{} {}", Instr::POP, Reg::EBP));
     text.push("".to_owned());
@@ -41,7 +46,10 @@ fn build_entrypoint(class_label: &String,
     // call this method
     text.push(format!("{} {}", Instr::PUSH, Reg::EBP));
     text.push(format!("{} {}, {}", Instr::MOV, Reg::EBP, Reg::ESP));
+
+    text.push(format!("{} {}", Instr::PUSH, Reg::EAX)); // this
     text.push(format!("{} {}", Instr::CALL, label));
+
     text.push(format!("{} {}, {}", Instr::MOV, Reg::ESP, Reg::EBP));
     text.push(format!("{} {}", Instr::POP, Reg::EBP));
     text.push("".to_owned());
@@ -58,6 +66,10 @@ pub fn get_args(parameters: &Vec<VariableEnvironment>,
                 mut text: &mut Vec<String>,
                 mut bss: &mut Vec<String>)
                 -> Result<(), String> {
+    text.push(format!("  ; get this"));
+    text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EBX, Reg::ESP));
+    text.push("".to_owned());
+
     if parameters.is_empty() {
         return Ok(());
     }
@@ -71,7 +83,8 @@ pub fn get_args(parameters: &Vec<VariableEnvironment>,
         bss.push(variable.clone());
 
         text.push(format!("{} {}, {}", Instr::MOV, Reg::ESI, Reg::ESP));
-        text.push(format!("{} {}, {}", Instr::ADD, Reg::ESI, 4 * (idx + 1)));
+        // "this", "this", "esp", "args.."
+        text.push(format!("{} {}, {}", Instr::ADD, Reg::ESI, 4 * (idx + 3)));
         text.push(format!("{} [{}], {}", Instr::MOV, variable, Reg::ESI));
     }
     text.push("".to_owned());
@@ -97,6 +110,7 @@ pub fn get_label(method: &MethodEnvironment,
 
 pub fn go(method: &MethodEnvironment,
           class_label: &String,
+          fields: &HashMap<String, Vec<String>>,
           mut text: &mut Vec<String>,
           mut externs: &mut Vec<String>,
           mut bss: &mut Vec<String>,
@@ -117,6 +131,7 @@ pub fn go(method: &MethodEnvironment,
         match body::go(&b,
                        &class_label,
                        &label,
+                       &fields,
                        &mut text,
                        &mut externs,
                        &mut bss,
@@ -125,7 +140,6 @@ pub fn go(method: &MethodEnvironment,
             Err(e) => return Err(e),
         }
     }
-    // TODO<codegen>: else error?
 
     if method.modifiers.contains(&*STATIC) && method.return_type == *INTEGER &&
        method.name == *TEST {

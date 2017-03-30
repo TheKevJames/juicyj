@@ -7,6 +7,7 @@ mod body;
 mod class;
 
 use std;
+use std::collections::HashMap;
 use std::fs;
 use std::io::Write;
 
@@ -23,16 +24,17 @@ lazy_static! {
 }
 
 trait Generatable {
-    fn generate(&self) -> Result<String, String>;
+    fn generate(&self,
+                label: &String,
+                fields: &HashMap<String, Vec<String>>)
+                -> Result<String, String>;
 }
 
 impl Generatable for ClassOrInterfaceEnvironment {
-    fn generate(&self) -> Result<String, String> {
-        let class_label = match self.name.to_label() {
-            Ok(l) => l,
-            Err(e) => return Err(e),
-        };
-
+    fn generate(&self,
+                label: &String,
+                fields: &HashMap<String, Vec<String>>)
+                -> Result<String, String> {
         let mut bss: Vec<String> = Vec::new();
         let mut data: Vec<String> = Vec::new();
         let mut externs: Vec<String> = Vec::new();
@@ -50,16 +52,22 @@ impl Generatable for ClassOrInterfaceEnvironment {
             let mut field = field.clone();
             field.name = name;
 
-            let label = match field.name.to_label() {
+            let flabel = match field.name.to_label() {
                 Ok(l) => l,
                 Err(e) => return Err(e),
             };
-            match class::field::go(&field, &label, &mut text, &mut externs, &mut bss, &mut data) {
+            match class::field::go(&field,
+                                   &flabel,
+                                   &fields,
+                                   &mut text,
+                                   &mut externs,
+                                   &mut bss,
+                                   &mut data) {
                 Ok(Some(n)) => {
                     let mut name = field.name.clone();
                     name.children.push(DOT.clone());
                     name.children.push(n.clone());
-                    init_fields.push((label.clone(), name.clone()))
+                    init_fields.push((flabel.clone(), name.clone()))
                 }
                 Ok(_) => (),
                 Err(e) => return Err(e),
@@ -68,8 +76,9 @@ impl Generatable for ClassOrInterfaceEnvironment {
 
         for constructor in &self.constructors {
             match class::constructor::go(&constructor,
-                                         &class_label,
+                                         &label,
                                          &init_fields,
+                                         &fields,
                                          &mut text,
                                          &mut externs,
                                          &mut bss,
@@ -81,7 +90,8 @@ impl Generatable for ClassOrInterfaceEnvironment {
 
         for method in &self.methods {
             match class::method::go(&method,
-                                    &class_label,
+                                    &label,
+                                    &fields,
                                     &mut text,
                                     &mut externs,
                                     &mut bss,
@@ -119,6 +129,29 @@ pub fn generate_or_exit(env: &Environment) {
         }
     }
 
+    let mut fields = HashMap::new();
+    for kind in &env.kinds {
+        let label = match kind.name.to_label() {
+            Ok(l) => l,
+            Err(e) => {
+                println!("{:?}", e);
+                std::process::exit(42);
+            }
+        };
+
+        fields.insert(label,
+                      kind.fields
+                          .iter()
+                          .map(|f| match f.name.to_label() {
+                              Ok(f) => f,
+                              Err(e) => {
+                                  println!("{:?}", e);
+                                  std::process::exit(42);
+                              }
+                          })
+                          .collect::<Vec<String>>());
+    }
+
     for kind in &env.kinds {
         let name = kind.name
             .children
@@ -135,7 +168,15 @@ pub fn generate_or_exit(env: &Environment) {
             }
         };
 
-        let source = match kind.generate() {
+        let label = match kind.name.to_label() {
+            Ok(l) => l,
+            Err(e) => {
+                println!("{:?}", e);
+                std::process::exit(42);
+            }
+        };
+
+        let source = match kind.generate(&label, &fields) {
             Ok(s) => s,
             Err(e) => {
                 println!("{}", e);

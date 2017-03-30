@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use analysis::MethodEnvironment;
 use generator::asm::Instr;
 use generator::asm::Reg;
@@ -21,6 +23,7 @@ lazy_static! {
 pub fn go(method: &MethodEnvironment,
           class_label: &String,
           init_fields: &Vec<(String, ASTNode)>,
+          fields: &HashMap<String, Vec<String>>,
           mut text: &mut Vec<String>,
           mut externs: &mut Vec<String>,
           mut bss: &mut Vec<String>,
@@ -36,29 +39,72 @@ pub fn go(method: &MethodEnvironment,
         Err(e) => return Err(e),
     }
 
-    // allocate 32 bytes for this
-    let this = format!("{}.THIS", class_label);
-    bss.push(this.clone());
+    // allocate 32 bytes for this and 32 bytes for each field
+    let myfields = fields.get(class_label);
+    if myfields.is_none() {
+        return Err(format!("could not find own fields for {:?}", class_label));
+    }
 
-    text.push(format!("{} {}, {}", Instr::MOV, Reg::EAX, "32"));
+    let space = 32 * (myfields.unwrap().len() + 1);
+    text.push(format!("{} {}, {}", Instr::MOV, Reg::EAX, space));
+
+    text.push(format!("{} {}", Instr::PUSH, Reg::EBX));
     externs.push(format!("{} {}", Instr::EXTERN, "__malloc"));
     text.push(format!("{} {}", Instr::CALL, "__malloc"));
-    text.push(format!("{} [{}], {}", Instr::MOV, &this, Reg::EAX));
+    text.push(format!("{} {}", Instr::POP, Reg::EBX));
+
+    text.push(format!("{} {}, {}", Instr::MOV, Reg::EBX, Reg::EAX));
+    text.push(format!("{} dword [{}], {}", Instr::MOV, Reg::EBX, "0xBEEF"));
     text.push("".to_owned());
 
     // call parent constructor
     if let Some(p) = method.parent.clone() {
         text.push(format!("  ; implicit super()"));
+        let mut parent = p.clone();
+        parent.children.pop();
+        parent.children.pop();
+
+        let plabel = match parent.to_label() {
+            Ok(l) => l,
+            Err(e) => return Err(e),
+        };
+
         match call(&p,
                    &EMPTYPARAMS.clone(),
                    &class_label,
                    &label,
+                   &fields,
                    &mut text,
                    &mut externs,
                    &mut bss,
                    &mut data) {
             Ok(_) => (),
             Err(e) => return Err(e),
+        }
+
+        let pfields = fields.get(&plabel);
+        if pfields.is_none() {
+            return Err(format!("could not find super class fields for {:?}", p));
+        }
+
+        let numpfields = pfields.unwrap().len();
+        if numpfields != 0 {
+            // insert parent fields into local memory allocation
+            text.push(format!("  ; copy super() fields into this"));
+            text.push(format!("{} {}, {}", Instr::MOV, Reg::ESI, Reg::EAX));
+            for idx in 0..pfields.unwrap().len() {
+                text.push(format!("{} {}, [{}+{}]",
+                                  Instr::MOV,
+                                  Reg::EAX,
+                                  Reg::ESI,
+                                  32 * (idx + 1)));
+                text.push(format!("{} [{}+{}], {}",
+                                  Instr::MOV,
+                                  Reg::EBX,
+                                  32 * (idx + 1),
+                                  Reg::EAX));
+            }
+            text.push("".to_owned());
         }
     }
 
@@ -66,18 +112,12 @@ pub fn go(method: &MethodEnvironment,
     for &(ref field, ref init) in init_fields {
         text.push(format!("  ; init {}", field));
 
-        // allocate space
-        text.push(format!("{} {}, {}", Instr::MOV, Reg::EAX, "32"));
-        externs.push(format!("{} {}", Instr::EXTERN, "__malloc"));
-        text.push(format!("{} {}", Instr::CALL, "__malloc"));
-        text.push(format!("{} [{}], {}", Instr::MOV, &field, Reg::EAX));
-        text.push("".to_owned());
-
         // get initial value
         match call(&init,
                    &EMPTYPARAMS.clone(),
                    &class_label,
                    &label,
+                   &fields,
                    &mut text,
                    &mut externs,
                    &mut bss,
@@ -86,9 +126,27 @@ pub fn go(method: &MethodEnvironment,
             Err(e) => return Err(e),
         }
 
-        // assign initial value
-        text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EDI, &field));
-        text.push(format!("{} [{}], {}", Instr::MOV, Reg::EDI, Reg::EAX));
+        let flookup = field.split_at(field.rfind(".").unwrap());
+        let fclass = fields.get(flookup.0);
+        if fclass.is_none() {
+            return Err(format!("could not find fields for {:?}", field));
+        }
+
+        let mut key = flookup.1.to_owned();
+        key.remove(0);
+        let fidx = fclass.unwrap().iter().position(|fld| fld == &key);
+        if fidx.is_none() {
+            return Err(format!("could not find matching field for {:?} in {:?}",
+                               field,
+                               fields));
+        }
+
+        // store value at offset
+        text.push(format!("{} [{} + {}], {}",
+                          Instr::MOV,
+                          Reg::EBX,
+                          32 * (fidx.unwrap() + 1),
+                          Reg::EAX));
         text.push("".to_owned());
     }
 
@@ -97,6 +155,7 @@ pub fn go(method: &MethodEnvironment,
         match body::go(&b,
                        &class_label,
                        &label,
+                       &fields,
                        &mut text,
                        &mut externs,
                        &mut bss,
@@ -105,11 +164,10 @@ pub fn go(method: &MethodEnvironment,
             Err(e) => return Err(e),
         }
     }
-    // TODO<codegen>: else error?
 
     // return this
-    text.push(format!("{} {}, [{}]", Instr::MOV, Reg::ESI, &this));
-    text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EAX, Reg::ESI));
+    text.push(format!("{} {}, {}", Instr::MOV, Reg::ESI, Reg::EBX));
+    text.push(format!("{} {}, {}", Instr::MOV, Reg::EAX, Reg::EBX)); // TODO<codegen>: verify
     text.push(format!("{}", Instr::RET));
     text.push("".to_owned());
 

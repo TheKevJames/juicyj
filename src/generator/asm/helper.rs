@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use generator::body;
 use scanner::ASTNode;
 use scanner::TokenKind;
@@ -36,6 +38,7 @@ pub fn call(method: &ASTNode,
             params: &ASTNode,
             class_label: &String,
             label: &String,
+            fields: &HashMap<String, Vec<String>>,
             mut text: &mut Vec<String>,
             mut externs: &mut Vec<String>,
             mut bss: &mut Vec<String>,
@@ -74,6 +77,7 @@ pub fn call(method: &ASTNode,
         match body::go(&param,
                        class_label,
                        label,
+                       fields,
                        &mut text,
                        &mut externs,
                        &mut bss,
@@ -85,13 +89,18 @@ pub fn call(method: &ASTNode,
     }
 
     // call method
+    text.push(format!("{} {}", Instr::PUSH, Reg::EBX));
+    // TODO<codegen>: push called this, not own this
+    text.push(format!("{} {}", Instr::PUSH, Reg::EBX));
     externs.push(format!("{} {}", Instr::EXTERN, method));
     text.push(format!("{} {}", Instr::CALL, method));
+    text.push(format!("{} {}", Instr::POP, Reg::EBX));
 
-    // pop stack by number of params
-    if !params.children.is_empty() {
-        text.push(format!("{} {}, {}", Instr::ADD, Reg::ESP, 4 * params.children.len()));
-    }
+    // pop stack by number of params (+ "this")
+    text.push(format!("{} {}, {}",
+                      Instr::ADD,
+                      Reg::ESP,
+                      4 * (params.children.len() + 1)));
 
     // pop stack frame
     text.push(format!("{} {}, {}", Instr::MOV, Reg::ESP, Reg::EBP));

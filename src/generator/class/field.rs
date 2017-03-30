@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use analysis::FieldEnvironment;
 use analysis::MethodEnvironment;
 use scanner::ASTNode;
@@ -29,13 +31,12 @@ lazy_static! {
 
 pub fn go(field: &FieldEnvironment,
           label: &String,
+          fields: &HashMap<String, Vec<String>>,
           mut text: &mut Vec<String>,
           mut externs: &mut Vec<String>,
           mut bss: &mut Vec<String>,
           mut data: &mut Vec<String>)
           -> Result<Option<ASTNode>, String> {
-    bss.push(label.clone());
-
     let mut init = field.name.clone();
     init.flatten();
     let init_label = match init.to_label() {
@@ -58,6 +59,7 @@ pub fn go(field: &FieldEnvironment,
     // build init method
     match method::go(&init_method,
                      &init_label,
+                     &fields,
                      &mut text,
                      &mut externs,
                      &mut bss,

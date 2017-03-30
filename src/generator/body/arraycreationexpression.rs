@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use generator::asm::Instr;
 use generator::asm::Reg;
 use scanner::ASTNode;
@@ -7,6 +9,7 @@ use super::statement;
 pub fn go(node: &ASTNode,
           class_label: &String,
           label: &String,
+          fields: &HashMap<String, Vec<String>>,
           mut text: &mut Vec<String>,
           mut externs: &mut Vec<String>,
           mut bss: &mut Vec<String>,
@@ -18,6 +21,7 @@ pub fn go(node: &ASTNode,
             match statement::go(&node.children[1].children[1],
                                 class_label,
                                 label,
+                                fields,
                                 &mut text,
                                 &mut externs,
                                 &mut bss,
@@ -30,8 +34,11 @@ pub fn go(node: &ASTNode,
             text.push(format!("{} {}, {}", Instr::MOV, Reg::ECX, "32"));
             text.push(format!("{} {}, {}", Instr::MUL, Reg::EAX, Reg::ECX));
             text.push(format!("{} {}, {}", Instr::ADD, Reg::EAX, Reg::ECX));
+
+            text.push(format!("{} {}", Instr::PUSH, Reg::EBX));
             externs.push(format!("{} {}", Instr::EXTERN, "__malloc"));
             text.push(format!("{} {}", Instr::CALL, "__malloc"));
+            text.push(format!("{} {}", Instr::POP, Reg::EBX));
         }
         Some(ref l) if l == "Dim" => return Err(format!("found Dim in ArrayCreation {:?}", node)),
         _ => {

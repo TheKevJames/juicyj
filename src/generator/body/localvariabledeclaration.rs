@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use generator::asm::Instr;
 use generator::asm::Reg;
 use scanner::ASTNode;
@@ -7,6 +9,7 @@ use super::statement;
 pub fn go(node: &ASTNode,
           class_label: &String,
           label: &String,
+          fields: &HashMap<String, Vec<String>>,
           mut text: &mut Vec<String>,
           mut externs: &mut Vec<String>,
           mut bss: &mut Vec<String>,
@@ -31,8 +34,12 @@ pub fn go(node: &ASTNode,
 
     // allocate 32 bytes for lhs
     text.push(format!("{} {}, {}", Instr::MOV, Reg::EAX, "32"));
+
+    text.push(format!("{} {}", Instr::PUSH, Reg::EBX));
     externs.push(format!("{} {}", Instr::EXTERN, "__malloc"));
     text.push(format!("{} {}", Instr::CALL, "__malloc"));
+    text.push(format!("{} {}", Instr::POP, Reg::EBX));
+
     text.push(format!("{} [{}], {}", Instr::MOV, variable, Reg::EAX));
     text.push("".to_owned());
 
@@ -40,6 +47,7 @@ pub fn go(node: &ASTNode,
     match statement::go(&node.children[1].children[1],
                         class_label,
                         label,
+                        fields,
                         &mut text,
                         &mut externs,
                         &mut bss,
@@ -48,8 +56,8 @@ pub fn go(node: &ASTNode,
         Err(e) => return Err(e),
     }
 
-    text.push(format!("{} {}, [{}]", Instr::MOV, "edi", variable));
-    text.push(format!("{} [{}], {}", Instr::MOV, "edi", Reg::EAX));
+    text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EDI, variable));
+    text.push(format!("{} [{}], {}", Instr::MOV, Reg::EDI, Reg::EAX));
     text.push("".to_owned());
 
     Ok(())

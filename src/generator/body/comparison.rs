@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use scanner::ASTNode;
 use scanner::TokenKind;
 use generator::asm::Instr;
@@ -8,6 +10,7 @@ use super::statement;
 pub fn go(node: &ASTNode,
           class_label: &String,
           label: &String,
+          fields: &HashMap<String, Vec<String>>,
           mut text: &mut Vec<String>,
           mut externs: &mut Vec<String>,
           mut bss: &mut Vec<String>,
@@ -27,6 +30,7 @@ pub fn go(node: &ASTNode,
     match statement::go(&node.children[0],
                         class_label,
                         label,
+                        fields,
                         &mut text,
                         &mut externs,
                         &mut bss,
@@ -42,6 +46,7 @@ pub fn go(node: &ASTNode,
     match statement::go(&node.children[1],
                         class_label,
                         label,
+                        fields,
                         &mut text,
                         &mut externs,
                         &mut bss,
