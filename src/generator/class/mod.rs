@@ -41,12 +41,13 @@ pub fn code(text: &Vec<String>,
         bss.sort();
         bss.dedup();
 
-        bss = bss.iter().map(|v| format!("{}: resb {}", v, "32")).collect();
+        bss = bss.iter().map(|v| format!("{}: resb {}", v, "16")).collect();
         bss.insert(0, format!("{} .{}", Instr::SECTION, "bss"));
 
         generated.push(bss.join("\n"));
     }
 
+    // TODO<codegen>: dedup data by value
     if !data.is_empty() {
         let mut data = data.clone();
         data.sort();
