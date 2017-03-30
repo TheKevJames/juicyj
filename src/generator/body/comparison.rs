@@ -41,6 +41,7 @@ pub fn go(node: &ASTNode,
 
     // store lhs while we get rhs
     text.push(format!("{} {}", Instr::PUSH, Reg::EAX));
+    text.push("".to_owned());
 
     // get rhs
     match statement::go(&node.children[1],

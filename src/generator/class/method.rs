@@ -103,6 +103,7 @@ pub fn get_args(parameters: &Vec<VariableEnvironment>,
         text.push(format!("{} {}", Instr::POP, Reg::EBX));
 
         text.push(format!("{} [{}], {}", Instr::MOV, variable, Reg::EAX));
+        text.push("".to_owned());
 
         // get variable from stack
         // 0:"esp", 4:"old_this", 8:"new_this", 12:"args.."
