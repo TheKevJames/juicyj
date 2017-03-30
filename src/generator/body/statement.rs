@@ -293,7 +293,16 @@ pub fn go(node: &ASTNode,
         }
         TokenKind::Null => nullvalue::go(&mut text),
         TokenKind::NumValue => numvalue::go(&node, &mut text),
-        TokenKind::StrValue => strvalue::go(&node, &mut text, &mut data),
+        TokenKind::StrValue => {
+            strvalue::go(&node,
+                         class_label,
+                         label,
+                         fields,
+                         &mut text,
+                         &mut externs,
+                         &mut bss,
+                         &mut data)
+        }
         TokenKind::This => this::go(class_label, &mut text),
 
         // TODO<codegen>: prune AST
