@@ -3,13 +3,16 @@ use generator::asm::Reg;
 use scanner::ASTNode;
 
 pub fn go(node: &ASTNode, mut text: &mut Vec<String>) -> Result<Option<String>, String> {
-    match node.token.lexeme {
-        Some(ref l) => {
-            text.push(format!("{} {}, {}", Instr::MOV, Reg::EAX, l));
-
-            // TODO<codegen>: kind is bool
-            Ok(None)
-        }
-        _ => Err(format!("could not parse NumValue from {:?}", node)),
+    if node.token.lexeme.is_none() {
+        return Err(format!("NumValue {:?} has no value", node));
     }
+
+    let value = node.clone().token.lexeme.unwrap();
+
+    // TODO<codegen>: store this somewhere so we have an address?
+    text.push(format!("{} dword {}, {}", Instr::MOV, Reg::ESI, value));
+    text.push(format!("{} {}, {}", Instr::MOV, Reg::EAX, value));
+
+    // TODO<codegen>: kind is bool
+    Ok(None)
 }
