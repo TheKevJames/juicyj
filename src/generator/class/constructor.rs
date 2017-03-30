@@ -143,7 +143,7 @@ pub fn go(method: &MethodEnvironment,
                           Instr::MOV,
                           Reg::EBX,
                           fidx.unwrap() + 1,
-                          Reg::EAX));
+                          Reg::ESI));
         text.push("".to_owned());
     }
 

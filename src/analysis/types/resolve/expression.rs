@@ -44,6 +44,9 @@ pub fn go(mut node: &mut ASTNode,
         Some(ref l) if l == "FieldAccess" => {
             resolve::fieldaccess::go(node, modifiers, current, kinds, globals)
         }
+        Some(ref l) if l == "FullyQualifiedMethod" => {
+            go(&mut node.children[1], modifiers, current, kinds, globals)
+        }
         Some(ref l) if l == "MethodInvocation" => {
             resolve::methodinvocation::go(&mut node, modifiers, current, kinds, globals)
         }

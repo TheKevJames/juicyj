@@ -15,6 +15,8 @@ pub fn go(node: &ASTNode,
           mut bss: &mut Vec<(String, String)>,
           mut data: &mut Vec<String>)
           -> Result<Option<String>, String> {
+    text.push(format!("  ; get array[idx]"));
+
     // get index
     match statement::go(&node.children[2],
                         class_label,
@@ -35,8 +37,9 @@ pub fn go(node: &ASTNode,
 
     // store offset
     text.push(format!("{} {}", Instr::PUSH, Reg::EAX));
+    text.push("".to_owned());
 
-    // get address of base (value: eax, addr: esi)
+    // get address of base (addr: eax, addr in class: esi)
     match statement::go(&node.children[0],
                         class_label,
                         label,
@@ -48,6 +51,9 @@ pub fn go(node: &ASTNode,
         Ok(_) => (),
         Err(e) => return Err(e),
     }
+
+    // arrays are pointers, need to dereference once more
+    text.push(format!("{} {}, [{}]", Instr::MOV, Reg::ESI, Reg::ESI));
 
     // get value at offset
     text.push(format!("{} {}", Instr::POP, Reg::EAX));

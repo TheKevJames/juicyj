@@ -50,6 +50,19 @@ pub fn go(node: &ASTNode,
         }
     }
 
+    if let Some(_) = fields.get(&field) {
+        // static reference
+        text.push(format!("  ; {} <static>", field));
+
+        // TODO<codegen>: static references shouldn't care about This value,
+        // right?
+        text.push(format!("{} {}, {}", Instr::MOV, Reg::EAX, Reg::EBX));
+        text.push(format!("{} {}, {}", Instr::MOV, Reg::ESI, Reg::EBX));
+        text.push("".to_owned());
+
+        return Ok(Some(field.clone()));
+    }
+
     // check if this is a FieldAccess
     // TODO: try to fix this in env?
     node.token.lexeme = Some("FieldAccess".to_owned());

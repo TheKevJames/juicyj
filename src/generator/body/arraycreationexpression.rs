@@ -17,6 +17,7 @@ pub fn go(node: &ASTNode,
           -> Result<Option<String>, String> {
     match node.children[1].token.lexeme {
         Some(ref l) if l == "DimExpr" => {
+            text.push(format!("  ; new array"));
             // resolve array length
             match statement::go(&node.children[1].children[1],
                                 class_label,
@@ -42,11 +43,14 @@ pub fn go(node: &ASTNode,
             externs.push(format!("{} {}", Instr::EXTERN, "__malloc"));
             text.push(format!("{} {}", Instr::CALL, "__malloc"));
             text.push(format!("{} {}", Instr::POP, Reg::EBX));
+            text.push("".to_owned());
 
             // set size in array memory
+            text.push(format!("  ; array.length = x"));
             text.push(format!("{} {}", Instr::POP, Reg::ECX));
-            text.push(format!("{} {}, [{}]", Instr::MOV, Reg::ESI, Reg::EAX));
+            text.push(format!("{} {}, {}", Instr::MOV, Reg::ESI, Reg::EAX));
             text.push(format!("{} [{}], {}", Instr::MOV, Reg::ESI, Reg::ECX));
+            text.push("".to_owned());
         }
         Some(ref l) if l == "Dim" => return Err(format!("found Dim in ArrayCreation {:?}", node)),
         _ => {

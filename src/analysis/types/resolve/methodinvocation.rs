@@ -15,6 +15,12 @@ lazy_static! {
     static ref DOT: ASTNode = {
         ASTNode { token: Token::new(TokenKind::Dot, None), children: Vec::new() }
     };
+    static ref FULLYQUALIFEDMETHOD: ASTNode = {
+        ASTNode {
+            token: Token::new(TokenKind::NonTerminal, Some("FullyQualifiedMethod")),
+            children: Vec::new()
+        }
+    };
     static ref NAME: ASTNode = {
         ASTNode { token: Token::new(TokenKind::NonTerminal, Some("Name")), children: Vec::new() }
     };
@@ -96,6 +102,10 @@ fn get_method(mut node: &mut ASTNode,
         3 | 4 => {
             // TODO: resolve first? Might have to remove trailing "Dot Identifier"?
             let mut canonical = node.children[0].clone();
+            if canonical.clone().token.lexeme.unwrap_or("".to_owned()) == "FullyQualifiedMethod" {
+                canonical = canonical.children[1].clone();
+            }
+
             canonical.flatten();
             if modifiers.contains(&*STATIC) &&
                canonical.children.first().unwrap().token.kind == TokenKind::This {
@@ -141,6 +151,11 @@ fn get_method(mut node: &mut ASTNode,
         5 | 6 => {
             let mut primary = NAME.clone();
             primary.children.push(node.children[0].clone());
+            if primary.children[0].clone().token.lexeme.unwrap_or("".to_owned()) ==
+               "FullyQualifiedMethod" {
+                primary.children[0] = primary.children[0].children[1].clone();
+            }
+
             primary.flatten();
             if modifiers.contains(&*STATIC) &&
                primary.children.first().unwrap().token.kind == TokenKind::This {
@@ -189,10 +204,24 @@ pub fn go(node: &mut ASTNode,
     fully_qualified.flatten();
     fully_qualified.children.push(DOT.clone());
     fully_qualified.children.push(method.name.clone());
+
+    let mut invocation = node.children[0].clone();
+    if invocation.clone().token.lexeme.unwrap_or("".to_owned()) != "FullyQualifiedMethod" {
+        let mut unqualified = invocation.clone();
+        unqualified.flatten();
+        if fully_qualified.children.ends_with(&unqualified.children) {
+            unqualified = fully_qualified.clone();
+        }
+
+        invocation = FULLYQUALIFEDMETHOD.clone();
+        invocation.children.push(unqualified.clone());
+        invocation.children.push(fully_qualified.clone());
+    }
+
     match node.children.len() {
-        3 | 4 => node.children[0] = fully_qualified,
+        3 | 4 => node.children[0] = invocation,
         5 | 6 => {
-            node.children[0] = fully_qualified;
+            node.children[0] = invocation;
             node.children.remove(2);
             node.children.remove(1);
         }

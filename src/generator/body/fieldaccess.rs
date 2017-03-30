@@ -58,6 +58,7 @@ pub fn go(node: &ASTNode,
         text.push(format!("  ; .{}", field));
 
         text.push(format!("{} {}, {}", Instr::ADD, Reg::ESI, 4 * (fidx.unwrap() + 1)));
+        text.push(format!("{} {}, [{}]", Instr::MOV, Reg::ESI, Reg::ESI));
         text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EAX, Reg::ESI));
         text.push("".to_owned());
 
@@ -67,7 +68,7 @@ pub fn go(node: &ASTNode,
     // ArrayTypes
     // TODO<codegen>: do this properly
     if kind == "" && node.children[2].clone().token.lexeme.unwrap() == "length" {
-        text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EAX, Reg::ESI));
+        text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EAX, Reg::EAX));
         text.push("".to_owned());
 
         // TODO<codegen>: kind is int

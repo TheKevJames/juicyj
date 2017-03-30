@@ -64,6 +64,9 @@ pub fn call(this: &Reg,
     }
     text.push(format!("  ; {}({})", method, param_labels.join(", ")));
 
+    // push this param
+    text.push(format!("{} {}, {}", Instr::MOV, Reg::ECX, &this));
+
     // push stack frame
     text.push(format!("{} {}", Instr::PUSH, Reg::EBP));
     text.push(format!("{} {}, {}", Instr::MOV, Reg::EBP, Reg::ESP));
@@ -75,6 +78,7 @@ pub fn call(this: &Reg,
             continue;
         }
 
+        text.push(format!("{} {}", Instr::PUSH, Reg::ECX));
         match body::go(&param,
                        class_label,
                        label,
@@ -86,11 +90,12 @@ pub fn call(this: &Reg,
             Ok(_) => (),
             Err(e) => return Err(e),
         }
+        text.push(format!("{} {}", Instr::POP, Reg::ECX));
         text.push(format!("{} {}", Instr::PUSH, Reg::EAX));
     }
 
     // call method
-    text.push(format!("{} {}", Instr::PUSH, this));
+    text.push(format!("{} {}", Instr::PUSH, Reg::ECX));
     text.push(format!("{} {}", Instr::PUSH, Reg::EBX));
     externs.push(format!("{} {}", Instr::EXTERN, method));
     text.push(format!("{} {}", Instr::CALL, method));
