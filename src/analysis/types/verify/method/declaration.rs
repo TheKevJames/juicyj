@@ -59,7 +59,10 @@ pub fn go(mut node: &mut ASTNode,
             }
 
             let lhs = match lookup::class::in_env(&new.kind, current, kinds) {
-                Ok(l) => Type::new(l),
+                Ok(l) => {
+                    node.children[0] = l.name.clone();
+                    Type::new(l)
+                }
                 Err(e) => return Err(e),
             };
 
