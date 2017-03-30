@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
 use analysis::MethodEnvironment;
+use generator::asm::helper::call;
 use generator::asm::Instr;
 use generator::asm::Reg;
-use generator::asm::helper::call;
 use generator::body;
 use scanner::ASTNode;
 use scanner::Token;
@@ -34,7 +34,11 @@ pub fn go(method: &MethodEnvironment,
         Err(e) => return Err(e),
     };
 
-    match method::get_args(&method.parameters, &label, &mut text, &mut bss) {
+    match method::get_args(&method.parameters,
+                           &label,
+                           &mut text,
+                           &mut externs,
+                           &mut bss) {
         Ok(_) => (),
         Err(e) => return Err(e),
     }
@@ -54,7 +58,7 @@ pub fn go(method: &MethodEnvironment,
     text.push(format!("{} {}", Instr::POP, Reg::EBX));
 
     text.push(format!("{} {}, {}", Instr::MOV, Reg::EBX, Reg::EAX));
-    text.push(format!("{} dword [{}], {}", Instr::MOV, Reg::EBX, "0xDEADBEEF"));
+    text.push(format!("{} dword [{}], {}", Instr::MOV, Reg::EBX, "0xBAADCAFE"));
     text.push("".to_owned());
 
     // call parent constructor
@@ -69,7 +73,8 @@ pub fn go(method: &MethodEnvironment,
             Err(e) => return Err(e),
         };
 
-        match call(&p,
+        match call(&Reg::EBX, // Note: this should not matter, will be overridden
+                   &p,
                    &EMPTYPARAMS.clone(),
                    &class_label,
                    &label,
@@ -105,7 +110,8 @@ pub fn go(method: &MethodEnvironment,
         text.push(format!("  ; init {}", field));
 
         // get initial value
-        match call(&init,
+        match call(&Reg::EBX,
+                   &init,
                    &EMPTYPARAMS.clone(),
                    &class_label,
                    &label,

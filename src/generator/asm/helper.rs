@@ -34,7 +34,8 @@ fn build_method(name: &ASTNode, params: &ASTNode) -> Result<String, String> {
     Ok(method.join(""))
 }
 
-pub fn call(method: &ASTNode,
+pub fn call(this: &Reg,
+            method: &ASTNode,
             params: &ASTNode,
             class_label: &String,
             label: &String,
@@ -89,8 +90,7 @@ pub fn call(method: &ASTNode,
     }
 
     // call method
-    text.push(format!("{} {}", Instr::PUSH, Reg::EBX));
-    // TODO<codegen>: push correct "this" when calling other class method
+    text.push(format!("{} {}", Instr::PUSH, this));
     text.push(format!("{} {}", Instr::PUSH, Reg::EBX));
     externs.push(format!("{} {}", Instr::EXTERN, method));
     text.push(format!("{} {}", Instr::CALL, method));

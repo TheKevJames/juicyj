@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use generator::asm::helper::call;
+use generator::asm::Reg;
 use scanner::ASTNode;
 
 pub fn go(node: &ASTNode,
@@ -12,7 +13,10 @@ pub fn go(node: &ASTNode,
           mut bss: &mut Vec<(String, String)>,
           mut data: &mut Vec<String>)
           -> Result<Option<String>, String> {
-    call(&node.children[0],
+    // TODO<codegen>: resolve node.children to type, use that as "this" param
+    // EBX is WRONG here
+    call(&Reg::EBX,
+         &node.children[0],
          &node.children[2],
          class_label,
          label,

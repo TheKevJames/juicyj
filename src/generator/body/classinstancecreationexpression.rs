@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use generator::asm::helper::call;
+use generator::asm::Reg;
 use scanner::ASTNode;
 use scanner::Token;
 use scanner::TokenKind;
@@ -28,7 +29,8 @@ pub fn go(node: &ASTNode,
         _ => EMPTYPARAMS.clone(),
     };
 
-    call(&node.children[0],
+    call(&Reg::EBX, // Note: this should not matter, will be overridden
+         &node.children[0],
          &params,
          class_label,
          label,

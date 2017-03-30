@@ -28,7 +28,7 @@ pub fn go(node: &ASTNode,
         // local
         text.push(format!("  ; {}", variable));
 
-        text.push(format!("{} {}, {}", Instr::MOV, Reg::ESI, variable));
+        text.push(format!("{} {}, [{}]", Instr::MOV, Reg::ESI, variable));
         text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EAX, Reg::ESI));
         text.push("".to_owned());
 

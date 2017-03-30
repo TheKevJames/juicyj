@@ -36,8 +36,11 @@ fn build_entrypoint(class_label: &String,
     text.push(format!("{} {}", Instr::PUSH, Reg::EBP));
     text.push(format!("{} {}, {}", Instr::MOV, Reg::EBP, Reg::ESP));
 
-    text.push(format!("{} {}", Instr::PUSH, Reg::EAX)); // fake this
+    text.push(format!("{} {}", Instr::PUSH, Reg::EBX)); // fake this param
+    text.push(format!("{} {}", Instr::PUSH, Reg::EBX)); // fake this
     text.push(format!("{} {}", Instr::CALL, constructor_label));
+    text.push(format!("{} {}", Instr::POP, Reg::EBX)); // fake this
+    text.push(format!("{} {}, {}", Instr::MOV, Reg::EBX, Reg::EAX)); // real this
 
     text.push(format!("{} {}, {}", Instr::MOV, Reg::ESP, Reg::EBP));
     text.push(format!("{} {}", Instr::POP, Reg::EBP));
@@ -47,8 +50,10 @@ fn build_entrypoint(class_label: &String,
     text.push(format!("{} {}", Instr::PUSH, Reg::EBP));
     text.push(format!("{} {}, {}", Instr::MOV, Reg::EBP, Reg::ESP));
 
-    text.push(format!("{} {}", Instr::PUSH, Reg::EAX)); // this
+    text.push(format!("{} {}", Instr::PUSH, Reg::EBX)); // this param
+    text.push(format!("{} {}", Instr::PUSH, Reg::EBX)); // this
     text.push(format!("{} {}", Instr::CALL, label));
+    text.push(format!("{} {}", Instr::POP, Reg::EBX)); // this
 
     text.push(format!("{} {}, {}", Instr::MOV, Reg::ESP, Reg::EBP));
     text.push(format!("{} {}", Instr::POP, Reg::EBP));
@@ -64,10 +69,11 @@ fn build_entrypoint(class_label: &String,
 pub fn get_args(parameters: &Vec<VariableEnvironment>,
                 label: &String,
                 mut text: &mut Vec<String>,
+                mut externs: &mut Vec<String>,
                 mut bss: &mut Vec<(String, String)>)
                 -> Result<(), String> {
     text.push(format!("  ; get this"));
-    text.push(format!("{} {}, [{}+4]", Instr::MOV, Reg::EBX, Reg::ESP));
+    text.push(format!("{} {}, [{}+8]", Instr::MOV, Reg::EBX, Reg::ESP));
     text.push("".to_owned());
 
     if parameters.is_empty() {
@@ -86,10 +92,25 @@ pub fn get_args(parameters: &Vec<VariableEnvironment>,
         };
         bss.push((variable.clone(), pkind.clone()));
 
-        text.push(format!("{} {}, {}", Instr::MOV, Reg::ESI, Reg::ESP));
-        // "this", "this", "esp", "args.."
-        text.push(format!("{} {}, {}", Instr::ADD, Reg::ESI, 4 * (idx + 4)));
-        text.push(format!("{} [{}], {}", Instr::MOV, variable, Reg::ESI));
+        // TODO<codegen>: this is unnecessary allocation, but ensures bss vars
+        // are always treated the same
+        // allocate space for variable
+        text.push(format!("{} {}, {}", Instr::MOV, Reg::EAX, "32"));
+
+        text.push(format!("{} {}", Instr::PUSH, Reg::EBX));
+        externs.push(format!("{} {}", Instr::EXTERN, "__malloc"));
+        text.push(format!("{} {}", Instr::CALL, "__malloc"));
+        text.push(format!("{} {}", Instr::POP, Reg::EBX));
+
+        text.push(format!("{} [{}], {}", Instr::MOV, variable, Reg::EAX));
+
+        // get variable from stack
+        // 0:"esp", 4:"old_this", 8:"new_this", 12:"args.."
+        text.push(format!("{} {}, [{}+4*{}]", Instr::MOV, Reg::EAX, Reg::ESP, idx + 3));
+
+        // put variable in new space
+        text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EDI, variable));
+        text.push(format!("{} [{}], {}", Instr::MOV, Reg::EDI, Reg::EAX));
     }
     text.push("".to_owned());
 
@@ -125,7 +146,11 @@ pub fn go(method: &MethodEnvironment,
         Err(e) => return Err(e),
     };
 
-    match get_args(&method.parameters, &label, &mut text, &mut bss) {
+    match get_args(&method.parameters,
+                   &label,
+                   &mut text,
+                   &mut externs,
+                   &mut bss) {
         Ok(_) => (),
         Err(e) => return Err(e),
     }
