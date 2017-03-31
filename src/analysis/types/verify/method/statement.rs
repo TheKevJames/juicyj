@@ -199,8 +199,7 @@ pub fn nonblock(mut node: &mut ASTNode,
 
             let mut block_locals = Vec::new();
 
-            let mut init = node.children[2].clone();
-            match nonblock(&mut init,
+            match nonblock(&mut node.children[2],
                            modifiers,
                            current,
                            kinds,
@@ -214,8 +213,7 @@ pub fn nonblock(mut node: &mut ASTNode,
             if node.children[2].token.kind != TokenKind::Semicolon {
                 cond_idx += 1;
             }
-            let mut cond = node.children[cond_idx].clone();
-            match nonblock(&mut cond,
+            match nonblock(&mut node.children[cond_idx],
                            modifiers,
                            current,
                            kinds,
@@ -241,9 +239,9 @@ pub fn nonblock(mut node: &mut ASTNode,
 
             // Update statement is always 2 children before last child. If there
             // is not update statement, this will be a semicolon.
-            let mut update = node.children[node.children.len() - 3].clone();
-            if update.token.kind != TokenKind::Semicolon {
-                match nonblock(&mut update,
+            let idx = node.children.len() - 3;
+            if node.children[idx].clone().token.kind != TokenKind::Semicolon {
+                match nonblock(&mut node.children[idx],
                                modifiers,
                                current,
                                kinds,
@@ -254,8 +252,8 @@ pub fn nonblock(mut node: &mut ASTNode,
                 }
             }
 
-            let mut block = node.children.last().unwrap().clone();
-            match nonblock(&mut block,
+            let idx = node.children.len() - 1;
+            match nonblock(&mut node.children[idx],
                            modifiers,
                            current,
                            kinds,
