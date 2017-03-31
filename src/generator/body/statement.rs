@@ -260,16 +260,7 @@ pub fn go(node: &ASTNode,
                      &mut bss,
                      &mut data)
         }
-        TokenKind::Instanceof => {
-            instanceof::go(&node,
-                           class_label,
-                           label,
-                           fields,
-                           &mut text,
-                           &mut externs,
-                           &mut bss,
-                           &mut data)
-        }
+        TokenKind::Instanceof => instanceof::go(&node),
         TokenKind::FSlash | TokenKind::Minus | TokenKind::Percent | TokenKind::Plus |
         TokenKind::Star => {
             math::go(&node,
