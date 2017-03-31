@@ -300,6 +300,9 @@ pub fn go(node: &ASTNode,
         TokenKind::Boolean | TokenKind::Char | TokenKind::Byte | TokenKind::Int |
         TokenKind::Short => Err(format!("attempted to generate code for unpruned {:?}", node)),
 
+        // TODO<codegen>: prune empty blocks
+        TokenKind::Semicolon => Ok(None),
+
         _ => Err(format!("attempted to generate code for {:?}", node)),
     }
 }
