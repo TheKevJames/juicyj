@@ -58,7 +58,7 @@ pub fn go(node: &ASTNode,
         }
     }
 
-    call(&Reg::EAX,
+    call(&Reg::ESI,
          &node.children[0].children[1],
          &node.children[2],
          class_label,

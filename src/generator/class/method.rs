@@ -105,15 +105,16 @@ pub fn get_args(parameters: &Vec<VariableEnvironment>,
         text.push(format!("{} [{}], {}", Instr::MOV, variable, Reg::EAX));
         text.push("".to_owned());
 
-        // get variable from stack
+        // get address of variable on stack
         // 0:"esp", 4:"old_this", 8:"new_this", 12:"args.."
-        text.push(format!("{} {}, [{}+4*{}]", Instr::MOV, Reg::EAX, Reg::ESP, idx + 3));
+        text.push(format!("{} {}, {}", Instr::MOV, Reg::ESI, Reg::ESP));
+        text.push(format!("{} {}, {}", Instr::ADD, Reg::ESI, 4 * (idx + 3)));
 
-        // put variable in new space
+        // put address of variable in new space
         text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EDI, variable));
-        text.push(format!("{} [{}], {}", Instr::MOV, Reg::EDI, Reg::EAX));
+        text.push(format!("{} [{}], {}", Instr::MOV, Reg::EDI, Reg::ESI));
+        text.push("".to_owned());
     }
-    text.push("".to_owned());
 
     Ok(())
 }

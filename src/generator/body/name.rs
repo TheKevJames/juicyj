@@ -33,6 +33,7 @@ pub fn go(node: &ASTNode,
         text.push(format!("  ; {}", variable));
 
         text.push(format!("{} {}, [{}]", Instr::MOV, Reg::ESI, variable));
+        text.push(format!("{} {}, [{}]", Instr::MOV, Reg::ESI, Reg::ESI));
         text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EAX, Reg::ESI));
         text.push("".to_owned());
 
@@ -47,6 +48,7 @@ pub fn go(node: &ASTNode,
 
             text.push(format!("{} {}, {}", Instr::MOV, Reg::ESI, Reg::EBX));
             text.push(format!("{} {}, {}", Instr::ADD, Reg::ESI, 4 * (fidx.unwrap() + 1)));
+            text.push(format!("{} {}, [{}]", Instr::MOV, Reg::ESI, Reg::ESI));
             text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EAX, Reg::ESI));
             text.push("".to_owned());
 
@@ -56,7 +58,7 @@ pub fn go(node: &ASTNode,
 
     if let Some(_) = fields.get(&field) {
         // static reference
-        text.push(format!("  ; {} <static>", field));
+        text.push(format!("  ; {} <static class>", field));
 
         // TODO<codegen>: static references shouldn't care about This value,
         // right?

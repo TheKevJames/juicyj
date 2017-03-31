@@ -61,7 +61,7 @@ pub fn go(node: &ASTNode,
     }
 
     text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EDI, variable));
-    text.push(format!("{} [{}], {}", Instr::MOV, Reg::EDI, Reg::EAX));
+    text.push(format!("{} [{}], {}", Instr::MOV, Reg::EDI, Reg::ESI));
     text.push("".to_owned());
 
     // TODO<codegen>: kind is either lhs kind or null

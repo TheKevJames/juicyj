@@ -233,7 +233,7 @@ pub fn go(node: &ASTNode,
                                  &mut bss,
                                  &mut data)
         }
-        TokenKind::CharValue => charvalue::go(&node, &mut text),
+        TokenKind::CharValue => charvalue::go(&node, &mut text, &mut externs),
         TokenKind::Equality |
         TokenKind::NotEqual |
         TokenKind::LessThan |
@@ -292,7 +292,7 @@ pub fn go(node: &ASTNode,
                     &mut data)
         }
         TokenKind::Null => nullvalue::go(&mut text),
-        TokenKind::NumValue => numvalue::go(&node, &mut text),
+        TokenKind::NumValue => numvalue::go(&node, &mut text, &mut externs),
         TokenKind::StrValue => {
             strvalue::go(&node,
                          class_label,
