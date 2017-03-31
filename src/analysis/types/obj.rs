@@ -26,6 +26,32 @@ lazy_static! {
         let node = ASTNode { token: Token::new(TokenKind::Null, None), children: Vec::new() };
         Type::new(ClassOrInterfaceEnvironment::new(node, ClassOrInterface::CLASS))
     };
+    static ref OBJECT_CANONICAL: Type = {
+        let node = ASTNode {
+            token: Token::new(TokenKind::NonTerminal, Some("Name")),
+            children: vec![ASTNode {
+                               token: Token::new(TokenKind::Identifier, Some("java")),
+                               children: Vec::new(),
+                           },
+                           ASTNode {
+                               token: Token::new(TokenKind::Dot, None),
+                               children: Vec::new(),
+                           },
+                           ASTNode {
+                               token: Token::new(TokenKind::Identifier, Some("lang")),
+                               children: Vec::new(),
+                           },
+                           ASTNode {
+                               token: Token::new(TokenKind::Dot, None),
+                               children: Vec::new(),
+                           },
+                           ASTNode {
+                               token: Token::new(TokenKind::Identifier, Some("Object")),
+                               children: Vec::new(),
+                           }],
+        };
+        Type::new(ClassOrInterfaceEnvironment::new(node, ClassOrInterface::CLASS))
+    };
     static ref SHORT: Type = {
         let node = ASTNode { token: Token::new(TokenKind::Short, None), children: Vec::new() };
         Type::new(ClassOrInterfaceEnvironment::new(node, ClassOrInterface::CLASS))
@@ -292,6 +318,10 @@ impl Type {
             }
 
             if !rhs_array {
+                if rhs == *OBJECT_CANONICAL {
+                    return Ok(result);
+                }
+
                 return Err(format!("cannot assign class {} to array {}",
                                    rhs.kind.name,
                                    lhs.kind.name));
