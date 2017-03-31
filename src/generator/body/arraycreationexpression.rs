@@ -47,9 +47,9 @@ pub fn go(node: &ASTNode,
 
             // set size in array memory
             text.push(format!("  ; array.length = x"));
-            text.push(format!("{} {}", Instr::POP, Reg::ECX));
             text.push(format!("{} {}, {}", Instr::MOV, Reg::ESI, Reg::EAX));
-            text.push(format!("{} [{}], {}", Instr::MOV, Reg::ESI, Reg::ECX));
+            text.push(format!("{} {}", Instr::POP, Reg::EAX));
+            text.push(format!("{} [{}], {}", Instr::MOV, Reg::ESI, Reg::EAX));
             text.push("".to_owned());
         }
         Some(ref l) if l == "Dim" => return Err(format!("found Dim in ArrayCreation {:?}", node)),

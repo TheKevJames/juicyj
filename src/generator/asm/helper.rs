@@ -91,7 +91,7 @@ pub fn call(this: &Reg,
             Err(e) => return Err(e),
         }
         text.push(format!("{} {}", Instr::POP, Reg::ECX));
-        text.push(format!("{} {}", Instr::PUSH, Reg::EAX));
+        text.push(format!("{} {}", Instr::PUSH, Reg::ESI));
     }
 
     // call method

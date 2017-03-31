@@ -62,8 +62,8 @@ pub fn go(node: &ASTNode,
 
         // TODO<codegen>: static references shouldn't care about This value,
         // right?
-        text.push(format!("{} {}, {}", Instr::MOV, Reg::EAX, Reg::EBX));
         text.push(format!("{} {}, {}", Instr::MOV, Reg::ESI, Reg::EBX));
+        text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EAX, Reg::ESI));
         text.push("".to_owned());
 
         return Ok(Some(field.clone()));

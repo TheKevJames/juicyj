@@ -249,7 +249,7 @@ pub fn go(node: &ASTNode,
                            &mut bss,
                            &mut data)
         }
-        TokenKind::False | TokenKind::True => booleanvalue::go(&node, &mut text),
+        TokenKind::False | TokenKind::True => booleanvalue::go(&node, &mut text, &mut externs),
         TokenKind::Identifier => {
             name::go(&node,
                      class_label,
@@ -291,7 +291,7 @@ pub fn go(node: &ASTNode,
                     &mut bss,
                     &mut data)
         }
-        TokenKind::Null => nullvalue::go(&mut text),
+        TokenKind::Null => nullvalue::go(&mut text, &mut externs),
         TokenKind::NumValue => numvalue::go(&node, &mut text, &mut externs),
         TokenKind::StrValue => {
             strvalue::go(&node,
