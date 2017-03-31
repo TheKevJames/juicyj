@@ -71,8 +71,7 @@ pub fn go(node: &ASTNode,
     // ArrayTypes
     // TODO<codegen>: do this properly
     if kind == "" && node.children[2].clone().token.lexeme.unwrap() == "length" {
-        text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EAX, Reg::EAX));
-        text.push("".to_owned());
+        // the length of a field is stored at its base address
 
         // TODO<codegen>: kind is int
         return Ok(None);
