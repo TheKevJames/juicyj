@@ -33,30 +33,28 @@ fn build_entrypoint(class_label: &String,
     let constructor_label = class_label.split_at(class_label.rfind(".").unwrap()).1;
     let constructor_label = format!("__{}{}__", class_label, constructor_label);
 
+    text.push(format!("{} dword {}, {}", Instr::MOV, Reg::EBX, "0xC0DEBABE"));
+    text.push(format!("{} {}", Instr::PUSH, Reg::EBX)); // fake this param
+
     text.push(format!("{} {}", Instr::PUSH, Reg::EBP));
     text.push(format!("{} {}, {}", Instr::MOV, Reg::EBP, Reg::ESP));
-
-    text.push(format!("{} {}", Instr::PUSH, Reg::EBX)); // fake this param
-    text.push(format!("{} {}", Instr::PUSH, Reg::EBX)); // fake this
     text.push(format!("{} {}", Instr::CALL, constructor_label));
-    text.push(format!("{} {}", Instr::POP, Reg::EBX)); // fake this
-    text.push(format!("{} {}, {}", Instr::MOV, Reg::EBX, Reg::EAX)); // real this
-
     text.push(format!("{} {}, {}", Instr::MOV, Reg::ESP, Reg::EBP));
     text.push(format!("{} {}", Instr::POP, Reg::EBP));
+
+    text.push(format!("{} {}", Instr::POP, Reg::EBX)); // fake this param
     text.push("".to_owned());
 
     // call this method
+    text.push(format!("{} {}", Instr::PUSH, Reg::EAX)); // real this param
+
     text.push(format!("{} {}", Instr::PUSH, Reg::EBP));
     text.push(format!("{} {}, {}", Instr::MOV, Reg::EBP, Reg::ESP));
-
-    text.push(format!("{} {}", Instr::PUSH, Reg::EBX)); // this param
-    text.push(format!("{} {}", Instr::PUSH, Reg::EBX)); // this
     text.push(format!("{} {}", Instr::CALL, label));
-    text.push(format!("{} {}", Instr::POP, Reg::EBX)); // this
-
     text.push(format!("{} {}, {}", Instr::MOV, Reg::ESP, Reg::EBP));
     text.push(format!("{} {}", Instr::POP, Reg::EBP));
+
+    // text.push(format!("{} {}", Instr::POP, Reg::EBX)); // real this param
     text.push("".to_owned());
 
     // exit with this method's return value
@@ -72,14 +70,6 @@ pub fn get_args(parameters: &Vec<VariableEnvironment>,
                 mut externs: &mut Vec<String>,
                 mut bss: &mut Vec<(String, String)>)
                 -> Result<(), String> {
-    text.push(format!("  ; get this"));
-    text.push(format!("{} {}, [{}+8]", Instr::MOV, Reg::EBX, Reg::ESP));
-    text.push("".to_owned());
-
-    if parameters.is_empty() {
-        return Ok(());
-    }
-
     text.push(format!("  ; get args"));
     for (idx, param) in parameters.iter().enumerate().rev() {
         let variable = match param.name.to_label() {
@@ -92,29 +82,28 @@ pub fn get_args(parameters: &Vec<VariableEnvironment>,
         };
         bss.push((variable.clone(), pkind.clone()));
 
-        // TODO<codegen>: this is unnecessary allocation, but ensures bss vars
-        // are always treated the same
-        // allocate space for variable
-        text.push(format!("{} {}, {}", Instr::MOV, Reg::EAX, "32"));
-
-        text.push(format!("{} {}", Instr::PUSH, Reg::EBX));
         externs.push(format!("{} {}", Instr::EXTERN, "__malloc"));
+
+        // allocate space for variable
+        text.push(format!("{} {}, {}", Instr::MOV, Reg::EAX, "4"));
         text.push(format!("{} {}", Instr::CALL, "__malloc"));
-        text.push(format!("{} {}", Instr::POP, Reg::EBX));
+
+        // put address of variable in new space
+        // 0:"esp", 4:"null", 8:"argx", ... n:"arg0", n+4:"this param", n+8:"this"
+        text.push(format!("{} {}, [{}+4*{}]", Instr::MOV, Reg::EBX, Reg::ESP, idx + 2));
+        text.push(format!("{} [{}], {}", Instr::MOV, Reg::EAX, Reg::EBX));
 
         text.push(format!("{} [{}], {}", Instr::MOV, variable, Reg::EAX));
         text.push("".to_owned());
-
-        // get address of variable on stack
-        // 0:"esp", 4:"old_this", 8:"new_this", 12:"args.."
-        text.push(format!("{} {}, {}", Instr::MOV, Reg::ESI, Reg::ESP));
-        text.push(format!("{} {}, {}", Instr::ADD, Reg::ESI, 4 * (idx + 3)));
-
-        // put address of variable in new space
-        text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EDI, variable));
-        text.push(format!("{} [{}], {}", Instr::MOV, Reg::EDI, Reg::ESI));
-        text.push("".to_owned());
     }
+
+    text.push(format!("  ; get this"));
+    text.push(format!("{} {}, [{}+4*{}]",
+                      Instr::MOV,
+                      Reg::EBX,
+                      Reg::ESP,
+                      parameters.len() + 2));
+    text.push("".to_owned());
 
     Ok(())
 }

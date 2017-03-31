@@ -12,6 +12,8 @@ pub fn go(node: &ASTNode,
 
     let value = node.clone().token.lexeme.unwrap();
 
+    text.push(format!("  ; num {}", value));
+
     // allocate 4 bytes for num
     text.push(format!("{} {}, {}", Instr::MOV, Reg::EAX, "4"));
 

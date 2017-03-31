@@ -12,6 +12,8 @@ pub fn go(node: &ASTNode,
 
     let value = node.clone().token.lexeme.unwrap();
 
+    text.push(format!("  ; char '{}'", value));
+
     // allocate 4 bytes for char
     text.push(format!("{} {}, {}", Instr::MOV, Reg::EAX, "4"));
 
@@ -25,6 +27,7 @@ pub fn go(node: &ASTNode,
     text.push(format!("{} dword [{}], '{}'", Instr::MOV, Reg::ESI, value));
 
     text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EAX, Reg::ESI));
+    text.push("".to_owned());
 
     // TODO<codegen>: kind is char
     Ok(None)

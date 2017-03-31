@@ -4,6 +4,8 @@ use generator::asm::Reg;
 pub fn go(mut text: &mut Vec<String>,
           mut externs: &mut Vec<String>)
           -> Result<Option<String>, String> {
+    text.push(format!("  ; null"));
+
     // allocate 4 bytes for num
     text.push(format!("{} {}, {}", Instr::MOV, Reg::EAX, "4"));
 

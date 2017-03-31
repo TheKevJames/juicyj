@@ -90,6 +90,8 @@ pub fn go(node: &ASTNode,
 
     let chars = node.clone().token.lexeme.unwrap();
 
+    text.push(format!("  ; str '{}'", chars));
+
     let mut charinstantiation = STRINGARRAYINSTANTIATION.clone();
     charinstantiation.children[1].children.push(ASTNode {
         token: Token {

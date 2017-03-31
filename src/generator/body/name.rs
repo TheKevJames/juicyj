@@ -46,9 +46,11 @@ pub fn go(node: &ASTNode,
         if fidx.is_some() {
             text.push(format!("  ; <this>.{}", field));
 
-            text.push(format!("{} {}, {}", Instr::MOV, Reg::ESI, Reg::EBX));
-            text.push(format!("{} {}, {}", Instr::ADD, Reg::ESI, 4 * (fidx.unwrap() + 1)));
-            text.push(format!("{} {}, [{}]", Instr::MOV, Reg::ESI, Reg::ESI));
+            text.push(format!("{} {}, [{}+4*{}]",
+                              Instr::MOV,
+                              Reg::ESI,
+                              Reg::EBX,
+                              fidx.unwrap() + 1));
             text.push(format!("{} {}, [{}]", Instr::MOV, Reg::EAX, Reg::ESI));
             text.push("".to_owned());
 

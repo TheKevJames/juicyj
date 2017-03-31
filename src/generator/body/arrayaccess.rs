@@ -52,9 +52,6 @@ pub fn go(node: &ASTNode,
         Err(e) => return Err(e),
     }
 
-    // arrays are pointers, need to dereference once more
-    text.push(format!("{} {}, [{}]", Instr::MOV, Reg::ESI, Reg::ESI));
-
     // get value at offset
     text.push(format!("{} {}", Instr::POP, Reg::EAX));
     text.push(format!("{} {}, {}", Instr::ADD, Reg::ESI, Reg::EAX));

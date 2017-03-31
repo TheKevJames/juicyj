@@ -62,14 +62,14 @@ pub fn call(this: &Reg,
             Err(e) => return Err(e),
         }
     }
+
     text.push(format!("  ; {}({})", method, param_labels.join(", ")));
+    externs.push(format!("{} {}", Instr::EXTERN, method));
 
-    // push this param
-    text.push(format!("{} {}, {}", Instr::MOV, Reg::ECX, &this));
-
-    // push stack frame
-    text.push(format!("{} {}", Instr::PUSH, Reg::EBP));
-    text.push(format!("{} {}, {}", Instr::MOV, Reg::EBP, Reg::ESP));
+    // push this and this param
+    text.push(format!("{} {}", Instr::PUSH, Reg::EBX));
+    text.push(format!("{} {}", Instr::PUSH, &this));
+    text.push("".to_owned());
 
     // push params
     for param in params.children.iter().rev() {
@@ -78,7 +78,6 @@ pub fn call(this: &Reg,
             continue;
         }
 
-        text.push(format!("{} {}", Instr::PUSH, Reg::ECX));
         match body::go(&param,
                        class_label,
                        label,
@@ -90,26 +89,32 @@ pub fn call(this: &Reg,
             Ok(_) => (),
             Err(e) => return Err(e),
         }
-        text.push(format!("{} {}", Instr::POP, Reg::ECX));
         text.push(format!("{} {}", Instr::PUSH, Reg::ESI));
+        text.push("".to_owned());
     }
 
     // call method
-    text.push(format!("{} {}", Instr::PUSH, Reg::ECX));
-    text.push(format!("{} {}", Instr::PUSH, Reg::EBX));
-    externs.push(format!("{} {}", Instr::EXTERN, method));
+    text.push(format!("{} {}", Instr::PUSH, Reg::EBP));
+    text.push(format!("{} {}, {}", Instr::MOV, Reg::EBP, Reg::ESP));
     text.push(format!("{} {}", Instr::CALL, method));
-    text.push(format!("{} {}", Instr::POP, Reg::EBX));
-
-    // pop stack by number of params (+ "this")
-    text.push(format!("{} {}, {}",
-                      Instr::ADD,
-                      Reg::ESP,
-                      4 * (params.children.len() + 1)));
-
-    // pop stack frame
     text.push(format!("{} {}, {}", Instr::MOV, Reg::ESP, Reg::EBP));
     text.push(format!("{} {}", Instr::POP, Reg::EBP));
+    text.push("".to_owned());
+
+    // pop stack by number of params
+    for param in params.children.iter().rev() {
+        // TODO<codegen>: remove commas earlier (ie. in a single place...)
+        // Then we can do this whole function in one go
+        if param.token.kind == TokenKind::Comma {
+            continue;
+        }
+
+        text.push(format!("{} {}, {}", Instr::ADD, Reg::ESP, 4));
+    }
+
+    // pop stack frame and this
+    text.push(format!("{} {}", Instr::POP, Reg::EBX)); // this param
+    text.push(format!("{} {}", Instr::POP, Reg::EBX)); // real this
     text.push("".to_owned());
 
     // TODO<codegen>: kind is return_type of method

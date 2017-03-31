@@ -17,7 +17,6 @@ pub fn go(node: &ASTNode,
           -> Result<Option<String>, String> {
     match node.children[1].token.lexeme {
         Some(ref l) if l == "DimExpr" => {
-            text.push(format!("  ; new array"));
             // resolve array length
             match statement::go(&node.children[1].children[1],
                                 class_label,
@@ -33,6 +32,9 @@ pub fn go(node: &ASTNode,
 
             // store size
             text.push(format!("{} {}", Instr::PUSH, Reg::EAX));
+            text.push("".to_owned());
+
+            text.push(format!("  ; new array [size in EAX]"));
 
             // allocate 4 + 4*l bytes
             text.push(format!("{} {}, {}", Instr::MOV, Reg::ECX, "4"));
