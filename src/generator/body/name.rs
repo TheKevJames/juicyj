@@ -16,7 +16,7 @@ pub fn go(node: &ASTNode,
           mut data: &mut Vec<String>)
           -> Result<Option<String>, String> {
     if node.clone().token.lexeme.unwrap_or("".to_owned()) == "FieldAccess" {
-        return Err(format!("could not resolve {:?}", node));
+        return Err(format!("could not resolve node"));
     }
 
     let mut node = node.clone();

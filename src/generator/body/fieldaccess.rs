@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use generator::asm::Instr;
 use generator::asm::Reg;
 use scanner::ASTNode;
-use scanner::TokenKind;
 
 use super::statement;
 
@@ -29,10 +28,10 @@ pub fn go(node: &ASTNode,
     };
 
     if kind.is_none() {
-        // TODO<codegen>
         return Ok(None);
-        return Err(format!("NotImplemented: kind of {:?} is not known",
-                           node.children[0]));
+        // TODO<codegen>
+        // return Err(format!("NotImplemented: kind of {:?} is not known",
+        //                    node.children[0]));
     }
 
     let mut kind = kind.unwrap();
