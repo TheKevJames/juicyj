@@ -47,6 +47,7 @@ pub fn go(node: &ASTNode,
     // store rhs value in lhs address
     text.push(format!("{} {}", Instr::POP, Reg::EDI));
     text.push(format!("{} [{}], {}", Instr::MOV, Reg::EDI, Reg::EAX));
+    text.push(format!("{} {}, {}", Instr::MOV, Reg::ESI, Reg::EDI));
     text.push("".to_owned());
 
     return Ok(kind);

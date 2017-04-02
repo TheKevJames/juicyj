@@ -53,14 +53,14 @@ pub fn go(node: &ASTNode,
             text.push(format!("{} {}", Instr::POP, Reg::EAX));
             text.push(format!("{} [{}], {}", Instr::MOV, Reg::ESI, Reg::EAX));
             text.push("".to_owned());
+
+            // TODO<codegen>: kind is ArrayType of subexpr
+            Ok(None)
         }
-        Some(ref l) if l == "Dim" => return Err(format!("found Dim in ArrayCreation {:?}", node)),
+        Some(ref l) if l == "Dim" => Err(format!("found Dim in ArrayCreation {:?}", node)),
         _ => {
-            return Err(format!("ArrayCreationExpression {:?} did not have Dim or DimExpr",
-                               node))
+            Err(format!("ArrayCreationExpression {:?} did not have Dim or DimExpr",
+                        node))
         }
     }
-
-    // TODO<codegen>: kind is ArrayType of subexpr
-    Ok(None)
 }
