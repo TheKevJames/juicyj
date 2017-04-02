@@ -10,11 +10,13 @@ clean:
 	rm -rf joosc
 	rm -rf juicyj.zip
 	rm -rf **/*.rs.bk
+	rm -rf docs/*.pdf
 	rm -rf grammar/jlalr/*.class
 
-docs: docs/a1.pdf docs/a4.pdf
+docs: docs/a1.pdf docs/a4.pdf docs/a5.pdf
 docs/a1.pdf: docs/a1.md
 docs/a4.pdf: docs/a4.md
+docs/a5.pdf: docs/a5.md
 
 release:
 	@cargo build --release
