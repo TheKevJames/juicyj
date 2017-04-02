@@ -109,7 +109,9 @@ fn verify_env_inheritable(mut env: &mut Environment) -> Result<(), String> {
                             let mut fully_qualified = found.name.clone();
                             fully_qualified.flatten();
                             fully_qualified.children.push(DOT.clone());
-                            fully_qualified.children.push(parent_constructor.name.clone());
+                            fully_qualified
+                                .children
+                                .push(parent_constructor.name.clone());
                             for mut constructor in &mut current.constructors {
                                 constructor.parent = Some(fully_qualified.clone());
                             }

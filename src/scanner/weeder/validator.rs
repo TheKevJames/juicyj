@@ -50,39 +50,59 @@ impl<'filename, 'tree> Weeder<'filename, 'tree> {
                     Some(ref l) if l == "MethodDeclaration" &&
                                    node.children[1].token.lexeme ==
                                    Some("MethodBody".to_owned()) => {
-                        if node.children[0].clone().has_child_kind(&TokenKind::Abstract) {
+                        if node.children[0]
+                               .clone()
+                               .has_child_kind(&TokenKind::Abstract) {
                             return self.error(ErrorMessage::AbstractBody, &node);
                         }
 
-                        if node.children[0].clone().has_child_kind(&TokenKind::Native) {
+                        if node.children[0]
+                               .clone()
+                               .has_child_kind(&TokenKind::Native) {
                             return self.error(ErrorMessage::NativeBody, &node);
                         }
                     }
                     Some(ref l) if l == "MethodHeader" => {
-                        if node.children[0].clone().has_child_kind(&TokenKind::Abstract) {
-                            if node.children[0].clone().has_child_kind(&TokenKind::Final) {
+                        if node.children[0]
+                               .clone()
+                               .has_child_kind(&TokenKind::Abstract) {
+                            if node.children[0]
+                                   .clone()
+                                   .has_child_kind(&TokenKind::Final) {
                                 return self.error(ErrorMessage::FinalAbstract, &node);
                             }
 
-                            if node.children[0].clone().has_child_kind(&TokenKind::Static) {
+                            if node.children[0]
+                                   .clone()
+                                   .has_child_kind(&TokenKind::Static) {
                                 return self.error(ErrorMessage::StaticAbstract, &node);
                             }
                         }
 
-                        if node.children[0].clone().has_child_kind(&TokenKind::Static) {
-                            if node.children[0].clone().has_child_kind(&TokenKind::Final) {
+                        if node.children[0]
+                               .clone()
+                               .has_child_kind(&TokenKind::Static) {
+                            if node.children[0]
+                                   .clone()
+                                   .has_child_kind(&TokenKind::Final) {
                                 return self.error(ErrorMessage::StaticFinal, &node);
                             }
                         }
 
-                        if node.children[0].clone().has_child_kind(&TokenKind::Native) {
-                            if !node.children[0].clone().has_child_kind(&TokenKind::Static) {
+                        if node.children[0]
+                               .clone()
+                               .has_child_kind(&TokenKind::Native) {
+                            if !node.children[0]
+                                    .clone()
+                                    .has_child_kind(&TokenKind::Static) {
                                 return self.error(ErrorMessage::NonStaticNative, &node);
                             }
                         }
                     }
                     Some(ref l) if l == "FieldDeclaration" &&
-                                   node.children[0].clone().has_child_kind(&TokenKind::Final) &&
+                                   node.children[0]
+                                       .clone()
+                                       .has_child_kind(&TokenKind::Final) &&
                                    node.children[2].clone().children.len() != 3 => {
                         return self.error(ErrorMessage::FinalNoInit, &node);
                     }

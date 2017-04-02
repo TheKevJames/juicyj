@@ -37,7 +37,14 @@ impl DFA {
         };
 
         let mut terminals = Vec::new();
-        for _ in 0..file.by_ref().lines().next().unwrap().unwrap().parse().unwrap() {
+        for _ in 0..
+                 file.by_ref()
+                     .lines()
+                     .next()
+                     .unwrap()
+                     .unwrap()
+                     .parse()
+                     .unwrap() {
             let symbol = file.by_ref().lines().next().unwrap().unwrap();
             match Symbol::new(Terminality::Terminal, symbol) {
                 Ok(s) => terminals.push(s),
@@ -49,7 +56,14 @@ impl DFA {
         }
 
         let mut non_terminals = Vec::new();
-        for _ in 0..file.by_ref().lines().next().unwrap().unwrap().parse().unwrap() {
+        for _ in 0..
+                 file.by_ref()
+                     .lines()
+                     .next()
+                     .unwrap()
+                     .unwrap()
+                     .parse()
+                     .unwrap() {
             let symbol = file.by_ref().lines().next().unwrap().unwrap();
             match Symbol::new(Terminality::NonTerminal, symbol) {
                 Ok(s) => non_terminals.push(s),
@@ -60,23 +74,31 @@ impl DFA {
             }
         }
 
-        let kinds_terminal = terminals.clone().into_iter().map(|t| t.token.kind).collect();
+        let kinds_terminal = terminals
+            .clone()
+            .into_iter()
+            .map(|t| t.token.kind)
+            .collect();
 
-        let start = match Symbol::new_from_terminals(&kinds_terminal,
-                                                     file.by_ref()
-                                                         .lines()
-                                                         .next()
-                                                         .unwrap()
-                                                         .unwrap()) {
-            Ok(s) => s,
-            Err(e) => {
-                println!("{}", e);
-                std::process::exit(1);
-            }
-        };
+        let start =
+            match Symbol::new_from_terminals(&kinds_terminal,
+                                             file.by_ref().lines().next().unwrap().unwrap()) {
+                Ok(s) => s,
+                Err(e) => {
+                    println!("{}", e);
+                    std::process::exit(1);
+                }
+            };
 
         let mut rules = Vec::new();
-        for _ in 0..file.by_ref().lines().next().unwrap().unwrap().parse().unwrap() {
+        for _ in 0..
+                 file.by_ref()
+                     .lines()
+                     .next()
+                     .unwrap()
+                     .unwrap()
+                     .parse()
+                     .unwrap() {
             let rule = file.by_ref().lines().next().unwrap().unwrap();
             let mut sides = rule.splitn(2, " ");
 
@@ -93,28 +115,39 @@ impl DFA {
                 Some(side) => {
                     side.split_whitespace()
                         .map(|s| match Symbol::new_from_terminals(&kinds_terminal, s.to_owned()) {
-                            Ok(s) => s,
-                            Err(e) => {
-                                println!("{}", e);
-                                std::process::exit(42);
-                            }
-                        })
+                                 Ok(s) => s,
+                                 Err(e) => {
+                            println!("{}", e);
+                            std::process::exit(42);
+                        }
+                             })
                         .collect()
                 }
                 _ => Vec::new(),
             };
-            rules.push(Rule {
-                lhs: lhs,
-                rhs: rhs,
-            });
+            rules.push(Rule { lhs: lhs, rhs: rhs });
         }
 
         let mut states = Vec::new();
-        for i in 0..file.by_ref().lines().next().unwrap().unwrap().parse().unwrap() {
+        for i in 0..
+                 file.by_ref()
+                     .lines()
+                     .next()
+                     .unwrap()
+                     .unwrap()
+                     .parse()
+                     .unwrap() {
             states.push(State::new(i as usize));
         }
 
-        for _ in 0..file.by_ref().lines().next().unwrap().unwrap().parse().unwrap() {
+        for _ in 0..
+                 file.by_ref()
+                     .lines()
+                     .next()
+                     .unwrap()
+                     .unwrap()
+                     .parse()
+                     .unwrap() {
             let transition = file.by_ref().lines().next().unwrap().unwrap();
             let mut tx = transition.split(" ");
 
@@ -123,18 +156,21 @@ impl DFA {
             let function: Function = tx.next().unwrap().parse().unwrap();
             let value: usize = tx.next().unwrap().parse().unwrap();
 
-            states[start_state].transitions.push(Transition {
-                value: value,
-                function: function,
-                start_state: start_state,
-                symbol: match Symbol::new_from_terminals(&kinds_terminal, symbol.to_owned()) {
-                    Ok(s) => s,
-                    Err(e) => {
-                        println!("{}", e);
-                        std::process::exit(1);
-                    }
-                },
-            });
+            states[start_state]
+                .transitions
+                .push(Transition {
+                          value: value,
+                          function: function,
+                          start_state: start_state,
+                          symbol: match Symbol::new_from_terminals(&kinds_terminal,
+                                                                   symbol.to_owned()) {
+                              Ok(s) => s,
+                              Err(e) => {
+                    println!("{}", e);
+                    std::process::exit(1);
+                }
+                          },
+                      });
         }
 
         DFA {

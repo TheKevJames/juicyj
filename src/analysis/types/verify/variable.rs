@@ -16,13 +16,13 @@ pub fn initialized(node: &ASTNode,
             }
 
             return match var.initialized {
-                false => {
-                    Err(format!("using un-initialized variable {} in class {}",
-                                var.name,
-                                current.name))
-                }
-                true => Ok(()),
-            };
+                       false => {
+                           Err(format!("using un-initialized variable {} in class {}",
+                                       var.name,
+                                       current.name))
+                       }
+                       true => Ok(()),
+                   };
         }
 
         return Ok(());

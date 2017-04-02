@@ -151,8 +151,11 @@ fn get_method(mut node: &mut ASTNode,
         5 | 6 => {
             let mut primary = NAME.clone();
             primary.children.push(node.children[0].clone());
-            if primary.children[0].clone().token.lexeme.unwrap_or("".to_owned()) ==
-               "FullyQualifiedMethod" {
+            if primary.children[0]
+                   .clone()
+                   .token
+                   .lexeme
+                   .unwrap_or("".to_owned()) == "FullyQualifiedMethod" {
                 primary.children[0] = primary.children[0].children[1].clone();
             }
 
@@ -206,7 +209,11 @@ pub fn go(node: &mut ASTNode,
     fully_qualified.children.push(method.name.clone());
 
     let mut invocation = node.children[0].clone();
-    if invocation.clone().token.lexeme.unwrap_or("".to_owned()) != "FullyQualifiedMethod" {
+    if invocation
+           .clone()
+           .token
+           .lexeme
+           .unwrap_or("".to_owned()) != "FullyQualifiedMethod" {
         let mut unqualified = invocation.clone();
         unqualified.flatten();
         if fully_qualified.children.ends_with(&unqualified.children) {

@@ -57,12 +57,12 @@ impl Symbol {
         match value.parse() {
             Ok(kind) => {
                 Ok(Symbol {
-                    terminality: terminality,
-                    token: Token {
-                        kind: kind,
-                        lexeme: Some(value),
-                    },
-                })
+                       terminality: terminality,
+                       token: Token {
+                           kind: kind,
+                           lexeme: Some(value),
+                       },
+                   })
             }
             Err(_) => return Err(ParserError::new(ErrorMessage::StringNotToken(value), None)),
         }

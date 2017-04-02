@@ -34,7 +34,10 @@ pub fn go(node: &ASTNode,
     }
 
     let iflabel = format!("if{}",
-                          rand::thread_rng().gen_ascii_chars().take(32).collect::<String>());
+                          rand::thread_rng()
+                              .gen_ascii_chars()
+                              .take(32)
+                              .collect::<String>());
 
     text.push(format!("{} {}, {}", Instr::CMP, Reg::AL, "0"));
     text.push(format!("{} .{}", Instr::JE, iflabel));

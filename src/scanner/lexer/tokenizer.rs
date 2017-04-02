@@ -115,36 +115,46 @@ impl<'file, 'src> Lexer<'file, 'src> {
             if self.current == Some(ahead_char) {
                 self.consume();
                 return match ahead_kind {
-                    Some(TokenKind::AssignmentAddition) => {
-                        Err(self.error(ErrorMessage::InvalidToken))
-                    }
-                    Some(TokenKind::AssignmentAnd) => Err(self.error(ErrorMessage::InvalidToken)),
-                    Some(TokenKind::AssignmentDivision) => {
-                        Err(self.error(ErrorMessage::InvalidToken))
-                    }
-                    Some(TokenKind::AssignmentModulus) => {
-                        Err(self.error(ErrorMessage::InvalidToken))
-                    }
-                    Some(TokenKind::AssignmentMultiplication) => {
-                        Err(self.error(ErrorMessage::InvalidToken))
-                    }
-                    Some(TokenKind::AssignmentOr) => Err(self.error(ErrorMessage::InvalidToken)),
-                    Some(TokenKind::AssignmentSubtraction) => {
-                        Err(self.error(ErrorMessage::InvalidToken))
-                    }
-                    Some(TokenKind::AssignmentXor) => Err(self.error(ErrorMessage::InvalidToken)),
-                    Some(TokenKind::Decrement) => Err(self.error(ErrorMessage::InvalidToken)),
-                    Some(TokenKind::Increment) => Err(self.error(ErrorMessage::InvalidToken)),
-                    Some(TokenKind::LShift) => Err(self.error(ErrorMessage::InvalidToken)),
-                    Some(TokenKind::RShift) => Err(self.error(ErrorMessage::InvalidToken)),
-                    Some(kind) => {
-                        Ok(Token {
-                            kind: kind,
-                            lexeme: None,
-                        })
-                    }
-                    None => Err(self.error(ErrorMessage::InvalidToken)),
-                };
+                           Some(TokenKind::AssignmentAddition) => {
+                               Err(self.error(ErrorMessage::InvalidToken))
+                           }
+                           Some(TokenKind::AssignmentAnd) => {
+                               Err(self.error(ErrorMessage::InvalidToken))
+                           }
+                           Some(TokenKind::AssignmentDivision) => {
+                               Err(self.error(ErrorMessage::InvalidToken))
+                           }
+                           Some(TokenKind::AssignmentModulus) => {
+                               Err(self.error(ErrorMessage::InvalidToken))
+                           }
+                           Some(TokenKind::AssignmentMultiplication) => {
+                               Err(self.error(ErrorMessage::InvalidToken))
+                           }
+                           Some(TokenKind::AssignmentOr) => {
+                               Err(self.error(ErrorMessage::InvalidToken))
+                           }
+                           Some(TokenKind::AssignmentSubtraction) => {
+                               Err(self.error(ErrorMessage::InvalidToken))
+                           }
+                           Some(TokenKind::AssignmentXor) => {
+                               Err(self.error(ErrorMessage::InvalidToken))
+                           }
+                           Some(TokenKind::Decrement) => {
+                               Err(self.error(ErrorMessage::InvalidToken))
+                           }
+                           Some(TokenKind::Increment) => {
+                               Err(self.error(ErrorMessage::InvalidToken))
+                           }
+                           Some(TokenKind::LShift) => Err(self.error(ErrorMessage::InvalidToken)),
+                           Some(TokenKind::RShift) => Err(self.error(ErrorMessage::InvalidToken)),
+                           Some(kind) => {
+                               Ok(Token {
+                                      kind: kind,
+                                      lexeme: None,
+                                  })
+                           }
+                           None => Err(self.error(ErrorMessage::InvalidToken)),
+                       };
             }
         }
 
@@ -171,24 +181,30 @@ impl<'file, 'src> Lexer<'file, 'src> {
                 self.consume();
             }
             return match ahead_kind {
-                Some(TokenKind::AssignmentLShift) => Err(self.error(ErrorMessage::InvalidToken)),
-                Some(TokenKind::AssignmentRRShift) => Err(self.error(ErrorMessage::InvalidToken)),
-                Some(TokenKind::AssignmentRShift) => Err(self.error(ErrorMessage::InvalidToken)),
-                Some(TokenKind::RRShift) => Err(self.error(ErrorMessage::InvalidToken)),
-                Some(kind) => {
-                    Ok(Token {
-                        kind: kind,
-                        lexeme: None,
-                    })
-                }
-                None => Err(self.error(ErrorMessage::InvalidToken)),
-            };
+                       Some(TokenKind::AssignmentLShift) => {
+                           Err(self.error(ErrorMessage::InvalidToken))
+                       }
+                       Some(TokenKind::AssignmentRRShift) => {
+                           Err(self.error(ErrorMessage::InvalidToken))
+                       }
+                       Some(TokenKind::AssignmentRShift) => {
+                           Err(self.error(ErrorMessage::InvalidToken))
+                       }
+                       Some(TokenKind::RRShift) => Err(self.error(ErrorMessage::InvalidToken)),
+                       Some(kind) => {
+                           Ok(Token {
+                                  kind: kind,
+                                  lexeme: None,
+                              })
+                       }
+                       None => Err(self.error(ErrorMessage::InvalidToken)),
+                   };
         }
 
         return Ok(Token {
-            kind: current_kind,
-            lexeme: None,
-        });
+                      kind: current_kind,
+                      lexeme: None,
+                  });
     }
 
     fn next_char(&mut self) -> Result<Token, LexerError> {
@@ -279,9 +295,9 @@ impl<'file, 'src> Lexer<'file, 'src> {
         }
 
         Ok(Token {
-            kind: TokenKind::CharValue,
-            lexeme: Some(identifier),
-        })
+               kind: TokenKind::CharValue,
+               lexeme: Some(identifier),
+           })
     }
 
     fn next_identifier(&mut self) -> Result<Token, LexerError> {
@@ -357,16 +373,16 @@ impl<'file, 'src> Lexer<'file, 'src> {
             "volatile" => TokenKind::Volatile,
             _ => {
                 return Ok(Token {
-                    kind: TokenKind::Identifier,
-                    lexeme: Some(identifier),
-                })
+                              kind: TokenKind::Identifier,
+                              lexeme: Some(identifier),
+                          })
             }
         };
 
         Ok(Token {
-            kind: kind,
-            lexeme: None,
-        })
+               kind: kind,
+               lexeme: None,
+           })
     }
 
     fn next_number(&mut self) -> Result<Token, LexerError> {
@@ -381,9 +397,9 @@ impl<'file, 'src> Lexer<'file, 'src> {
         }
 
         Ok(Token {
-            kind: TokenKind::NumValue,
-            lexeme: Some(identifier),
-        })
+               kind: TokenKind::NumValue,
+               lexeme: Some(identifier),
+           })
     }
 
     fn next_string(&mut self) -> Result<Token, LexerError> {
@@ -423,9 +439,9 @@ impl<'file, 'src> Lexer<'file, 'src> {
         }
 
         Ok(Token {
-            kind: TokenKind::StrValue,
-            lexeme: Some(identifier),
-        })
+               kind: TokenKind::StrValue,
+               lexeme: Some(identifier),
+           })
     }
 
     fn next_token(&mut self) -> Option<Result<Token, LexerError>> {
@@ -465,9 +481,9 @@ impl<'file, 'src> Lexer<'file, 'src> {
             Some(kind) => {
                 self.consume();
                 return Some(Ok(Token {
-                    kind: kind,
-                    lexeme: None,
-                }));
+                                   kind: kind,
+                                   lexeme: None,
+                               }));
             }
             _ => {}
         }

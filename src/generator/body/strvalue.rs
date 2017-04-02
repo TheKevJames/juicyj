@@ -93,13 +93,15 @@ pub fn go(node: &ASTNode,
     text.push(format!("  ; str '{}'", chars));
 
     let mut charinstantiation = STRINGARRAYINSTANTIATION.clone();
-    charinstantiation.children[1].children.push(ASTNode {
-        token: Token {
-            kind: TokenKind::NumValue,
-            lexeme: Some(chars.len().to_string()),
-        },
-        children: Vec::new(),
-    });
+    charinstantiation.children[1]
+        .children
+        .push(ASTNode {
+                  token: Token {
+                      kind: TokenKind::NumValue,
+                      lexeme: Some(chars.len().to_string()),
+                  },
+                  children: Vec::new(),
+              });
 
     // create chars array
     match statement::go(&charinstantiation,

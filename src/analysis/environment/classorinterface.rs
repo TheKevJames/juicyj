@@ -90,7 +90,10 @@ impl ClassOrInterfaceEnvironment {
                 }
 
                 for (constructor_param, existing_param) in
-                    constructor.parameters.iter().zip(existing.parameters.iter()) {
+                    constructor
+                        .parameters
+                        .iter()
+                        .zip(existing.parameters.iter()) {
                     let found_constructor_param =
                         match lookup::class::in_env(&constructor_param.kind, child, kinds) {
                             Ok(mp) => mp,

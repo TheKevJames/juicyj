@@ -58,7 +58,11 @@ pub fn analyze_interface_declaration(canonical: &ASTNode,
                 for mut greatgrandkid in grandkid.children {
                     if greatgrandkid.token.kind == TokenKind::Identifier {
                         current.extends.push(greatgrandkid.clone());
-                    } else if greatgrandkid.clone().token.lexeme.unwrap_or("".to_owned()) ==
+                    } else if greatgrandkid
+                                  .clone()
+                                  .token
+                                  .lexeme
+                                  .unwrap_or("".to_owned()) ==
                               "Name" {
                         current.extends.push(greatgrandkid.flatten().clone());
                     } else if greatgrandkid.token.kind == TokenKind::Comma {

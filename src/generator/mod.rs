@@ -142,20 +142,20 @@ pub fn generate_or_exit(env: &Environment) {
                       kind.fields
                           .iter()
                           .map(|fld| match fld.name.to_label() {
-                              Ok(n) => {
-                                  match fld.kind.to_label() {
-                                      Ok(k) => (n, k),
-                                      Err(e) => {
-                                          println!("{:?}", e);
-                                          std::process::exit(42);
-                                      }
-                                  }
-                              }
-                              Err(e) => {
-                                  println!("{:?}", e);
-                                  std::process::exit(42);
-                              }
-                          })
+                                   Ok(n) => {
+                                       match fld.kind.to_label() {
+                                           Ok(k) => (n, k),
+                                           Err(e) => {
+            println!("{:?}", e);
+            std::process::exit(42);
+        }
+                                       }
+                                   }
+                                   Err(e) => {
+            println!("{:?}", e);
+            std::process::exit(42);
+        }
+                               })
                           .collect::<Vec<(String, String)>>());
     }
 
@@ -163,7 +163,13 @@ pub fn generate_or_exit(env: &Environment) {
         let name = kind.name
             .children
             .iter()
-            .map(|n| n.clone().token.lexeme.unwrap_or("".to_owned()).to_lowercase())
+            .map(|n| {
+                     n.clone()
+                         .token
+                         .lexeme
+                         .unwrap_or("".to_owned())
+                         .to_lowercase()
+                 })
             .collect::<Vec<String>>()
             .join("");
 

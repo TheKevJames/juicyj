@@ -310,8 +310,18 @@ impl Type {
 
         // can't assign classes to arrays, but can assign arrays to Object
         // can assign arrays to each other with rules equal to child kinds
-        let lhs_array = lhs.kind.name.clone().token.lexeme.unwrap_or("".to_owned()) == "ArrayType";
-        let rhs_array = rhs.kind.name.clone().token.lexeme.unwrap_or("".to_owned()) == "ArrayType";
+        let lhs_array = lhs.kind
+            .name
+            .clone()
+            .token
+            .lexeme
+            .unwrap_or("".to_owned()) == "ArrayType";
+        let rhs_array = rhs.kind
+            .name
+            .clone()
+            .token
+            .lexeme
+            .unwrap_or("".to_owned()) == "ArrayType";
         if lhs_array {
             if lhs == rhs || rhs == *NULL {
                 return Ok(result);
@@ -403,8 +413,18 @@ impl Type {
 
         // can't assign classes to arrays, but can assign arrays to Object
         // can assign arrays to each other with rules equal to child kinds
-        let lhs_array = lhs.kind.name.clone().token.lexeme.unwrap_or("".to_owned()) == "ArrayType";
-        let rhs_array = rhs.kind.name.clone().token.lexeme.unwrap_or("".to_owned()) == "ArrayType";
+        let lhs_array = lhs.kind
+            .name
+            .clone()
+            .token
+            .lexeme
+            .unwrap_or("".to_owned()) == "ArrayType";
+        let rhs_array = rhs.kind
+            .name
+            .clone()
+            .token
+            .lexeme
+            .unwrap_or("".to_owned()) == "ArrayType";
         if lhs_array {
             if lhs == rhs || rhs == *NULL {
                 return Ok(0);
@@ -538,9 +558,19 @@ impl Type {
 
 impl PartialEq for Type {
     fn eq(&self, other: &Type) -> bool {
-        let lhs_array = self.kind.name.clone().token.lexeme.unwrap_or("".to_owned()) == "ArrayType";
-        let rhs_array = other.kind.name.clone().token.lexeme.unwrap_or("".to_owned()) ==
-                        "ArrayType";
+        let lhs_array = self.kind
+            .name
+            .clone()
+            .token
+            .lexeme
+            .unwrap_or("".to_owned()) == "ArrayType";
+        let rhs_array = other
+            .kind
+            .name
+            .clone()
+            .token
+            .lexeme
+            .unwrap_or("".to_owned()) == "ArrayType";
 
         if lhs_array != rhs_array {
             return false;
@@ -563,29 +593,30 @@ impl PartialEq for Type {
         let mut lhs = self.kind.name.clone();
         if self.kind.name.children.len() >= 3 &&
            self.kind
-            .name
-            .children
-            .first()
-            .unwrap()
-            .clone()
-            .token
-            .lexeme
-            .unwrap_or("".to_owned()) == "juicyj_unnamed" {
+               .name
+               .children
+               .first()
+               .unwrap()
+               .clone()
+               .token
+               .lexeme
+               .unwrap_or("".to_owned()) == "juicyj_unnamed" {
             lhs.children.remove(0);
             lhs.children.remove(0);
         }
 
         let mut rhs = other.kind.name.clone();
         if other.kind.name.children.len() >= 3 &&
-           other.kind
-            .name
-            .children
-            .first()
-            .unwrap()
-            .clone()
-            .token
-            .lexeme
-            .unwrap_or("".to_owned()) == "juicyj_unnamed" {
+           other
+               .kind
+               .name
+               .children
+               .first()
+               .unwrap()
+               .clone()
+               .token
+               .lexeme
+               .unwrap_or("".to_owned()) == "juicyj_unnamed" {
             rhs.children.remove(0);
             rhs.children.remove(0);
         }

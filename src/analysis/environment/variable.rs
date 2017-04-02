@@ -14,7 +14,11 @@ pub struct VariableEnvironment {
 
 impl VariableEnvironment {
     pub fn new(node: ASTNode) -> VariableEnvironment {
-        let dim = node.children[0].clone().token.lexeme.unwrap_or("".to_owned()) == "ArrayType";
+        let dim = node.children[0]
+            .clone()
+            .token
+            .lexeme
+            .unwrap_or("".to_owned()) == "ArrayType";
         let mut kind = node.children[0].clone().flatten().clone();
 
         VariableEnvironment {

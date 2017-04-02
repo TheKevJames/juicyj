@@ -29,8 +29,11 @@ impl ParserError {
         where T: IntoIterator,
               <T as IntoIterator>::Item: fmt::Display
     {
-        self.nodes =
-            Some(nodes.into_iter().map(|n| format!("{}", n)).collect::<Vec<_>>().join("\n"));
+        self.nodes = Some(nodes
+                              .into_iter()
+                              .map(|n| format!("{}", n))
+                              .collect::<Vec<_>>()
+                              .join("\n"));
         self
     }
 }

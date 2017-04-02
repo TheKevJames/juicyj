@@ -37,7 +37,9 @@ pub fn code(text: &Vec<String>,
     generated.push(text.join("\n"));
 
     if !bss.is_empty() {
-        let mut bss: Vec<String> = bss.iter().map(|v| format!("{}: resb {}", v.0, "16")).collect();
+        let mut bss: Vec<String> = bss.iter()
+            .map(|v| format!("{}: resb {}", v.0, "16"))
+            .collect();
         bss.sort();
         bss.dedup();
 

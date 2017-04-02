@@ -30,7 +30,10 @@ pub fn go(node: &ASTNode,
     }
 
     let lazylabel = format!("lazy{}",
-                            rand::thread_rng().gen_ascii_chars().take(32).collect::<String>());
+                            rand::thread_rng()
+                                .gen_ascii_chars()
+                                .take(32)
+                                .collect::<String>());
 
     // get lhs
     match statement::go(&node.children[0],

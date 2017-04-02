@@ -44,15 +44,15 @@ pub fn analyze_constant_declaration(current: &mut ClassOrInterfaceEnvironment,
 
     let mut kind = declaration.children[4].clone().flatten().clone();
     new.value = Some(match kind.clone().token.lexeme {
-        Some(ref l) if l == "ArrayType" => {
-            // Remove Dim or DimExpr
-            kind.children.truncate(1);
-            // Flatten Name
-            kind.children[0].flatten();
-            kind
-        }
-        _ => kind,
-    });
+                         Some(ref l) if l == "ArrayType" => {
+        // Remove Dim or DimExpr
+        kind.children.truncate(1);
+        // Flatten Name
+        kind.children[0].flatten();
+        kind
+    }
+                         _ => kind,
+                     });
 
     for field in current.fields.clone() {
         if field.name == new.name {

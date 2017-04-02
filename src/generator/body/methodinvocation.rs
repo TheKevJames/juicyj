@@ -15,7 +15,11 @@ pub fn go(node: &ASTNode,
           mut bss: &mut Vec<(String, String)>,
           mut data: &mut Vec<String>)
           -> Result<Option<String>, String> {
-    if node.children[0].clone().token.lexeme.unwrap_or("".to_owned()) != "FullyQualifiedMethod" {
+    if node.children[0]
+           .clone()
+           .token
+           .lexeme
+           .unwrap_or("".to_owned()) != "FullyQualifiedMethod" {
         return Err(format!("got un-qualified method call {:?}", node));
     }
 

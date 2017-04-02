@@ -35,7 +35,8 @@ impl<T: Iterator<Item = Result<Token, LexerError>>> Parser<T> {
     }
 
     fn consume(&mut self, token: Token) -> Result<(), ParserError> {
-        match self.dfa.consume(self.states.last().unwrap_or(&0), &token) {
+        match self.dfa
+                  .consume(self.states.last().unwrap_or(&0), &token) {
             Ok(transition) => {
                 let result = match transition.function {
                     Function::Reduce => self.reduce(transition, token),
@@ -56,9 +57,9 @@ impl<T: Iterator<Item = Result<Token, LexerError>>> Parser<T> {
         if self.token_state == 0 {
             self.token_state += 1;
             Some(Token {
-                kind: TokenKind::BOF,
-                lexeme: None,
-            })
+                     kind: TokenKind::BOF,
+                     lexeme: None,
+                 })
         } else {
             match self.tokens.peek() {
                 Some(&Ok(ref t)) => Some(t.clone()),
@@ -71,9 +72,9 @@ impl<T: Iterator<Item = Result<Token, LexerError>>> Parser<T> {
                     if self.token_state == 1 {
                         self.token_state += 1;
                         Some(Token {
-                            kind: TokenKind::EOF,
-                            lexeme: None,
-                        })
+                                 kind: TokenKind::EOF,
+                                 lexeme: None,
+                             })
                     } else {
                         None
                     }
@@ -96,10 +97,11 @@ impl<T: Iterator<Item = Result<Token, LexerError>>> Parser<T> {
             }
         }
 
-        self.nodes.push(ParseNode {
-            children: children,
-            token: rule.lhs.token.clone(),
-        });
+        self.nodes
+            .push(ParseNode {
+                      children: children,
+                      token: rule.lhs.token.clone(),
+                  });
 
         match self.consume(rule.lhs.token.clone()) {
             Ok(_) => (),
@@ -116,10 +118,11 @@ impl<T: Iterator<Item = Result<Token, LexerError>>> Parser<T> {
     fn shift(&mut self, transition: Transition, token: Token) -> Result<(), ParserError> {
         self.states.push(transition.value);
         if transition.symbol.terminality == Terminality::Terminal {
-            self.nodes.push(ParseNode {
-                children: Vec::new(),
-                token: token,
-            });
+            self.nodes
+                .push(ParseNode {
+                          children: Vec::new(),
+                          token: token,
+                      });
         }
 
         Ok(())
@@ -127,7 +130,8 @@ impl<T: Iterator<Item = Result<Token, LexerError>>> Parser<T> {
 
     pub fn get_tree(&mut self) -> Result<ParseTree, ParserError> {
         while let Some(token) = self.peek() {
-            match self.dfa.consume(self.states.last().unwrap_or(&0), &token) {
+            match self.dfa
+                      .consume(self.states.last().unwrap_or(&0), &token) {
                 Ok(transition) => {
                     let result = match transition.function {
                         Function::Reduce => self.reduce(transition, token.clone()),
@@ -150,7 +154,7 @@ impl<T: Iterator<Item = Result<Token, LexerError>>> Parser<T> {
             3 => Ok(ParseTree { root: self.nodes[1].clone() }),
             _ => {
                 Err(ParserError::new(ErrorMessage::InvalidParseTree, None)
-                    .with_nodes(self.nodes.clone()))
+                        .with_nodes(self.nodes.clone()))
             }
         }
     }

@@ -60,7 +60,11 @@ pub fn analyze_class_declaration(canonical: &ASTNode,
                 for mut greatgrandkid in grandkid.children {
                     if greatgrandkid.token.kind == TokenKind::Identifier {
                         current.implements.push(greatgrandkid.clone());
-                    } else if greatgrandkid.clone().token.lexeme.unwrap_or("".to_owned()) ==
+                    } else if greatgrandkid
+                                  .clone()
+                                  .token
+                                  .lexeme
+                                  .unwrap_or("".to_owned()) ==
                               "Name" {
                         current.implements.push(greatgrandkid.flatten().clone());
                     } else if greatgrandkid.token.kind == TokenKind::Comma {
@@ -74,9 +78,14 @@ pub fn analyze_class_declaration(canonical: &ASTNode,
             Some(ref le) if le == "ClassExtends" => {
                 if child.children[1].token.kind == TokenKind::Identifier {
                     current.extends.push(child.children[1].clone());
-                } else if child.children[1].clone().token.lexeme.unwrap_or("".to_owned()) ==
-                          "Name" {
-                    current.extends.push(child.children[1].clone().flatten().clone());
+                } else if child.children[1]
+                              .clone()
+                              .token
+                              .lexeme
+                              .unwrap_or("".to_owned()) == "Name" {
+                    current
+                        .extends
+                        .push(child.children[1].clone().flatten().clone());
                 } else {
                     return Err(format!("got invalid ClassExtends child {}",
                                        child.children[1].token));

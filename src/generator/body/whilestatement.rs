@@ -22,9 +22,15 @@ pub fn go(node: &ASTNode,
     text.push(format!("  ; while"));
 
     let startlabel = format!("while{}",
-                             rand::thread_rng().gen_ascii_chars().take(32).collect::<String>());
+                             rand::thread_rng()
+                                 .gen_ascii_chars()
+                                 .take(32)
+                                 .collect::<String>());
     let endlabel = format!("while{}",
-                           rand::thread_rng().gen_ascii_chars().take(32).collect::<String>());
+                           rand::thread_rng()
+                               .gen_ascii_chars()
+                               .take(32)
+                               .collect::<String>());
 
     text.push(format!(".{}:", startlabel));
     match statement::go(&node.children[2],

@@ -17,7 +17,13 @@ pub fn go(mut node: &mut ASTNode,
             Err(e) => return Err(e),
         };
 
-    if array.kind.name.clone().token.lexeme.unwrap_or("".to_owned()) != "ArrayType" {
+    if array
+           .kind
+           .name
+           .clone()
+           .token
+           .lexeme
+           .unwrap_or("".to_owned()) != "ArrayType" {
         return Err(format!("got invalid array type {:?}", array));
     }
 

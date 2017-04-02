@@ -131,9 +131,9 @@ pub fn in_env(canonical: &ASTNode,
 
             if !methods.is_empty() {
                 return match select_method(&methods, args, &cls, kinds) {
-                    Ok(m) => Ok((cls.clone(), m)),
-                    Err(e) => Err(e),
-                };
+                           Ok(m) => Ok((cls.clone(), m)),
+                           Err(e) => Err(e),
+                       };
             }
 
             // A.B.C.f.g.h.i(), we're at f or g
@@ -148,15 +148,17 @@ pub fn in_env(canonical: &ASTNode,
                 }
 
                 return match lookup::class::in_env(&f.kind, &cls, kinds) {
-                    Ok(cls) => {
-                        remaining_method.children.remove(0);
-                        // cls is now kind or A.B.C.f.g, remaining_method is h.i()
-                        in_env(&cls.name, &remaining_method, args, &cls, kinds)
-                    }
-                    Err(_) => {
-                        Err(format!("could not lookup kind {} of field in class {}", f.kind, cls))
-                    }
-                };
+                           Ok(cls) => {
+                    remaining_method.children.remove(0);
+                    // cls is now kind or A.B.C.f.g, remaining_method is h.i()
+                    in_env(&cls.name, &remaining_method, args, &cls, kinds)
+                }
+                           Err(_) => {
+                               Err(format!("could not lookup kind {} of field in class {}",
+                                           f.kind,
+                                           cls))
+                           }
+                       };
             }
         }
 

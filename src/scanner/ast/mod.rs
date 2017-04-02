@@ -114,15 +114,19 @@ impl AST {
         match name {
             Some(ref n) => {
                 if !canonical.children.is_empty() {
-                    canonical.children.push(ASTNode {
-                        token: Token::new(TokenKind::Dot, None),
-                        children: Vec::new(),
-                    });
+                    canonical
+                        .children
+                        .push(ASTNode {
+                                  token: Token::new(TokenKind::Dot, None),
+                                  children: Vec::new(),
+                              });
                 }
-                canonical.children.push(ASTNode {
-                    token: n.clone(),
-                    children: Vec::new(),
-                });
+                canonical
+                    .children
+                    .push(ASTNode {
+                              token: n.clone(),
+                              children: Vec::new(),
+                          });
             }
             _ => return Err(ASTError::new(ErrorMessage::MissingName, &root.unwrap())),
         };
@@ -149,12 +153,12 @@ impl AST {
         }
 
         Ok(AST {
-            filename: filename.to_owned(),
-            imports: imports,
-            package: package,
-            root: root,
-            canonical: canonical,
-        })
+               filename: filename.to_owned(),
+               imports: imports,
+               package: package,
+               root: root,
+               canonical: canonical,
+           })
     }
 }
 

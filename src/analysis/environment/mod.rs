@@ -76,7 +76,10 @@ impl Environment {
                 import_package.children.pop();
 
                 for kind in trees {
-                    if kind.package.package.children.starts_with(&import_package.children) {
+                    if kind.package
+                           .package
+                           .children
+                           .starts_with(&import_package.children) {
                         continue 'import;
                     }
                 }

@@ -45,9 +45,15 @@ pub fn go(node: &ASTNode,
     }
 
     let looplabel = format!("for{}",
-                            rand::thread_rng().gen_ascii_chars().take(32).collect::<String>());
+                            rand::thread_rng()
+                                .gen_ascii_chars()
+                                .take(32)
+                                .collect::<String>());
     let donelabel = format!("for{}",
-                            rand::thread_rng().gen_ascii_chars().take(32).collect::<String>());
+                            rand::thread_rng()
+                                .gen_ascii_chars()
+                                .take(32)
+                                .collect::<String>());
 
     text.push(format!(".{}:", looplabel));
 
