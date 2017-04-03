@@ -23,7 +23,11 @@ dependencies:
         - rustc --version
 
         - test -e $HOME/.cargo/bin/cargo-fmt || cargo install --force rustfmt || true
+
+        - pip install pre-commit
     override:
+        - pre-commit run --all-files
+
         - cargo build
         - cargo test --no-run
 
