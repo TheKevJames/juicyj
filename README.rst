@@ -3,6 +3,13 @@ JuicyJ
 
 JuicyJ Unabashedly Is a Compiler for Your JOOS.
 
+This project was written for the CS 444 "Compilers" course at the University of
+Waterloo in Winter 2017. It is meant to compile JOOS 1W, a confined subset of
+Java 1.3.
+
+This compiler does not quite pass all the associated test cases, mostly due to
+time constraints. I may continue work on this at some point in the future.
+
 FAQ
 ---
 
